@@ -140,4 +140,6 @@ MIT
 
 ## Autor
 
+**Fernando Abraham Peña Muñoz (Eclipse)**
+
 IAM - Intencional Artificial Multitarea
