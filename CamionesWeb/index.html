@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transportes Roja - Soluciones en Camiones</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <span class="logo-icon">🚛</span>
+                <div class="logo-text">
+                    <h1>TRANSPORTES ROJA</h1>
+                    <span class="tagline">Soluciones Logísticas</span>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="#inicio" class="nav-link active">Inicio</a>
+                <a href="#catalogo" class="nav-link">Catálogo</a>
+                <a href="#servicios" class="nav-link">Servicios</a>
+                <a href="#nosotros" class="nav-link">Nosotros</a>
+                <a href="#contacto" class="nav-link">Contacto</a>
+            </nav>
+            <div class="header-actions">
+                <span class="phone">📞 +52 55 1234 5678</span>
+                <a href="#contacto" class="btn btn-primary">Cotizar Ahora</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero" id="inicio">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Transporte pesado de carga para toda Latinoamérica</h1>
+                <p class="hero-subtitle">Más de 15 años de experiencia brindando soluciones logísticas confiables y seguras. Flota moderna y GPS en tiempo real.</p>
+                <div class="hero-buttons">
+                    <a href="#catalogo" class="btn btn-primary btn-lg">Ver Flota</a>
+                    <a href="#contacto" class="btn btn-outline btn-lg" style="border-color: white; color: white;">Solicitar Cotización</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Camiones</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">15+</span>
+                        <span class="stat-label">Años</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">50K</span>
+                        <span class="stat-label">Envíos</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-label">Satisfacción</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="truck-card">
+                    <span class="truck-badge">⭐ Más Solicitado</span>
+                    <div class="truck-image">🚛</div>
+                    <h3>Volvo FH16 750</h3>
+                    <p class="truck-price">Potencia y Eficiencia</p>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">⬇️</div>
+    </section>
+
+    <!-- CATÁLOGO -->
+    <section class="section catalogo" id="catalogo">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nuestra Flota de Camiones</h2>
+                <p>Contamos con los mejores vehículos para cubrir tus necesidades de transporte</p>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="todos">Todos</button>
+                <button class="filter-btn" data-filter="carga">Carga General</button>
+                <button class="filter-btn" data-filter="refrigerado">Refrigerados</button>
+                <button class="filter-btn" data-filter="tanque">Tanques</button>
+                <button class="filter-btn" data-filter="plataforma">Plataformas</button>
+            </div>
+            <div class="catalogo-grid" id="catalogoGrid">
+                <!-- Se llena con JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICIOS -->
+    <section class="section servicios" id="servicios">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nuestros Servicios</h2>
+                <p>Soluciones integrales para cada tipo de carga</p>
+            </div>
+            <div class="servicios-grid">
+                <div class="servicio-card">
+                    <div class="servicio-icon">📦</div>
+                    <h3>Carga General</h3>
+                    <p>Transporte seguro de mercancías generales con seguro incluido y seguimiento GPS en tiempo real.</p>
+                    <a href="#contacto" class="servicio-link">Solicitar información →</a>
+                </div>
+                <div class="servicio-card">
+                    <div class="servicio-icon">🧊</div>
+                    <h3>Cadena de Frío</h3>
+                    <p>Transporte refrigerado para productos perecederos, farmacéuticos y alimentos con control de temperatura.</p>
+                    <a href="#contacto" class="servicio-link">Solicitar información →</a>
+                </div>
+                <div class="servicio-card">
+                    <div class="servicio-icon">⛽</div>
+                    <h3>Tanques y Líquidos</h3>
+                    <p>Transporte de combustibles, químicos y líquidos a granel con certificaciones especiales.</p>
+                    <a href="#contacto" class="servicio-link">Solicitar información →</a>
+                </div>
+                <div class="servicio-card">
+                    <div class="servicio-icon">🏗️</div>
+                    <h3>Carga Pesada</h3>
+                    <p>Equipos especializados para carga sobredimensionada y maquinaria pesada industrial.</p>
+                    <a href="#contacto" class="servicio-link">Solicitar información →</a>
+                </div>
+                <div class="servicio-card">
+                    <div class="servicio-icon">🌍</div>
+                    <h3>Internacional</h3>
+                    <p>Servicio de carga internacional con experiencia en comercio exterior y logística aduanera.</p>
+                    <a href="#contacto" class="servicio-link">Solicitar información →</a>
+                </div>
+                <div class="servicio-card">
+                    <div class="servicio-icon">📍</div>
+                    <h3>Rastreo GPS</h3>
+                    <p>Monitoreo en tiempo real de tu carga con ubicación satelital y reportes automáticos.</p>
+                    <a href="#contacto" class="servicio-link">Solicitar información →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NOSOTROS -->
+    <section class="section nosotros" id="nosotros">
+        <div class="container nosotros-content">
+            <div class="nosotros-text">
+                <h2>Sobre Nosotros</h2>
+                <p class="lead">Más de 15 años conectando negocios en toda Latinoamérica</p>
+                <p>Transportes Roja nació con la visión de ofrecer un servicio de transporte de carga confiable, seguro y eficiente. Hoy somos líderes en logística con presencia en México, Centroamérica y Estados Unidos.</p>
+                <p>Nuestra flota cuenta con más de 500 unidades modernas, todas equipadas con GPS y sistema de monitoreo en tiempo real para garantizar la seguridad de tu mercancía.</p>
+                <div class="nosotros-features">
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Seguro de carga hasta por $10 millones</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>GPS en tiempo real en toda la flota</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Choferes capacitados y certificados</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Servicio 24/7 de atención al cliente</span>
+                    </div>
+                </div>
+            </div>
+            <div class="about-cards">
+                <div class="about-card">
+                    <span class="about-icon">🚛</span>
+                    <h4>500+ Unidades</h4>
+                    <p>Flota moderna y diversificada</p>
+                </div>
+                <div class="about-card">
+                    <span class="about-icon">🌎</span>
+                    <h4>15 Países</h4>
+                    <p>Cobertura internacional</p>
+                </div>
+                <div class="about-card">
+                    <span class="about-icon">🏆</span>
+                    <h4>Calidad Certificada</h4>
+                    <p>ISO 9001:2015 y CTPAT</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACTO -->
+    <section class="section contacto" id="contacto">
+        <div class="container">
+            <div class="section-header">
+                <h2>Contáctanos</h2>
+                <p>Cotización sin compromiso en menos de 24 horas</p>
+            </div>
+            <div class="contacto-grid">
+                <div class="contact-form">
+                    <form id="contactForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nombre">Nombre completo</label>
+                                <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+                            </div>
+                            <div class="form-group">
+                                <label for="empresa">Empresa</label>
+                                <input type="text" id="empresa" name="empresa" placeholder="Nombre de tu empresa">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Correo electrónico</label>
+                                <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="telefono">Teléfono</label>
+                                <input type="tel" id="telefono" name="telefono" placeholder="55 1234 5678">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="servicio">Servicio requerido</label>
+                            <select id="servicio" name="servicio">
+                                <option value="">Selecciona un servicio</option>
+                                <option value="carga">Carga General</option>
+                                <option value="refrigerado">Refrigerados</option>
+                                <option value="tanque">Tanques y Líquidos</option>
+                                <option value="pesada">Carga Pesada</option>
+                                <option value="internacional">Internacional</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ruta">Ruta (Origen - Destino)</label>
+                            <input type="text" id="ruta" name="ruta" placeholder="Ej: Ciudad de México - Guadalajara">
+                        </div>
+                        <div class="form-group">
+                            <label for="mensaje">Detalles de tu carga</label>
+                            <textarea id="mensaje" name="mensaje" rows="4" placeholder="Describe el tipo de carga, peso aproximado, volumen, etc."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">📨 Enviar Solicitud de Cotización</button>
+                    </form>
+                </div>
+                <div class="contacto-info">
+                    <div class="info-card">
+                        <h4>📞 Teléfono</h4>
+                        <p>+52 55 1234 5678</p>
+                        <p>+52 800 123 4567 (Sin costo)</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📧 Email</h4>
+                        <p>ventas@transportesroja.com</p>
+                        <p>soporte@transportesroja.com</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📍 Sede Principal</h4>
+                        <p>Av. Industrial 2500</p>
+                        <p>Zona Industrial, CP 67110</p>
+                        <p>Nuevo León, México</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>🕐 Horario</h4>
+                        <p>Lunes a Viernes: 8:00 - 18:00</p>
+                        <p>Sábados: 8:00 - 14:00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <div class="logo">
+                    <span class="logo-icon">🚛</span>
+                    <div class="logo-text">
+                        <h1>TRANSPORTES ROJA</h1>
+                        <span class="tagline">Soluciones Logísticas</span>
+                    </div>
+                </div>
+                <p>Tu socio confiable en transporte de carga. Más de 15 años de experiencia y excelencia en servicio.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Enlaces Rápidos</h4>
+                <a href="#inicio">Inicio</a>
+                <a href="#catalogo">Catálogo</a>
+                <a href="#servicios">Servicios</a>
+                <a href="#nosotros">Nosotros</a>
+                <a href="#contacto">Contacto</a>
+            </div>
+            <div class="footer-links">
+                <h4>Servicios</h4>
+                <a href="#servicios">Carga General</a>
+                <a href="#servicios">Refrigerados</a>
+                <a href="#servicios">Tanques</a>
+                <a href="#servicios">Internacional</a>
+            </div>
+            <div class="footer-social">
+                <h4>Síguenos</h4>
+                <div class="social-icons">
+                    <a href="#">📘 Facebook</a>
+                    <a href="#">🐦 Twitter</a>
+                    <a href="#">📷 Instagram</a>
+                    <a href="#">💼 LinkedIn</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Transportes Roja. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- MODAL DETALLES -->
+    <div class="modal" id="truckModal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div class="modal-body">
+                <div class="modal-image" id="modalImage">🚛</div>
+                <div class="modal-info">
+                    <span class="modal-brand" id="modalBrand"></span>
+                    <h2 id="modalName"></h2>
+                    <p class="modal-price" id="modalPrice"></p>
+                    <div class="modal-specs" id="modalSpecs"></div>
+                    <p class="modal-desc" id="modalDesc"></p>
+                    <button class="btn btn-primary btn-lg btn-block" onclick="document.getElementById('truckModal').style.display='none'; document.getElementById('contacto').scrollIntoView({behavior:'smooth'});">
+                        Solicitar Cotización
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Environment
+.env
+.env.local
+.env.production
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# IAM Runtime Data
+iam/data/sessions/
+iam/data/*.json
+iam/data/cli_history
+
+# Temp files
+unicode_check.txt
+
+# Test files (optional - remove if you want tests in repo)
+# Pruebas/
+
+# Empty directories
+Cafeteria/
+iam/agents/
+
+# Large generated docs
+# claude-fable-5.md

@@ -1,0 +1,1 @@
+# Calculadora - Sin dependencias externas
