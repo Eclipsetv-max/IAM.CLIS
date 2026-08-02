@@ -927,13 +927,13 @@ class EnhancedCLI:
                     self.console.print(text)
 
     def _render_tool_results(self, results: list):
-        """Mostrar resultados de TOOL_CALLs con iconos visuales"""
+        """Mostrar resultados de TOOL_CALLs con iconos visuales mejorados"""
         ok_count = sum(1 for r in results if r.startswith("[OK]"))
         error_count = sum(1 for r in results if r.startswith("[ERROR]"))
         warn_count = sum(1 for r in results if r.startswith("[WARN]"))
         skip_count = sum(1 for r in results if r.startswith("[SKIP]"))
 
-        # Resumen visual limpio
+        # Resumen visual con iconos Unicode
         icons = []
         if ok_count:
             icons.append(f"[green]{ok_count} OK[/green]")
@@ -944,15 +944,41 @@ class EnhancedCLI:
         if skip_count:
             icons.append(f"[dim]{skip_count} skip[/dim]")
 
-        summary = " | ".join(icons)
-        self.console.print(f"\n  [dim]--- Archivos: {summary} ---[/dim]")
+        if not icons:
+            return
 
-        # Detalles solo errores y warnings (NO contenido de archivos)
+        summary = "  ".join(icons)
+        self.console.print(f"\n  {summary}")
+
+        # Detalles de archivos creados (solo nombres y tamaños)
+        created_files = []
+        for r in results:
+            if r.startswith("[OK]") and "Archivo" in r:
+                # Extraer nombre y tamaño
+                try:
+                    parts = r.split(": ", 1)
+                    if len(parts) > 1:
+                        detail = parts[1]
+                        # Limpiar path para mostrar solo nombre
+                        import os
+                        basename = os.path.basename(detail.split("(")[0].strip())
+                        size_match = re.search(r'\(([\d,]+)\s*bytes\)', r)
+                        size_str = f" ({size_match.group(1)} bytes)" if size_match else ""
+                        created_files.append(f"    [green]+[/green] [cyan]{basename}[/cyan]{size_str}")
+                except:
+                    pass
+
+        if created_files:
+            self.console.print("\n  [bold]Archivos:[/bold]")
+            for f in created_files:
+                self.console.print(f)
+
+        # Errores y warnings
         for r in results:
             if r.startswith("[ERROR]"):
-                self.console.print(f"  [red]{r}[/red]")
+                self.console.print(f"  [red]  ! {r}[/red]")
             elif r.startswith("[WARN]"):
-                self.console.print(f"  [yellow]{r}[/yellow]")
+                self.console.print(f"  [yellow]  ! {r}[/yellow]")
 
     def _render_compact(self, response: str):
         lines = response.strip().split("\n")

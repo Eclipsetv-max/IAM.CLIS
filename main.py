@@ -236,13 +236,19 @@ def main():
         
         # RAM
         try:
-            import subprocess
-            result = subprocess.run('wmic OS get TotalVisibleMemorySize', shell=True, capture_output=True, text=True, timeout=5)
-            lines = result.stdout.strip().split('\n')
-            for line in lines:
-                if line.strip().isdigit():
-                    system_info["ram_gb"] = round(int(line.strip()) / (1024**2), 1)
-                    break
+            import psutil
+            system_info["ram_gb"] = round(psutil.virtual_memory().total / (1024**3), 1)
+        except ImportError:
+            try:
+                import subprocess
+                result = subprocess.run('wmic OS get TotalVisibleMemorySize', shell=True, capture_output=True, text=True, timeout=5)
+                lines = result.stdout.strip().split('\n')
+                for line in lines:
+                    if line.strip().isdigit():
+                        system_info["ram_gb"] = round(int(line.strip()) / (1024**2), 1)
+                        break
+            except:
+                pass
         except:
             pass
         
@@ -356,11 +362,10 @@ def main():
             )
 
             loader = LoadingIndicator()
-            loader.start("Procesando", "brain")
+            loader.start("🧠 procesando", "brain")
 
             start_time = time.time()
             try:
-                loader.stop()
                 response = router.process_input(user_input)
             finally:
                 loader.stop()

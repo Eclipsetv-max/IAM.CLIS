@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Agent - Agente de IA avanzado con razonamiento profundo
+Version 4.0 - Mejora completa de creacion de codigo
 """
 
 import json
@@ -32,11 +33,15 @@ from ..tools.web import web
 from ..tools.monitor import monitor
 from ..tools.packages import packages
 from ..tools.screen import ScreenMonitor
-from .loading import LoadingIndicator
+from .loading import LoadingIndicator, ToolCallProgress, ThinkingAnimation, PhaseAnimation
 from .permissions import (
     PermissionSystem, PermissionAction, PermissionLevel,
     permission_system, request_permission, require_permission
 )
+
+# Nuevos modulos v4.0
+from ..tools.code_validator import code_validator, quality_checker, validate_file, get_quality_report
+from ..tools.smart_templates import smart_templates
 
 
 class Agent:
@@ -56,11 +61,11 @@ class Agent:
     
     # Tipo de animacion por modo
     MODE_SPINNERS = {
-        "general": "dots",
-        "builder": "build",
-        "debug": "line",
-        "security": "pulse",
-        "reader": "clock",
+        "general": "smooth",    # Indigo suave para análisis general
+        "builder": "build",     # Barra de carga para construir
+        "debug": "line",        # Radar para depurar
+        "security": "pulse",    # Pulso verde para seguridad
+        "reader": "clock",      # Reloj para leer
     }
     
     def _get_mode_message(self, extra: str = "") -> str:
@@ -242,6 +247,9 @@ class Agent:
             if self.current_session:
                 self.current_session.mode = mode
                 self.current_session.model = settings.MODELS.get(mode, settings.MODELS["general"])
+            # Usar MiMo v2.5 Free en builder para mejor calidad de codigo
+            if mode == "builder":
+                self.engine = "mimo"
             return True
         return False
     
@@ -520,7 +528,7 @@ class Agent:
     
     def _detect_and_create_raw_files(self, content: str, folder: str) -> list:
         """Detectar HTML/CSS/JS en contenido raw y crear archivos.
-        Solo crea si encuentra codigo real, no texto descriptivo."""
+        Versión mejorada para manejar código largo correctamente."""
         import re
         results = []
         
@@ -533,33 +541,74 @@ class Agent:
         
         # Detectar HTML: buscar <!DOCTYPE o <html
         if '<!DOCTYPE' in content or '<html' in content:
-            html_match = re.search(r'(<!DOCTYPE.*?</html>)', content, re.DOTALL | re.IGNORECASE)
+            # Buscar desde <!DOCTYPE hasta </html>
+            html_match = re.search(r'(<!DOCTYPE[^>]*>.*?</html>)', content, re.DOTALL | re.IGNORECASE)
             if html_match:
                 html_content = html_match.group(1).strip()
+            else:
+                # Intentar con <html> hasta </html>
+                html_match = re.search(r'(<html[^>]*>.*?</html>)', content, re.DOTALL | re.IGNORECASE)
+                if html_match:
+                    html_content = html_match.group(1).strip()
         
-        # Detectar CSS: buscar bloques con selectores y propiedades
+        # Detectar CSS: primero intentar extraer de <style> tags
         if not html_content:
-            style_match = re.search(r'<style[^>]*>(.*?)</style>', content, re.DOTALL | re.IGNORECASE)
-            if style_match:
-                css_content = style_match.group(1).strip()
+            # Buscar <style> tags (puede haber múltiples)
+            style_matches = re.findall(r'<style[^>]*>(.*?)</style>', content, re.DOTALL | re.IGNORECASE)
+            if style_matches:
+                css_content = '\n\n'.join([m.strip() for m in style_matches])
         
-        # Detectar CSS standalone: buscar patron selector { propiedades }
+        # Detectar CSS standalone: buscar patrón selector { propiedades }
         if not css_content:
-            css_block = re.search(r'[\.\#a-zA-Z][\w\-\s]*\{[^}]+\}', content, re.DOTALL)
-            if css_block and len(css_block.group(0)) > 50:
-                css_content = content[content.find(css_block.group(0)):]
-                # Cortar en el proximo bloque grande o final
-                css_end = re.search(r'\n\n\n', css_content)
-                if css_end:
-                    css_content = css_content[:css_end.start()]
+            # Buscar bloques CSS más grandes
+            css_patterns = [
+                r'\*[\s\S]*?\{[^}]+\}',  # * { ... }
+                r'\.[a-zA-Z][\w\-\s]*\{[^}]+\}',  # .class { ... }
+                r'#[a-zA-Z][\w\-\s]*\{[^}]+\}',  # #id { ... }
+                r'[a-zA-Z][\w\-\s]*\{[^}]+\}',  # element { ... }
+            ]
+            
+            for pattern in css_patterns:
+                css_matches = re.findall(pattern, content, re.DOTALL)
+                if css_matches:
+                    # Unir todos los bloques CSS encontrados
+                    css_text = '\n\n'.join(css_matches)
+                    if len(css_text) > 50:
+                        css_content = css_text
+                        break
         
-        # Detectar JS: buscar function/const/let/var/document/window
-        js_indicators = ['function ', 'const ', 'let ', 'var ', 'document.', 'window.', 'addEventListener', 'querySelector']
+        # Detectar JS: buscar bloques de código JavaScript
+        js_indicators = [
+            'function ', 'const ', 'let ', 'var ', 'document.', 'window.',
+            'addEventListener', 'querySelector', 'querySelectorAll',
+            'addEventListener', 'fetch(', 'async ', 'await ',
+            'class ', 'export ', 'import ', 'require('
+        ]
+        
         js_lines = []
+        in_js_block = False
+        
         for line in content.split('\n'):
             stripped = line.strip()
+            
+            # Detectar inicio de bloque JS
             if any(ind in stripped for ind in js_indicators):
+                in_js_block = True
                 js_lines.append(line)
+            elif in_js_block:
+                # Continuar si estamos dentro de un bloque JS
+                if stripped and not stripped.startswith('//') and not stripped.startswith('/*'):
+                    js_lines.append(line)
+                elif not stripped:
+                    # Línea vacía puede ser parte del código
+                    js_lines.append(line)
+                else:
+                    # Comentario o fin de bloque
+                    if len(js_lines) > 3:
+                        break
+                    js_lines = []
+                    in_js_block = False
+        
         if len(js_lines) > 3:
             js_content = '\n'.join(js_lines)
         
@@ -652,19 +701,37 @@ class Agent:
                     created_files = [os.path.basename(f) for f in created_matches]
                 
                 # Verificar si faltan archivos tipicos de web
-                needs_html = not any('index.html' in f for f in created_files)
-                needs_css = not any(f.endswith('.css') for f in created_files)
-                needs_js = not any(f.endswith('.js') for f in created_files)
+                # Buscar tanto index.html como cualquier .html
+                has_html = any(f.endswith('.html') for f in created_files) or 'index.html' in str(created_files)
+                has_css = any(f.endswith('.css') for f in created_files)
+                has_js = any(f.endswith('.js') for f in created_files)
+                
+                needs_html = not has_html
+                needs_css = not has_css
+                needs_js = not has_js
                 
                 # Si no hizo nada util O faltan archivos
                 if (not made_edit and not made_create) or (made_create and (needs_html or needs_css or needs_js)):
-                    # Primer reintento
+                    # Construir mensaje de archivos faltantes
+                    missing = []
+                    if needs_html:
+                        missing.append("index.html")
+                    if needs_css:
+                        missing.append("style.css")
+                    if needs_js:
+                        missing.append("script.js")
+                    
+                    # Primer reintento con instrucciones claras
                     follow_up = self._chat_normal(
                         f"El usuario pidio: {user_message}. "
                         f"Archivos creados hasta ahora: {created_files if created_files else 'ninguno'}. "
-                        f"Faltan: {', '.join(['HTML'] if needs_html else []) + ', '.join(['CSS'] if needs_css else []) + ', '.join(['JS'] if needs_js else [])}. "
-                        f"Crea los archivos que faltan con TOOL_CALLs. "
-                        f"Ejemplo: [TOOL_CALL] action: create_file name: \"style.css\" [/TOOL_CALL]"
+                        f"Faltan estos archivos: {', '.join(missing)}. "
+                        f"Crea cada archivo en un TOOL_CALL SEPARADO. "
+                        f"NO pongas CSS dentro del HTML. "
+                        f"Formato correcto: "
+                        f"[TOOL_CALL] action: create_file name: \"style.css\" "
+                        f"/* todo el CSS aqui */ "
+                        f"[/TOOL_CALL]"
                     )
                     if follow_up:
                         follow_result = self._execute_tool_calls(follow_up)
@@ -696,11 +763,67 @@ class Agent:
         
         return response
     
+    def _extract_from_markdown(self, text: str) -> tuple:
+        """
+        Extraer archivos de bloques markdown ```code```.
+        Returns: (tool_blocks, unclosed_block)
+        """
+        import re
+        
+        tool_blocks = []
+        unclosed_block = None
+        
+        # Buscar bloques markdown con archivos
+        # Formato: **filename** ```language\ncode\n```
+        pattern = r'\*\*(\w+\.\w+)\*\*\s*```(\w*)\n(.*?)```'
+        matches = re.findall(pattern, text, re.DOTALL)
+        
+        for filename, lang, content in matches:
+            if filename.endswith(('.html', '.css', '.js')):
+                tool_block = f'action: create_file name: "{filename}"\n{content.strip()}'
+                tool_blocks.append(tool_block)
+        
+        # Si no encontro con **filename**, buscar solo bloques de codigo
+        if not tool_blocks:
+            # Buscar ```html ... ``` o ```css ... ``` o ```javascript ... ```
+            code_pattern = r'```(?:html|css|javascript|js)\n(.*?)```'
+            code_matches = re.findall(code_pattern, text, re.DOTALL)
+            
+            # Determinar tipo por orden
+            extensions = ['.html', '.css', '.js']
+            for i, content in enumerate(code_matches):
+                if i < len(extensions):
+                    filename = f'{"index" if i == 0 else "style" if i == 1 else "script"}{extensions[i]}'
+                    tool_block = f'action: create_file name: "{filename}"\n{content.strip()}'
+                    tool_blocks.append(tool_block)
+        
+        # Si aun no encontro, buscar bloques de codigo sin language tag
+        if not tool_blocks:
+            # Buscar ```\n...``` (sin tag de lenguaje) que contengan HTML/CSS/JS
+            raw_pattern = r'```\n(.*?)```'
+            raw_matches = re.findall(raw_pattern, text, re.DOTALL)
+            
+            for content in raw_matches:
+                content = content.strip()
+                if not content:
+                    continue
+                # Detectar tipo por contenido
+                if '<!DOCTYPE' in content or '<html' in content.lower():
+                    tool_block = f'action: create_file name: "index.html"\n{content}'
+                    tool_blocks.append(tool_block)
+                elif '{' in content and ':' in content and ('.' in content or '#' in content):
+                    tool_block = f'action: create_file name: "style.css"\n{content}'
+                    tool_blocks.append(tool_block)
+                elif 'function' in content or 'const ' in content or 'document.' in content or 'addEventListener' in content:
+                    tool_block = f'action: create_file name: "script.js"\n{content}'
+                    tool_blocks.append(tool_block)
+        
+        return tool_blocks, unclosed_block
+    
     def _execute_tool_calls(self, response: str) -> str:
         """
         Ejecutar TOOL_CALLs de la IA.
-        Maneja formatos variados: [TOOL_CALL], <tool_call>, bloques multilinea.
-        Maneja TOOL_CALLs sin cerrar (ultima respuesta cortada).
+        Soporta formato TOOL_CALL y formato markdown (```code```).
         """
         import re
         
@@ -719,31 +842,37 @@ class Agent:
         
         unclosed_block = None
         if last_open > last_close:
-            # Hay un TOOL_CALL sin cerrar
             unclosed_text = text[last_open + len('[TOOL_CALL]'):]
             unclosed_block = unclosed_text.strip()
         
-        # Calcular limpieza: remover todos los TOOL_CALLs (cerrados y sin cerrar)
+        # Si no hay TOOL_CALLs, buscar bloques markdown
+        if not tool_blocks and not unclosed_block:
+            tool_blocks, unclosed_block = self._extract_from_markdown(text)
+        
+        # Calcular limpieza
         clean = text
         for block in tool_blocks:
             clean = clean.replace('[TOOL_CALL]' + block + '[/TOOL_CALL]', '', 1)
         if unclosed_block:
             clean = clean.replace('[TOOL_CALL]' + unclosed_block, '', 1)
+        # Limpiar bloques markdown tambien
+        clean = re.sub(r'```[\w]*\n[\s\S]*?```', '', clean)
+        clean = re.sub(r'\*\*\w+\.html\*\*\s*', '', clean)
+        clean = re.sub(r'\*\*\w+\.css\*\*\s*', '', clean)
+        clean = re.sub(r'\*\*\w+\.js\*\*\s*', '', clean)
         clean = clean.strip()
         
         results = []
         
-        # Ejecutar TOOL_CALLs cerrados
+        # Ejecutar TOOL_CALLs cerrados con barra de progreso
         total = len(tool_blocks) + (1 if unclosed_block else 0)
+        progress = ToolCallProgress(total)
+
         for i, block in enumerate(tool_blocks, 1):
-            try:
-                print(f"\r  \033[38;2;99;102;241m[build] Archivo {i}/{total}...\033[0m", end='', flush=True)
-            except:
-                pass
-            
             parsed = self._parse_tool_block(block)
             if not parsed:
                 results.append(f"[ERROR] TOOL_CALL #{i}: no se pudo parsear")
+                progress.update(i, f"TOOL_CALL #{i}", False)
                 continue
             
             action = parsed.get('action')
@@ -761,6 +890,7 @@ class Agent:
             is_valid, msg = self._validate_tool_call(action, path, content, command)
             if not is_valid:
                 results.append(f"[ERROR] TOOL_CALL #{i}: {msg}")
+                progress.update(i, f"TOOL_CALL #{i}", False)
                 continue
             
             # Ejecutar
@@ -768,10 +898,22 @@ class Agent:
                 result = self._run_tool_call(action, path, content, command, old_text, new_text)
                 if result:
                     results.append(result)
+                    # Extraer nombre del archivo del resultado
+                    fname = os.path.basename(path) if path else f"TOOL_CALL #{i}"
+                    size_str = ""
+                    if "[OK]" in result:
+                        # Extraer tamaño del resultado
+                        import re
+                        size_match = re.search(r'\((\d[\d,]*)\s*bytes\)', result)
+                        if size_match:
+                            size_str = size_match.group(1) + " bytes"
+                    progress.update(i, fname, "[OK]" in result, size_str)
             except Exception as e:
                 results.append(f"[ERROR] TOOL_CALL #{i}: {str(e)}")
+                progress.update(i, f"TOOL_CALL #{i}", False)
         
         # Ejecutar TOOL_CALL sin cerrar (ultimo bloque cortado)
+        # IMPORTANTE: Para contenido largo, intentar crear el archivo aunque el TOOL_CALL no esté cerrado
         if unclosed_block:
             i = len(tool_blocks) + 1
             parsed = self._parse_tool_block(unclosed_block)
@@ -786,259 +928,480 @@ class Agent:
                 if path and self.active_project and not os.path.isabs(path):
                     path = self.resolve_project_path(path)
                 
-                is_valid, msg = self._validate_tool_call(action, path, content, command)
-                if is_valid:
-                    try:
-                        result = self._run_tool_call(action, path, content, command, old_text, new_text)
-                        if result:
-                            results.append(result)
-                    except Exception as e:
-                        results.append(f"[ERROR] TOOL_CALL #{i} (sin cerrar): {str(e)}")
-                else:
-                    results.append(f"[WARN] TOOL_CALL #{i} (sin cerrar): {msg}")
+                # Para TOOL_CALLs sin cerrar con contenido, ser más permisivo
+                # Si tiene acción y contenido (o path para create_file), intentar ejecutar
+                if action and content:
+                    is_valid, msg = self._validate_tool_call(action, path, content, command)
+                    if is_valid:
+                        try:
+                            result = self._run_tool_call(action, path, content, command, old_text, new_text)
+                            if result:
+                                results.append(result)
+                                # Marcar como exitoso para no mostrar warning
+                                unclosed_block = None
+                        except Exception as e:
+                            results.append(f"[ERROR] TOOL_CALL #{i} (sin cerrar): {str(e)}")
+                    else:
+                        # Si falla validación pero tiene contenido, intentar crear archivo directamente
+                        if content and action == 'create_file':
+                            try:
+                                if path:
+                                    parent = os.path.dirname(path)
+                                    if parent:
+                                        os.makedirs(parent, exist_ok=True)
+                                    with open(path, 'w', encoding='utf-8') as f:
+                                        f.write(content)
+                                    results.append(f"[OK] Archivo creado (incompleto): {path}")
+                                    unclosed_block = None
+                            except Exception as e:
+                                results.append(f"[WARN] TOOL_CALL #{i} (sin cerrar): {msg}")
+                elif action and not content and path:
+                    # TOOL_CALL sin contenido pero con path - podría ser create_file vacío
+                    if action == 'create_file':
+                        try:
+                            if path:
+                                parent = os.path.dirname(path)
+                                if parent:
+                                    os.makedirs(parent, exist_ok=True)
+                                with open(path, 'w', encoding='utf-8') as f:
+                                    f.write('')
+                                results.append(f"[OK] Archivo creado (vacío): {path}")
+                                unclosed_block = None
+                        except Exception as e:
+                            pass
         
-        # Agregar resultados
+        # Agregar resultados con reporte de progreso
+        progress_summary = progress.finish()
         if results:
-            try:
-                print(f"\r{' ' * 40}\r", end='')
-            except:
-                pass
             safe = [str(r) for r in results if r]
             if safe:
-                clean = "\n".join(safe) + ("\n\n" + clean if clean else "")
+                # Agregar reporte de progreso antes de los resultados
+                clean = progress_summary + "\n" + "\n".join(safe) + ("\n\n" + clean if clean else "")
+        
+        # FALLBACK: Si no se creó ningún archivo pero hay proyecto activo,
+        # intentar extraer archivos directamente de la respuesta
+        if self.active_project and '[OK]' not in (clean or ''):
+            try:
+                fallback_results = self._extract_files_from_response(text, self.active_project)
+                if fallback_results:
+                    clean = "\n".join(fallback_results) + ("\n\n" + clean if clean else "")
+            except Exception:
+                pass
         
         return clean or ""
     
+    def _extract_files_from_response(self, response: str, folder: str) -> list:
+        """Extraer archivos HTML/CSS/JS directamente de la respuesta como fallback.
+        Se usa cuando los TOOL_CALLs no funcionan correctamente."""
+        import re
+        results = []
+        
+        if not response or not folder:
+            return results
+        
+        # Limpiar markdown fences del response
+        clean_response = response
+        clean_response = re.sub(r'```\w*\n', '', clean_response)
+        clean_response = re.sub(r'\n```', '', clean_response)
+        
+        # Detectar HTML completo
+        html_match = re.search(r'(<!DOCTYPE[^>]*>[\s\S]*?</html>)', clean_response, re.IGNORECASE)
+        if html_match:
+            html_content = html_match.group(1).strip()
+            if len(html_content) > 50:
+                path = os.path.join(folder, 'index.html')
+                try:
+                    os.makedirs(folder, exist_ok=True)
+                    with open(path, 'w', encoding='utf-8') as f:
+                        f.write(html_content)
+                    results.append(f"[OK] Archivo creado (fallback): {path}")
+                except Exception as e:
+                    results.append(f"[ERROR] Error creando {path}: {e}")
+        
+        # Detectar HTML parcial (sin </html>) - buscar <html o <body
+        if not results or not any('[OK] Archivo creado' in r and 'index.html' in r for r in results):
+            html_partial = re.search(r'(<(?:html|body)[^>]*>[\s\S]*)', clean_response, re.IGNORECASE)
+            if html_partial:
+                html_content = html_partial.group(1).strip()
+                # Limpiar al final si hay texto no-HTML
+                html_content = re.sub(r'\n[^<\n]*$', '', html_content)
+                if len(html_content) > 50 and ('<html' in html_content.lower() or '<body' in html_content.lower()):
+                    path = os.path.join(folder, 'index.html')
+                    try:
+                        os.makedirs(folder, exist_ok=True)
+                        with open(path, 'w', encoding='utf-8') as f:
+                            f.write(html_content)
+                        results.append(f"[OK] Archivo creado (fallback): {path}")
+                    except Exception as e:
+                        results.append(f"[ERROR] Error creando {path}: {e}")
+        
+        # Detectar CSS completo (entre style tags o standalone)
+        css_content = None
+        
+        # Buscar en style tags
+        style_matches = re.findall(r'<style[^>]*>([\s\S]*?)</style>', clean_response, re.IGNORECASE)
+        if style_matches:
+            css_content = '\n\n'.join([m.strip() for m in style_matches])
+        
+        # Buscar CSS standalone (patrón selector { propiedades })
+        if not css_content:
+            css_blocks = re.findall(r'([\.\#]?[a-zA-Z][\w\-\s,]*\{[^}]+\})', clean_response, re.DOTALL)
+            if css_blocks and len(''.join(css_blocks)) > 50:
+                css_content = '\n\n'.join(css_blocks)
+        
+        if css_content and len(css_content) > 30:
+            path = os.path.join(folder, 'style.css')
+            try:
+                os.makedirs(folder, exist_ok=True)
+                with open(path, 'w', encoding='utf-8') as f:
+                    f.write(css_content)
+                results.append(f"[OK] Archivo creado (fallback): {path}")
+            except Exception as e:
+                results.append(f"[ERROR] Error creando {path}: {e}")
+        
+        # Detectar JS
+        js_indicators = ['function ', 'const ', 'let ', 'var ', 'document.', 'window.', 'addEventListener']
+        js_lines = []
+        for line in clean_response.split('\n'):
+            stripped = line.strip()
+            if any(ind in stripped for ind in js_indicators):
+                js_lines.append(line)
+        
+        if len(js_lines) > 2:
+            js_content = '\n'.join(js_lines)
+            path = os.path.join(folder, 'script.js')
+            try:
+                os.makedirs(folder, exist_ok=True)
+                with open(path, 'w', encoding='utf-8') as f:
+                    f.write(js_content)
+                results.append(f"[OK] Archivo creado (fallback): {path}")
+            except Exception as e:
+                results.append(f"[ERROR] Error creando {path}: {e}")
+        
+        return results
+    
     def _parse_tool_block(self, block: str) -> dict:
-        """Parsear un bloque TOOL_CALL y extraer action, path, content, command."""
+        """Parsear un bloque TOOL_CALL y extraer action, path, content, command.
+        Versión ultrarrobusta capaz de parsear cualquier variación de formato."""
         import re
         
         result = {'action': None, 'path': None, 'content': None, 'command': None, 'old_text': None, 'new_text': None}
-        
         block = block.strip()
         if not block:
             return None
         
         lines = block.split('\n')
         
-        for line in lines:
-            stripped = line.strip()
-            
-            # action: (puede tener name/path inline)
-            if stripped.lower().startswith('action:'):
-                val = stripped[len('action:'):].strip().strip('"\'')
-                
-                # Manejar "execute command: X" en una sola linea
-                if val.lower().startswith('execute command:') or val.lower().startswith('executecommand:'):
+        # 1. Detectar Acción
+        for line in lines[:5]:
+            line_l = line.lower().strip()
+            if 'action:' in line_l:
+                action_part = line_l.split('action:')[1].strip()
+                if 'create_file' in action_part or 'createfile' in action_part:
+                    result['action'] = 'create_file'
+                elif 'edit_file' in action_part or 'editfile' in action_part:
+                    result['action'] = 'edit_file'
+                elif 'read_file' in action_part or 'readfile' in action_part:
+                    result['action'] = 'read_file'
+                elif 'create_folder' in action_part or 'createfolder' in action_part:
+                    result['action'] = 'create_folder'
+                elif 'execute' in action_part:
                     result['action'] = 'execute'
-                    for prefix in ['execute command:', 'executecommand:']:
-                        if val.lower().startswith(prefix):
-                            result['command'] = val[len(prefix):].strip()
-                            break
-                elif val.lower().startswith('execute '):
-                    result['action'] = 'execute'
-                    result['command'] = val[len('execute '):].strip()
-                else:
-                    words = val.split()
-                    if words:
-                        result['action'] = words[0].lower()
-                
-                # Buscar name: o path: en la misma linea (formato single-line)
-                for kw in ['name:', 'path:']:
-                    kw_match = re.search(rf'{kw}\s*"?([^"\n]+?)"?(?:\s+\w+:|\s*$)', stripped, re.IGNORECASE)
-                    if kw_match:
-                        p = kw_match.group(1).strip().strip('"\'')
-                        if p:
-                            result['path'] = p
-                        break
-            
-            # path: o name: en linea aparte
-            elif stripped.lower().startswith('path:') or stripped.lower().startswith('name:'):
-                for prefix in ['path:', 'name:']:
-                    if stripped.lower().startswith(prefix):
-                        p = stripped[len(prefix):].strip().strip('"\'')
-                        if p:
-                            result['path'] = p
-                        break
-            
-            # command:
-            elif stripped.lower().startswith('command:'):
-                result['command'] = stripped[len('command:'):].strip()
-            
-            # old_text:
-            elif stripped.lower().startswith('old_text:'):
-                result['old_text'] = stripped[len('old_text:'):].strip()
-            
-            # new_text:
-            elif stripped.lower().startswith('new_text:'):
-                result['new_text'] = stripped[len('new_text:'):].strip()
+                break
         
-        # Extraer content: buscar desde "content:" hasta el final del bloque
-        content_match = re.search(r'content:\s*(.*)', block, re.IGNORECASE | re.DOTALL)
-        if content_match:
-            content_text = content_match.group(1).strip()
-            if content_text:
-                result['content'] = content_text
-        
-        # Si no encontro content, buscar en lineas que no son keys conocidos
-        if not result['content']:
-            content_lines = []
-            in_content = False
-            known_keys = ['action:', 'path:', 'name:', 'command:', 'old_text:', 'new_text:', '[/tool_call]']
-            for line in block.split('\n'):
-                stripped = line.strip()
-                if stripped.lower().startswith('content:'):
-                    in_content = True
-                    inline = stripped[len('content:'):].strip()
-                    if inline:
-                        content_lines.append(inline)
-                    continue
-                if in_content:
-                    if any(stripped.lower().startswith(k) for k in known_keys):
-                        break
-                    content_lines.append(line)
-                elif not in_content and stripped and not any(stripped.lower().startswith(k) for k in known_keys):
-                    # Si ya tenemos action y path, las lineas restantes pueden ser contenido
-                    if result['action'] and result['path'] and not stripped.startswith('[/'):
-                        in_content = True
-                        content_lines.append(line)
-            if content_lines:
-                result['content'] = '\n'.join(content_lines).strip()
-        
-        # Si no encontro action, intentar detectar por contexto
+        # Fallback de Acción si no se declaró explícitamente
         if not result['action']:
-            lower_block = block.lower()
-            if any(w in lower_block for w in ['create_file', 'crear archivo', 'create file']):
+            if '<!doctype' in block.lower() or '<html' in block.lower() or 'function' in block.lower() or 'body {' in block.lower() or ':root' in block.lower():
                 result['action'] = 'create_file'
-            elif any(w in lower_block for w in ['create_folder', 'crear carpeta', 'mkdir']):
-                result['action'] = 'create_folder'
-            elif any(w in lower_block for w in ['edit_file', 'editar', 'modificar']):
-                result['action'] = 'edit_file'
-            elif any(w in lower_block for w in ['execute', 'ejecutar', 'ejecuta', 'run', 'command']):
+            elif 'command:' in block.lower() or 'python ' in block.lower():
                 result['action'] = 'execute'
-                if not result['command']:
-                    result['command'] = block.strip()
-            elif any(w in lower_block for w in ['read_file', 'leer', 'lee el']):
-                result['action'] = 'read_file'
-            elif any(w in lower_block for w in ['listfiles', 'list_files', 'listar', 'lista']):
-                result['action'] = 'list_files'
         
-        # Si action es create_file pero no hay path, buscar en el texto
+        # 2. Detectar Nombre/Path del archivo
+        for line in lines[:6]:
+            line_s = line.strip()
+            # Patrón name: "x" o path: "x"
+            m = re.search(r'(?:name|path):\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                found_path = m.group(1).strip()
+                # Filtrar palabras clave de formato
+                if not found_path.lower().startswith('create_file') and not found_path.lower().startswith('edit_file'):
+                    result['path'] = found_path
+                    break
+        
+        # Inferir path si falta por extensión o estructura
         if result['action'] == 'create_file' and not result['path']:
-            for line in block.split('\n'):
-                s = line.strip()
-                if '.' in s and not s.startswith(('action:', 'path:', 'name:', 'command:', 'content:', 'old_', 'new_')):
-                    candidate = s.strip('"\'').strip()
-                    if any(candidate.endswith(ext) for ext in ['.html', '.css', '.js', '.py', '.json', '.md', '.txt', '.ts', '.jsx', '.tsx', '.vue']):
-                        result['path'] = candidate
-                        break
-        
-        # Si action es edit_file pero no hay path, buscar
-        if result['action'] == 'edit_file' and not result['path']:
-            for line in block.split('\n'):
-                s = line.strip()
-                if '.' in s and not s.startswith(('action:', 'path:', 'name:', 'command:', 'content:', 'old_', 'new_')):
-                    candidate = s.strip('"\'').strip()
-                    if any(candidate.endswith(ext) for ext in ['.html', '.css', '.js', '.py', '.json', '.md', '.txt', '.ts', '.jsx', '.tsx']):
-                        result['path'] = candidate
-                        break
-        
-        # Si no tiene path pero tiene contenido, asumir create_file con nombre basico
-        if not result['path'] and result['content'] and result['action'] in ['create_file', None]:
-            if result['content'].strip().startswith('<!DOCTYPE') or result['content'].strip().startswith('<html'):
-                result['action'] = 'create_file'
+            if '<!doctype' in block.lower() or '<html' in block.lower():
                 result['path'] = 'index.html'
-            elif 'function ' in result['content'] or 'const ' in result['content']:
-                result['action'] = 'create_file'
+            elif 'addEventListener' in block or 'DOMContentLoaded' in block or 'document.querySelector' in block:
                 result['path'] = 'script.js'
-            elif '{' in result['content'] and ':' in result['content']:
-                result['action'] = 'create_file'
+            elif ':root' in block or 'font-family:' in block or 'margin:' in block:
                 result['path'] = 'style.css'
+            else:
+                # Buscar cualquier palabra que termine en extensión conocida en las primeras líneas
+                m_ext = re.search(r'([\w\-\./]+\.(?:html|css|js|py|json|md|txt))', block[:300], re.IGNORECASE)
+                if m_ext:
+                    result['path'] = m_ext.group(1)
+
+        # 3. Detectar Comando (para execute)
+        if result['action'] == 'execute':
+            m_cmd = re.search(r'command:\s*["\']?([^"\'\n\r]+)["\']?', block, re.IGNORECASE)
+            if m_cmd:
+                result['command'] = m_cmd.group(1).strip()
+            else:
+                # Extraer primera línea después de action: execute
+                for line in lines:
+                    if 'action:' not in line.lower() and line.strip():
+                        result['command'] = line.strip()
+                        break
+            return result
+
+        # 4. Extraer Contenido
+        content_lines = []
+        in_content = False
         
-        # Si action es execute pero no hay command
-        if result['action'] == 'execute' and not result['command']:
-            result['command'] = block.strip()
+        for line in lines:
+            line_str = line.strip()
+            
+            # El contenido empieza tras la línea del header (action/name/path)
+            if not in_content:
+                if any(line_str.lower().startswith(k) for k in ['action:', 'name:', 'path:']):
+                    continue
+                # Si llegamos a una línea vacía o código real
+                if line_str == '' or not any(line_str.lower().startswith(k) for k in ['action:', 'name:', 'path:']):
+                    in_content = True
+            
+            if in_content:
+                if line_str == '[/TOOL_CALL]' or line_str == '[/tool_call]':
+                    break
+                content_lines.append(line)
         
-        # Validar minimo - si tiene contenido pero no action, asumir create
-        if not result['action'] and result['content']:
-            result['action'] = 'create_file'
-            result['path'] = 'index.html'
+        raw_content = '\n'.join(content_lines).strip()
         
-        if not result['action']:
-            return None
+        # Limpiar markdown code fences interiores si los hay
+        raw_content = re.sub(r'^```\w*\s*\n', '', raw_content)
+        raw_content = re.sub(r'\n```\s*$', '', raw_content)
+        result['content'] = raw_content.strip()
         
         return result
     
     def _run_tool_call(self, action, path, content, command, old_text, new_text) -> str:
-        """Ejecutar una accion de tool call"""
+        """Ejecutar una accion de tool call con validacion y correccion automatica
+        Incluye animación contextual breve para cada acción."""
         
-        if action == 'create_file' and path:
-            # Crear directorios padres
-            parent = os.path.dirname(path)
-            if parent:
-                os.makedirs(parent, exist_ok=True)
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(content or '')
-            verify = self._verify_execution('create_file', path)
-            return verify if verify else f"[OK] Archivo creado: {path}"
+        # Animación breve según la acción
+        _loader = LoadingIndicator()
+        _action_map = {
+            'create_file': ('📄', 'creando', 'build'),
+            'edit_file':   ('✏️', 'editando', 'smooth'),
+            'read_file':   ('📖', 'leyendo', 'type'),
+            'execute':     ('⚡', 'ejecutando', 'wave'),
+            'create_folder':('📁', 'creando carpeta', 'orbit'),
+        }
+        if action in _action_map:
+            _icon, _prefix, _spin = _action_map[action]
+            _fname = os.path.basename(path) if path else ""
+            _msg = f"{_icon} {_prefix}: {_fname}" if _fname else f"{_icon} {_prefix}"
+            _loader.start(_msg, _spin)
         
-        elif action == 'edit_file' and path:
-            if not os.path.exists(path):
-                return f"[ERROR] Archivo no existe: {path}"
-            with open(path, 'r', encoding='utf-8') as f:
-                current = f.read()
-            if old_text and new_text:
-                if old_text in current:
-                    new = current.replace(old_text, new_text, 1)
-                    with open(path, 'w', encoding='utf-8') as f:
-                        f.write(new)
-                    return f"[OK] Archivo editado: {path}"
-                return f"[ERROR] Texto no encontrado en {path}"
-            elif content:
+        try:
+            if action == 'create_file' and path:
+                # Crear directorios padres
+                parent = os.path.dirname(path)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
+                
+                # Validar y corregir codigo antes de escribir
+                if content:
+                    ext = os.path.splitext(path)[1].lower()
+                    if ext in ['.html', '.htm', '.css', '.js']:
+                        is_valid, corrected_content = validate_file(path, content)
+                        if not is_valid:
+                            content = corrected_content
+                
                 with open(path, 'w', encoding='utf-8') as f:
-                    f.write(content)
-                return f"[OK] Archivo reescrito: {path}"
-            return f"[ERROR] edit_file sin old_text/new_text ni content"
+                    f.write(content or '')
+                
+                # Verificar y dar info detallada
+                verify = self._verify_execution('create_file', path)
+                if verify:
+                    try:
+                        size = os.path.getsize(path)
+                        size_str = f" ({size:,} bytes)" if size > 1000 else f" ({size} bytes)"
+                        return verify + size_str
+                    except:
+                        return verify
+                return f"[OK] Archivo creado: {path}"
+            
+            elif action == 'edit_file' and path:
+                if not os.path.exists(path):
+                    return f"[ERROR] Archivo no existe: {path}"
+                with open(path, 'r', encoding='utf-8') as f:
+                    current = f.read()
+                if old_text and new_text:
+                    if old_text in current:
+                        new = current.replace(old_text, new_text, 1)
+                        ext = os.path.splitext(path)[1].lower()
+                        if ext in ['.html', '.htm', '.css', '.js']:
+                            is_valid, new = validate_file(path, new)
+                        with open(path, 'w', encoding='utf-8') as f:
+                            f.write(new)
+                        return f"[OK] Archivo editado: {path}"
+                    return f"[ERROR] Texto no encontrado en {path}"
+                elif content:
+                    ext = os.path.splitext(path)[1].lower()
+                    if ext in ['.html', '.htm', '.css', '.js']:
+                        is_valid, content = validate_file(path, content)
+                    with open(path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    return f"[OK] Archivo reescrito: {path}"
+                return f"[ERROR] edit_file sin old_text/new_text ni content"
+            
+            elif action == 'read_file' and path:
+                if not os.path.exists(path):
+                    return f"[ERROR] Archivo no existe: {path}"
+                with open(path, 'r', encoding='utf-8') as f:
+                    c = f.read()
+                lines_count = c.count('\n') + 1
+                if not hasattr(self, '_file_cache'):
+                    self._file_cache = {}
+                self._file_cache[path] = c
+                ext = os.path.splitext(path)[1].lower()
+                lang_map = {'.py': 'Python', '.js': 'JavaScript', '.html': 'HTML', '.css': 'CSS', '.json': 'JSON', '.md': 'Markdown'}
+                lang = lang_map.get(ext, 'archivo')
+                return f"[OK] {lang} leido: {os.path.basename(path)} ({lines_count} lineas)"
+            
+            elif action == 'create_folder' and path:
+                os.makedirs(path, exist_ok=True)
+                return f"[OK] Carpeta creada: {path}"
+            
+            elif action == 'execute' and command:
+                try:
+                    import _locale
+                    enc = _locale._getdefaultlocale()[1] or 'cp1252'
+                except:
+                    enc = 'cp1252'
+                result = subprocess.run(command, shell=True, capture_output=True, timeout=60, encoding=enc, errors='replace')
+                output_parts = []
+                if result.stdout:
+                    output_parts.append(result.stdout.strip())
+                if result.stderr:
+                    output_parts.append(f"STDERR: {result.stderr.strip()}")
+                if result.returncode != 0:
+                    output_parts.append(f"[ERROR] Comando fallo (codigo {result.returncode})")
+                elif not output_parts:
+                    output_parts.append("[OK] Comando ejecutado exitosamente")
+                return "\n".join(output_parts)
+            
+            return f"[ERROR] Accion no reconocida: {action}"
         
-        elif action == 'read_file' and path:
-            if not os.path.exists(path):
-                return f"[ERROR] Archivo no existe: {path}"
-            with open(path, 'r', encoding='utf-8') as f:
-                c = f.read()
-            lines_count = c.count('\n') + 1
-            # Guardar contenido para que la IA lo use internamente
-            if not hasattr(self, '_file_cache'):
-                self._file_cache = {}
-            self._file_cache[path] = c
-            # Retornar solo resumen, NO el contenido
-            ext = os.path.splitext(path)[1].lower()
-            lang_map = {'.py': 'Python', '.js': 'JavaScript', '.html': 'HTML', '.css': 'CSS', '.json': 'JSON', '.md': 'Markdown'}
-            lang = lang_map.get(ext, 'archivo')
-            return f"[OK] {lang} leido: {os.path.basename(path)} ({lines_count} lineas)"
+        finally:
+            _loader.stop()
+    
+    def generate_web_project(self, folder: str, title: str = "Mi Proyecto", 
+                            description: str = "", custom_vars: dict = None) -> list:
+        """Generar proyecto web completo usando templates profesionales.
+        Retorna lista de archivos creados."""
+        results = []
         
-        elif action == 'create_folder' and path:
-            os.makedirs(path, exist_ok=True)
-            return f"[OK] Carpeta creada: {path}"
+        if not folder:
+            return ["[ERROR] No se especifico carpeta del proyecto"]
         
-        elif action == 'execute' and command:
-            try:
-                import _locale
-                enc = _locale._getdefaultlocale()[1] or 'cp1252'
-            except:
-                enc = 'cp1252'
-            result = subprocess.run(command, shell=True, capture_output=True, timeout=60, encoding=enc, errors='replace')
-            output_parts = []
-            if result.stdout:
-                output_parts.append(result.stdout.strip())
-            if result.stderr:
-                output_parts.append(f"STDERR: {result.stderr.strip()}")
-            if result.returncode != 0:
-                output_parts.append(f"[ERROR] Comando fallo (codigo {result.returncode})")
-            elif not output_parts:
-                output_parts.append("[OK] Comando ejecutado exitosamente")
-            return "\n".join(output_parts)
+        # Crear carpeta
+        os.makedirs(folder, exist_ok=True)
         
-        return f"[ERROR] Accion no reconocida: {action}"
+        # Generar HTML
+        html_content = smart_templates.get_base_html(title, description)
+        html_path = os.path.join(folder, 'index.html')
+        with open(html_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        results.append(f"[OK] Archivo creado: {html_path}")
+        
+        # Generar CSS
+        css_content = smart_templates.get_full_css()
+        css_path = os.path.join(folder, 'style.css')
+        with open(css_path, 'w', encoding='utf-8') as f:
+            f.write(css_content)
+        results.append(f"[OK] Archivo creado: {css_path}")
+        
+        # Generar JS
+        js_content = smart_templates.get_base_js()
+        js_path = os.path.join(folder, 'script.js')
+        with open(js_path, 'w', encoding='utf-8') as f:
+            f.write(js_content)
+        results.append(f"[OK] Archivo creado: {js_path}")
+        
+        # Reporte de calidad
+        try:
+            report = get_quality_report(html_content, css_content, js_content)
+            responsive_score = report['responsive']['is_responsive']
+            accessibility_score = report['accessibility']['score']
+            performance_score = report['performance']['score']
+            
+            results.append(f"[INFO] Calidad: Responsive={'SI' if responsive_score else 'NO'} | Accesibilidad={accessibility_score}/100 | Rendimiento={performance_score}/100")
+        except Exception:
+            pass
+        
+        return results
+    
+    def get_code_quality_report(self, folder: str) -> str:
+        """Obtener reporte de calidad de un proyecto web existente."""
+        if not folder or not os.path.isdir(folder):
+            return "[ERROR] Carpeta no encontrada"
+        
+        html_content = ""
+        css_content = ""
+        js_content = ""
+        
+        # Leer archivos
+        for filename in ['index.html', 'style.css', 'script.js']:
+            filepath = os.path.join(folder, filename)
+            if os.path.exists(filepath):
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    if filename.endswith('.html'):
+                        html_content = f.read()
+                    elif filename.endswith('.css'):
+                        css_content = f.read()
+                    elif filename.endswith('.js'):
+                        js_content = f.read()
+        
+        if not html_content and not css_content and not js_content:
+            return "[ERROR] No se encontraron archivos HTML/CSS/JS en la carpeta"
+        
+        # Generar reporte
+        report = get_quality_report(html_content, css_content, js_content)
+        
+        lines = ["=== REPORTE DE CALIDAD ===\n"]
+        
+        # Responsive
+        resp = report['responsive']
+        lines.append("DISEÑO RESPONSIVE:")
+        lines.append(f"  - Media queries: {'SI' if resp['has_media_queries'] else 'NO'}")
+        lines.append(f"  - Usa clamp(): {'SI' if resp['has_clamp'] else 'NO'}")
+        lines.append(f"  - Flexbox: {'SI' if resp['has_flexbox'] else 'NO'}")
+        lines.append(f"  - Grid: {'SI' if resp['has_grid'] else 'NO'}")
+        if resp['issues']:
+            for issue in resp['issues']:
+                lines.append(f"  ! {issue}")
+        lines.append("")
+        
+        # Accesibilidad
+        acc = report['accessibility']
+        lines.append(f"ACCESIBILIDAD: {acc['score']}/100")
+        for good in acc['good']:
+            lines.append(f"  + {good}")
+        for issue in acc['issues']:
+            lines.append(f"  ! {issue}")
+        lines.append("")
+        
+        # Rendimiento
+        perf = report['performance']
+        lines.append(f"RENDIMIENTO: {perf['score']}/100")
+        for good in perf['good']:
+            lines.append(f"  + {good}")
+        for issue in perf['issues']:
+            lines.append(f"  ! {issue}")
+        
+        return "\n".join(lines)
     
     def _chat_streaming(self, enriched_prompt: str) -> str:
         """Chat con streaming - muestra Pensando... y respuesta limpia"""
@@ -1051,14 +1414,10 @@ class Agent:
         loader.start(msg, self._get_mode_spinner())
         
         try:
-            if self.engine == "opencode":
+            if self.engine == "opencode" or self.engine == "mimo":
                 response = self._call_opencode_streaming(enriched_prompt, loader)
-            elif self.engine == "groq":
-                response = self._call_groq_streaming(enriched_prompt, loader)
-            elif self.engine == "huggingface":
-                response = self._call_huggingface(enriched_prompt)
             else:
-                response = self._call_groq_streaming(enriched_prompt, loader)
+                response = self._call_opencode_streaming(enriched_prompt, loader)
             
             elapsed = time.time() - start_time
             return response
@@ -1072,169 +1431,12 @@ class Agent:
         loader.start(msg, self._get_mode_spinner())
         
         try:
-            if self.engine == "opencode":
+            if self.engine == "opencode" or self.engine == "mimo":
                 return self._call_opencode(enriched_prompt)
-            elif self.engine == "groq":
-                return self._call_groq(enriched_prompt)
-            elif self.engine == "huggingface":
-                return self._call_huggingface(enriched_prompt)
             else:
-                return self._call_groq(enriched_prompt)
+                return self._call_opencode(enriched_prompt)
         finally:
             loader.stop()
-    
-    def _call_groq(self, enriched_prompt: str = None) -> str:
-        """Llamar a Groq API con retry automatico"""
-        import time
-        
-        if not settings.GROQ_API_KEY:
-            return self._fallback_response("groq")
-        
-        max_retries = 3
-        retry_delay = 2
-        
-        for attempt in range(max_retries):
-            try:
-                context = self.current_session.get_context()
-                messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
-                groq_models = settings.FALLBACK_MODELS.get("groq", {})
-                model = groq_models.get(self.current_mode, groq_models.get("general", "llama-3.1-8b-instant"))
-                
-                response = requests.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": model,
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 4096,
-                        "top_p": 0.9
-                    },
-                    timeout=30
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    return data["choices"][0]["message"]["content"]
-                elif response.status_code == 429:
-                    if attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        retry_delay *= 2
-                        continue
-                    return "Limite de rate alcanzado. Intenta de nuevo."
-                elif response.status_code == 401:
-                    return "API Key invalida. Verifica tu configuracion."
-                else:
-                    return f"Error Groq ({response.status_code})"
-            except requests.exceptions.Timeout:
-                if attempt < max_retries - 1:
-                    time.sleep(1)
-                    continue
-                return "Timeout: Groq no responde."
-            except requests.exceptions.ConnectionError:
-                return "Error de conexion. Verifica tu internet."
-            except Exception as e:
-                return f"Error: {str(e)}"
-        
-        return "Error: No se pudo conectar con Groq."
-    
-    def _call_groq_streaming(self, enriched_prompt: str, loader: LoadingIndicator) -> str:
-        """Llamar a Groq API con streaming - muestra Pensando... y luego respuesta limpia"""
-        import time
-        
-        if not settings.GROQ_API_KEY:
-            return self._fallback_response("groq")
-        
-        max_retries = 3
-        retry_delay = 2
-        
-        for attempt in range(max_retries):
-            try:
-                context = self.current_session.get_context()
-                messages = [{"role": "system", "content": enriched_prompt}] + context
-                groq_models = settings.FALLBACK_MODELS.get("groq", {})
-                model = groq_models.get(self.current_mode, groq_models.get("general", "llama-3.1-8b-instant"))
-                
-                loader.stop()
-                
-                # Mostrar "Pensando..."
-                process_start = time.time()
-                try:
-                    print(f"\n  {COLORS.TEAL}{self._get_mode_message()}...{COLORS.RESET}", end='', flush=True)
-                except:
-                    pass
-                
-                response = requests.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": model,
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 4096,
-                        "top_p": 0.9,
-                        "stream": True
-                    },
-                    timeout=60,
-                    stream=True
-                )
-                
-                process_time = time.time() - process_start
-                
-                if response.status_code == 200:
-                    # Recopilar tokens sin mostrar
-                    full_response = []
-                    for line in response.iter_lines():
-                        if line:
-                            line = line.decode('utf-8')
-                            if line.startswith('data: '):
-                                data = line[6:]
-                                if data.strip() == '[DONE]':
-                                    break
-                                try:
-                                    chunk = json.loads(data)
-                                    if 'choices' in chunk and len(chunk['choices']) > 0:
-                                        delta = chunk['choices'][0].get('delta', {})
-                                        if 'content' in delta:
-                                            token = delta['content']
-                                            full_response.append(token)
-                                except json.JSONDecodeError:
-                                    continue
-                    
-                    # Limpiar "Pensando..." y mostrar respuesta completa
-                    try:
-                        print(f"\r{' ' * 40}\r", end='')
-                    except:
-                        pass
-                    
-                    return ''.join(full_response)
-                elif response.status_code == 429:
-                    if attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        retry_delay *= 2
-                        continue
-                    return "Limite de rate alcanzado."
-                elif response.status_code == 401:
-                    return "API Key invalida."
-                else:
-                    return f"Error Groq ({response.status_code})"
-            except requests.exceptions.Timeout:
-                if attempt < max_retries - 1:
-                    time.sleep(1)
-                    continue
-                return "Timeout: Groq no responde."
-            except requests.exceptions.ConnectionError:
-                return "Error de conexion."
-            except Exception as e:
-                return f"Error: {str(e)}"
-        
-        return "Error: No se pudo conectar con Groq."
     
     def _call_opencode(self, enriched_prompt: str = None) -> str:
         """Llamar a OpenCode API con MiMo v2.5 Free"""
@@ -1243,8 +1445,8 @@ class Agent:
         if not settings.OPENCODE_API_KEY:
             return self._fallback_response("opencode")
         
-        max_retries = 3
-        retry_delay = 2
+        max_retries = 5
+        retry_delay = 3
         
         for attempt in range(max_retries):
             try:
@@ -1263,10 +1465,10 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 65536,
+                        "max_tokens": 131072,
                         "top_p": 0.9
                     },
-                    timeout=60
+                    timeout=120
                 )
                 
                 if response.status_code == 200:
@@ -1278,10 +1480,10 @@ class Agent:
                     return content or ""
                 elif response.status_code == 429:
                     if attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        retry_delay *= 2
+                        wait_time = retry_delay * (2 ** attempt)
+                        time.sleep(wait_time)
                         continue
-                    return "Limite de rate alcanzado."
+                    return "Limite de rate alcanzado. Intenta de nuevo en unos minutos."
                 elif response.status_code == 401:
                     return "API Key de OpenCode invalida."
                 elif response.status_code == 402:
@@ -1290,7 +1492,7 @@ class Agent:
                     return f"Error OpenCode ({response.status_code})"
             except requests.exceptions.Timeout:
                 if attempt < max_retries - 1:
-                    time.sleep(1)
+                    time.sleep(2)
                     continue
                 return "Timeout: OpenCode no responde."
             except requests.exceptions.ConnectionError:
@@ -1308,8 +1510,8 @@ class Agent:
         if not settings.OPENCODE_API_KEY:
             return self._fallback_response("opencode")
         
-        max_retries = 3
-        retry_delay = 2
+        max_retries = 5
+        retry_delay = 3
         
         for attempt in range(max_retries):
             try:
@@ -1336,7 +1538,7 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 65536,
+                        "max_tokens": 131072,
                         "top_p": 0.9,
                         "stream": True
                     },
@@ -1349,7 +1551,7 @@ class Agent:
                 if response.status_code == 200:
                     content_tokens = []
                     reasoning_tokens = []
-                    line_timeout = 30
+                    line_timeout = 90
                     last_data_time = time.time()
                     
                     for line in response.iter_lines():
@@ -1378,7 +1580,6 @@ class Agent:
                     except:
                         pass
                     
-                    # Priorizar content sobre reasoning
                     if content_tokens:
                         return ''.join(content_tokens)
                     elif reasoning_tokens:
@@ -1386,10 +1587,10 @@ class Agent:
                     return ""
                 elif response.status_code == 429:
                     if attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        retry_delay *= 2
+                        wait_time = retry_delay * (2 ** attempt)
+                        time.sleep(wait_time)
                         continue
-                    return "Limite de rate alcanzado."
+                    return "Limite de rate alcanzado. Intenta de nuevo en unos minutos."
                 elif response.status_code == 401:
                     return "API Key de OpenCode invalida."
                 elif response.status_code == 402:
@@ -1398,7 +1599,7 @@ class Agent:
                     return f"Error OpenCode ({response.status_code})"
             except requests.exceptions.Timeout:
                 if attempt < max_retries - 1:
-                    time.sleep(1)
+                    time.sleep(2)
                     continue
                 return "Timeout: OpenCode no responde."
             except requests.exceptions.ConnectionError:
@@ -1491,25 +1692,10 @@ Para configurar:
 6. Reinicia IAM"""
         
         elif engine == "groq":
-            return """API Key de Groq no configurada
-
-Para configurar:
-1. Ve a https://console.groq.com
-2. Crea una cuenta gratis
-3. Genera una API Key
-4. Configura: $env:GROQ_API_KEY="gsk_tu_api_key"
-5. Reinicia IAM"""
+            return "Motor Groq eliminado. Usa /engine mimo para MiMo v2.5 Free."
         
         elif engine == "huggingface":
-            return """API Key de Hugging Face no configurada
-
-Para configurar:
-1. Ve a https://huggingface.co
-2. Crea una cuenta
-3. Ve a Settings > Access Tokens
-4. Genera un token
-5. Configura: $env:HF_API_KEY="hf_tu_token"
-6. Reinicia IAM"""
+            return "Motor HuggingFace eliminado. Usa /engine mimo para MiMo v2.5 Free."
         
         return "Motor no configurado. Usa /engine para cambiar."
     
@@ -3047,7 +3233,7 @@ El codigo debe ser funcional y completo."""
   /help           Mostrar ayuda
   /status         Estado del sistema
   /mode [modo]    Cambiar modo
-  /engine [e]     Cambiar motor (opencode/groq/hf)
+  /engine [e]     Cambiar motor (opencode/mimo)
   /model [name]   Cambiar modelo
   /think          Activar/desactivar pensamiento
   /level [nivel]  Nivel (basico/analitico/profundo/experto)
@@ -3133,8 +3319,6 @@ El codigo debe ser funcional y completo."""
 
   APIs:
     OpenCode:   {'[OK]' if settings.OPENCODE_API_KEY else '[X]'}
-    Groq:       {'[OK]' if settings.GROQ_API_KEY else '[X]'}
-    HF:         {'[OK]' if settings.HF_API_KEY else '[X]'}
 """
     
     def _cmd_mode(self, args: List[str]) -> str:
