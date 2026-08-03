@@ -879,6 +879,43 @@ class EnhancedCLI:
                 if ch == b'\x03':
                     return None
 
+                # Ctrl+V - Pegar imagen del portapapeles
+                if ch == b'\x16':
+                    try:
+                        from PIL import ImageGrab
+                        import base64
+                        import io
+                        img = ImageGrab.grabclipboard()
+                        if img and isinstance(img, ImageGrab.Image.Image):
+                            buf = io.BytesIO()
+                            img.save(buf, format='PNG')
+                            b64 = base64.b64encode(buf.getvalue()).decode()
+                            # Guardar imagen temporal
+                            img_path = os.path.join(os.environ.get('TEMP', '.'), 'iam_paste_image.png')
+                            img.save(img_path, format='PNG')
+                            chars.extend(f'[IMAGE:{img_path}]')
+                            sys.stdout.write(f'[imagen pegada: {img.size[0]}x{img.size[1]}px]')
+                            sys.stdout.flush()
+                            continue
+                        else:
+                            # Intentar texto normal del portapapeles
+                            import subprocess
+                            result = subprocess.run(['powershell', '-command', 'Get-Clipboard'], capture_output=True, text=True, timeout=3)
+                            if result.stdout.strip():
+                                text = result.stdout.strip()
+                                chars.extend(text)
+                                sys.stdout.write(text)
+                                sys.stdout.flush()
+                            continue
+                    except ImportError:
+                        sys.stdout.write('[instala Pillow: pip install Pillow]')
+                        sys.stdout.flush()
+                        continue
+                    except Exception as e:
+                        sys.stdout.write(f'[error portapapeles: {str(e)[:30]}]')
+                        sys.stdout.flush()
+                        continue
+
                 # Caracter normal
                 try:
                     char = ch.decode('cp1252')

@@ -697,6 +697,19 @@ class Agent:
         if not self.current_session:
             self.session_manager.create_session(mode=self.current_mode)
         
+        # Detectar imagenes pegadas [IMAGE:path]
+        import base64
+        self._pending_images = []
+        img_matches = re.findall(r'\[IMAGE:(.+?)\]', user_message)
+        for img_path in img_matches:
+            if os.path.exists(img_path):
+                with open(img_path, 'rb') as f:
+                    b64 = base64.b64encode(f.read()).decode()
+                self._pending_images.append(b64)
+        user_message = re.sub(r'\[IMAGE:.+?\]', '', user_message).strip()
+        if not user_message and self._pending_images:
+            user_message = "Analiza esta imagen"
+        
         # FASE 1: ANALISIS INTELIGENTE (como yo pienso)
         smart = self._smart_analyze(user_message)
         
@@ -1512,6 +1525,18 @@ class Agent:
         try:
             context = self.current_session.get_context()
             messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
+            
+            # Si hay imagenes, agregar al ultimo mensaje del usuario
+            if hasattr(self, '_pending_images') and self._pending_images:
+                last_msg = messages[-1] if messages else {"role": "user", "content": ""}
+                content_parts = [{"type": "text", "text": last_msg.get("content", "")}]
+                for img_b64 in self._pending_images:
+                    content_parts.append({
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/png;base64,{img_b64}"}
+                    })
+                messages[-1] = {"role": "user", "content": content_parts}
+                self._pending_images = []
             
             # Si hay proxy, usarlo (key oculta en servidor)
             if proxy_url:
