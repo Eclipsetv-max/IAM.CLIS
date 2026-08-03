@@ -1632,7 +1632,7 @@ class Agent:
         
         # Ejecutar en paralelo
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {executor.submit(func): name for name, func in engines}
+            futures = {executor.submit(call_engine, name, func): name for name, func in engines}
             for future in concurrent.futures.as_completed(futures, timeout=90):
                 name, result, error = future.result()
                 if error:
