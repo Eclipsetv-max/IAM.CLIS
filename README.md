@@ -1,145 +1,114 @@
-# IAM CLI
+# IAM CLI v3.4
 
-> Asistente de IA multi-modos con ejecucion directa de codigo
+> Asistente de IA multi-modos que funciona **sin API keys**
 
-## Descripcion
+## Que es IAM?
 
-IAM CLI es un asistente de inteligencia artificial que ejecuta codigo directamente en lugar de solo describirlo. Cuenta con 5 modos especializados, animaciones de carga en tiempo real, y un parser TOOL_CALL que genera archivos automaticamente.
+IAM (Inteligencia Artificial Multitarea) es un asistente de IA que ejecuta codigo directamente. **No necesitas configurar API keys** - el servidor proxy ya las tiene.
 
-## Caracteristicas
+## Como funciona?
 
-- **5 Modos Especializados:**
-  - `general` - Asistente general con analisis profundo
-  - `builder` - Constructor de proyectos web completos
-  - `debug` - Detective de bugs con analisis paso a paso
-  - `security` - Auditor de seguridad y vulnerabilidades
-  - `reader` - Lector y analizador de archivos
-
-- **Ejecucion Directa:** La IA crea archivos reales, no describe lo que haria
-
-- **TOOL_CALL Parser:** Detecta HTML, CSS, JS y genera archivos automaticamente
-
-- **Loading Animations:** Animaciones en tiempo real con `sys.stdout.buffer.write`
-
-- **Tab Mode Switching:** Cambia entre modos con la tecla Tab
+```
+Tu PC (sin keys) → Servidor Proxy (tiene las keys) → APIs de IA
+```
 
 ## Instalacion
 
 ```bash
-# Clonar repositorio
-git clone https://github.com/TU_USUARIO/iam-cli.git
-cd iam-cli
-
-# Instalar dependencias
+git clone https://github.com/Eclipsetv-max/IAM.CLIS.git
+cd IAM.CLIS
 pip install -r requirements.txt
-
-# Configurar API keys
-cp .env.example .env
-# Editar .env con tus API keys
-```
-
-## Configuracion
-
-Crear archivo `.env` con:
-
-```env
-OPENCODE_API_KEY=tu-api-key-aqui
-GROQ_API_KEY=tu-api-key-aqui
-```
-
-## Uso
-
-```bash
-# Ejecutar IAM
 python main.py
-
-# Comandos disponibles:
-# /general  - Modo general (por defecto)
-# /build    - Modo constructor
-# /debug    - Modo depuracion
-# /security - Modo seguridad
-# /reader   - Modo lectura
-# /project  - Seleccionar proyecto
-# /help     - Ayuda
-# /clear    - Limpiar pantalla
-# /exit     - Salir
 ```
+
+**No necesitas configurar API keys.** Solo instalas y usas.
+
+## Caracteristicas
+
+- **Multi-AI Engine:** FreeTheAi, Gemini y OpenCode trabajan juntas
+- **5 Modos Especializados:** general, builder, debug, security, reader
+- **Ejecucion Directa:** La IA crea archivos reales
+- **TOOL_CALL Parser:** Genera HTML, CSS, JS automaticamente
+- **Loading Animations:** Animaciones en tiempo real
+
+## Comandos
+
+| Comando | Descripcion |
+|---------|-------------|
+| `/engine multi` | Usar todas las IAs (default) |
+| `/engine freetheai` | Solo FreeTheAi |
+| `/engine gemini` | Solo Gemini |
+| `/general` | Modo general |
+| `/build` | Modo constructor |
+| `/debug` | Modo depuracion |
+| `/security` | Modo seguridad |
+| `/project` | Seleccionar proyecto |
+| `/help` | Ayuda |
 
 ## Ejemplo
 
 ```
-> /build crea una web de camiones
+> hola que puedes hacer?
 
-[iam] Modo: [construyendo]...
-[iam] Proyecto: C:\Users\usuario\mi-proyecto
+[MULTI-AI: FreeTheAi, Gemini] (2.3s)
+--- Respuesta de FreeTheAi ---
+Hola! Soy IAM, puedo ayudarte con:
+- Crear paginas web completas
+- Programar en cualquier lenguaje
+- Depurar errores
+- Y mucho mas!
 
-> Hazme una web moderna de camiones con navbar, hero, cards y footer
+> crea una web de camiones
 
 [construyendo] Creando proyecto...
 [OK] Archivo creado: index.html
 [OK] Archivo creado: style.css
 [OK] Archivo creado: script.js
-[OK] Verificado: index.html (2847 bytes)
-[OK] Verificado: style.css (1523 bytes)
-[OK] Verificado: script.js (892 bytes)
-
-Cree index.html, style.css y script.js. Abrilo en tu navegador.
 ```
 
-## Estructura del Proyecto
+## Arquitectura
 
 ```
-iam-cli/
-├── main.py                 # Punto de entrada
-├── requirements.txt        # Dependencias
-├── .env.example           # Ejemplo de configuracion
-├── iam/
-│   ├── core/
-│   │   ├── agent.py       # Motor principal de IA
-│   │   ├── enhanced_cli.py # CLI mejorado
-│   │   ├── loading.py     # Animaciones de carga
-│   │   ├── memory.py      # Sistema de memoria
-│   │   ├── reasoning.py   # Motor de razonamiento
-│   │   └── session.py     # Manejo de sesiones
-│   ├── config/
-│   │   ├── prompts.py     # Prompts de cada modo
-│   │   └── settings.py    # Configuracion global
-│   ├── modes/
-│   │   ├── loader.py      # Cargador de modos
-│   │   ├── general/       # Modo general
-│   │   ├── builder/       # Modo constructor
-│   │   ├── debug/         # Modo depuracion
-│   │   ├── security/      # Modo seguridad
-│   │   └── reader/        # Modo lectura
-│   └── tools/             # Herramientas del sistema
-└── pruebas/               # Suite de tests
-    └── test_completo.py   # 154 tests
+IAM CLI (Python)
+    ↓
+Proxy Server (https://iam-proxy.onrender.com)
+    ↓
+FreeTheAi API (sin key requerida)
+Gemini API (sin key requerida)
+OpenCode API (key del usuario)
 ```
 
-## Tests
+## Seguridad
 
-```bash
-# Ejecutar todos los tests
-python pruebas/test_completo.py
+- **API keys NUNCA** se exponen a los usuarios
+- Las keys estan en el servidor como variables de entorno
+- Los usuarios solo ven la URL del proxy
+- Puedes desactivar el servidor desde el dashboard
 
-# Ejecutar un test especifico
-python -c "from pruebas.test_completo import *; test_load_modes()"
-```
+## Dashboard del Servidor
 
-## Tecnologias
+- URL: `https://iam-proxy.onrender.com/dashboard`
+- Control total: activar/desactivar, ver estado, modo mantenimiento
 
-- Python 3.12+
-- OpenCode API (MiMo v2.5)
-- Groq API (Llama 3.3)
-- Rich (UI en terminal)
-- psutil (monitoreo del sistema)
+## Archivos importantes
 
-## Licencia
+| Archivo | Descripcion |
+|---------|-------------|
+| `main.py` | Punto de entrada |
+| `iam/core/agent.py` | Motor Multi-AI |
+| `iam/core/freetheai.py` | Cliente FreeTheAi |
+| `iam/core/gemini.py` | Cliente Gemini |
+| `iam/server/server_full.py` | Servidor Proxy |
+| `.env.example` | Ejemplo de configuracion |
+| `HISTORY.md` | Historial de cambios |
 
-MIT
+## Cambios recientes
 
-## Autor
+- **v3.4:** Multi-AI engine, proxy server auto-conectado
+- **v3.1:** Animaciones mejoradas, loading indicators
+- **v3.0:** Sistema de modos, TOOL_CALL parser
 
-**Fernando Abraham Peña Muñoz (Eclipse)**
+## Soporte
 
-IAM - Intencional Artificial Multitarea
+- GitHub: https://github.com/Eclipsetv-max/IAM.CLIS
+- Issues: https://github.com/Eclipsetv-max/IAM.CLIS/issues
