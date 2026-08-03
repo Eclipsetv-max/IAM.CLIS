@@ -1631,14 +1631,7 @@ class Agent:
                 messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
                 
                 # Usar proxy para ocultar API key
-                proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
-                if not proxy_url:
-                    env_path = Path(__file__).parent.parent.parent / ".env"
-                    if env_path.exists():
-                        with open(env_path, 'r') as f:
-                            for line in f:
-                                if line.startswith("OPENCODE_PROXY_URL="):
-                                    proxy_url = line.split("=", 1)[1].strip()
+                proxy_url = os.environ.get("OPENCODE_PROXY_URL", "https://iam-proxy.onrender.com")
                 
                 if proxy_url:
                     url = f"{proxy_url}/v1/chat/completions"
@@ -1726,14 +1719,7 @@ class Agent:
             return self._fallback_response("opencode")
         
         # Usar proxy para ocultar API key
-        proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
-        if not proxy_url:
-            env_path = Path(__file__).parent.parent.parent / ".env"
-            if env_path.exists():
-                with open(env_path, 'r') as f:
-                    for line in f:
-                        if line.startswith("OPENCODE_PROXY_URL="):
-                            proxy_url = line.split("=", 1)[1].strip()
+        proxy_url = os.environ.get("OPENCODE_PROXY_URL", "https://iam-proxy.onrender.com")
         
         max_retries = 5
         retry_delay = 3
