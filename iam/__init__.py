@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 IAM - Intencional Artificial Multitarea
-v3.0.0 - Claude Style with Deep Reasoning
+v4.0.0 - OpenCode-Inspired with Advanced Features
 
-Arquitectura modular con razonamiento profundo y memoria a largo plazo
+Arquitectura modular con razonamiento profundo, memoria a largo plazo,
+historial de archivos, cost tracking, auto-compaction y sub-agentes
 """
 
-__version__ = "3.4"
+__version__ = "4.0"
 __author__ = "IAM Team"
 
 from .config.settings import settings, COLORS

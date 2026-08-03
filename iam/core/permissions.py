@@ -61,12 +61,41 @@ class PermissionSystem:
     """
     Sistema de permisos para IAM
     Controla el acceso a acciones sensibles
+    Inspirado en opencode: banned commands, safe commands, read-before-edit
     """
     
     def __init__(self):
         self.rules_file = Path(__file__).parent.parent / "data" / "permission_rules.json"
         self.rules: Dict[str, PermissionRule] = {}
         self._load_rules()
+        
+        # Tracking de archivos leidos (para read-before-edit)
+        self.read_files: Dict[str, str] = {}  # path -> checksum
+        self.file_checksums: Dict[str, str] = {}  # path -> last checksum
+        
+        # Comandos prohibidos (inspirado en opencode) - NUNCA se ejecutan
+        self.banned_commands = [
+            "curl", "wget", "nc", "netcat", "telnet", "ssh", "scp", "rsync",
+            "firefox", "chrome", "edge", "iexplore", "opera",
+            "rm -rf /", "rm -rf /*", "rmdir /s /q", "format c:",
+            "dd if=", "mkfs", "> /dev/sda",
+            "chmod 777", "chown root",
+            "sudo rm", "sudo chmod", "sudo chown",
+            ":(){ :|:& };:", "fork bomb",
+            "reg delete HKLM", "reg delete HKCU",
+        ]
+        
+        # Comandos seguros de solo lectura (no requieren permiso)
+        self.safe_read_commands = [
+            "ls", "dir", "pwd", "cd", "echo", "cat", "type",
+            "git status", "git log", "git diff", "git show",
+            "git branch", "git remote", "git stash list",
+            "python --version", "node --version", "npm --version",
+            "pip list", "npm list",
+            "whoami", "hostname", "date", "time",
+            "tree", "find", "where", "which",
+            "head", "tail", "wc", "grep", "findstr",
+        ]
         
         # Patrones de alto riesgo
         self.high_risk_commands = [
@@ -274,6 +303,94 @@ class PermissionSystem:
             output.append(f"      Nivel: {rule.level}")
         
         return "\n".join(output)
+    
+    # ==================== NUEVOS METODOS (inspirados en opencode) ====================
+    
+    def is_banned_command(self, command: str) -> bool:
+        """Verificar si un comando esta prohibido (NUNCA se ejecuta)"""
+        cmd_lower = command.lower().strip()
+        
+        for banned in self.banned_commands:
+            if cmd_lower.startswith(banned) or banned in cmd_lower:
+                return True
+        
+        return False
+    
+    def is_safe_read_command(self, command: str) -> bool:
+        """Verificar si un comando es seguro de solo lectura (no requiere permiso)"""
+        cmd_lower = command.lower().strip()
+        
+        for safe in self.safe_read_commands:
+            if cmd_lower.startswith(safe):
+                return True
+        
+        return False
+    
+    def track_file_read(self, filepath: str, checksum: str = None):
+        """Registrar que un archivo fue leido (para read-before-edit)"""
+        abs_path = os.path.abspath(filepath)
+        self.read_files[abs_path] = checksum or datetime.now().isoformat()
+    
+    def track_file_write(self, filepath: str, checksum: str = None):
+        """Registrar que un archivo fue escrito/modificado"""
+        abs_path = os.path.abspath(filepath)
+        self.file_checksums[abs_path] = checksum or datetime.now().isoformat()
+    
+    def was_file_read(self, filepath: str) -> bool:
+        """Verificar si un archivo fue leido antes de editarlo"""
+        abs_path = os.path.abspath(filepath)
+        return abs_path in self.read_files
+    
+    def has_file_changed(self, filepath: str, current_checksum: str) -> bool:
+        """Verificar si un archivo cambio desde la ultima lectura"""
+        abs_path = os.path.abspath(filepath)
+        
+        if abs_path not in self.file_checksums:
+            return False  # No tenemos registro, asumir que no cambio
+        
+        return self.file_checksums[abs_path] != current_checksum
+    
+    def check_edit_permission(self, filepath: str) -> Tuple[bool, str]:
+        """
+        Verificar permiso para editar archivo (read-before-edit)
+        Retorna: (puede_editar, razon)
+        """
+        abs_path = os.path.abspath(filepath)
+        
+        # Verificar si es archivo sensible
+        if self.is_sensitive_file(abs_path):
+            return False, "Archivo sensible - requiere permiso especial"
+        
+        # Verificar si fue leido
+        if not self.was_file_read(abs_path):
+            return False, "El archivo no ha sido leido - lee el archivo primero"
+        
+        return True, "Permiso concedido"
+    
+    def get_security_report(self) -> str:
+        """Obtener reporte de seguridad"""
+        lines = [
+            "REPORTE DE SEGURIDAD",
+            "=" * 50,
+            "",
+            f"Comandos prohibidos: {len(self.banned_commands)}",
+            f"Comandos seguros: {len(self.safe_read_commands)}",
+            f"Archivos sensibles: {len(self.sensitive_patterns)}",
+            f"Permisos guardados: {len(self.rules)}",
+            f"Archivos trackeados: {len(self.read_files)}",
+            "",
+            "COMANDOS PROHIBIDOS (no se ejecutan nunca):",
+        ]
+        
+        for cmd in self.banned_commands[:10]:
+            lines.append(f"  - {cmd}")
+        
+        lines.append("")
+        lines.append("COMANDOS SEGUROS (sin permiso):")
+        for cmd in self.safe_read_commands[:10]:
+            lines.append(f"  - {cmd}")
+        
+        return "\n".join(lines)
 
 
 # Instancia global

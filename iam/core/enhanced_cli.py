@@ -632,12 +632,17 @@ COMMAND_DESCRIPTIONS = {
     "/sqlite-query": "Ejecutar SQL",
     "/sqlite-tables": "Listar tablas SQLite",
     "/sqlite-export": "Exportar SQLite a JSON",
-    "/compact": "Modo compacto de respuesta",
+    "/compact": "Ver estadisticas de compactacion o compactar",
     "/think": "Modo pensamiento profundo",
-    "/context": "Ver uso de contexto",
-    "/cost": "Ver costo estimado",
+    "/context": "Ver contexto del proyecto (CLAUDE.md, opencode.md, etc)",
+    "/cost": "Ver costo y uso de tokens",
     "/folder": "Vincular proyecto a carpeta",
     "/project": "Seleccionar carpeta del proyecto (abre navegador)",
+    "/history": "Ver historial de archivos modificados",
+    "/history-show": "Ver historial de un archivo especifico",
+    "/rollback": "Restaurar archivo a version anterior",
+    "/security": "Ver reporte de seguridad",
+    "/subagent": "Lanzar sub-agente de solo lectura",
     "exit": "Salir de IAM",
     "quit": "Salir de IAM",
     "salir": "Salir de IAM",
@@ -1101,7 +1106,7 @@ class EnhancedCLI:
 
     def print_help_table(self):
         table = Table(
-            title=f"IAM v3.2.0 | Tema: {self.theme_name}",
+            title=f"IAM v4.0.0 | Tema: {self.theme_name}",
             box=box.ROUNDED,
             show_header=True,
             header_style="bold cyan",
@@ -1110,13 +1115,13 @@ class EnhancedCLI:
         table.add_column("Descripcion", style="white", width=40)
 
         categories = {
-            "IA": ["/help", "/status", "/mode", "/engine", "/model", "/think", "/compact", "/context", "/cost"],
-            "Sesion": ["/sessions", "/new", "/switch", "/clear"],
+            "IA": ["/help", "/status", "/mode", "/engine", "/model", "/think", "/context"],
+            "Sesion": ["/sessions", "/new", "/switch", "/clear", "/save"],
             "Archivos": ["/ls", "/cat", "/edit", "/rm", "/mv", "/cp", "/find", "/grep", "/tree"],
-            "Sistema": ["/proc", "/kill", "/top", "/cpu", "/mem", "/hardware"],
-            "Red": ["/ip", "/dns", "/ping", "/ports", "/scan", "/wifi"],
-            "Git": ["/git init", "/git status", "/git commit", "/git push", "/git pull"],
-            "Nuevo": ["/compact", "/think", "/context", "/cost", "/save", "/project"],
+            "Historial": ["/history", "/history-show", "/rollback"],
+            "Costos": ["/cost", "/compact"],
+            "Seguridad": ["/security", "/subagent"],
+            "Nuevo": ["/project", "/folder", "/alias"],
         }
 
         for cat, cmds in categories.items():

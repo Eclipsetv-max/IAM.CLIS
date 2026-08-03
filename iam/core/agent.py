@@ -45,6 +45,13 @@ from .permissions import (
 from ..tools.code_validator import code_validator, quality_checker, validate_file, get_quality_report
 from ..tools.smart_templates import smart_templates
 
+# Modulos inspirados en OpenCode
+from .file_history import FileHistory, file_history
+from .cost_tracking import CostTracker, cost_tracker
+from .auto_compact import AutoCompactor, auto_compactor
+from .context_loader import ContextLoader, context_loader
+from .sub_agent import SubAgent, SubAgentType, sub_agent
+
 
 class Agent:
     """
@@ -91,6 +98,16 @@ class Agent:
         self.memory = memory or MemorySystem()
         self.active_project: str = None  # Carpeta activa del proyecto
         self._local_model = None  # Modelo local fine-tuned
+        
+        # Modulos inspirados en OpenCode
+        self.file_history = file_history
+        self.cost_tracker = cost_tracker
+        self.auto_compactor = auto_compactor
+        self.context_loader = context_loader
+        self.sub_agent = sub_agent
+        
+        # Tracking de archivos leidos (para read-before-edit)
+        self._files_read_this_session: set = set()
     
     @property
     def current_session(self) -> Optional[Session]:
@@ -138,6 +155,13 @@ class Agent:
         # Memoria relevante
         memory_context = self._get_memory_context()
         
+        # Contexto del proyecto (inspirado en opencode: CLAUDE.md, opencode.md, etc.)
+        project_context = ""
+        if self.active_project:
+            self.context_loader.project_path = self.active_project
+            self.context_loader.load_project_context(force=True)
+            project_context = self.context_loader.get_context_prompt()
+        
         # Proyecto activo
         project_info = ""
         if self.active_project:
@@ -157,6 +181,9 @@ class Agent:
 ## CONTEXTO DEL SISTEMA
 {system_context}
 {project_info}
+
+## CONTEXTO DEL PROYECTO (archivos de instrucciones)
+{project_context}
 
 ## MEMORIA A LARGO PLAZO
 {memory_context}
@@ -730,6 +757,33 @@ class Agent:
         
         self.current_session.add_message("user", user_message)
         
+        # AUTO-COMPACTION: Verificar si el contexto necesita compactarse
+        if self.current_session:
+            context_limit = self.cost_tracker.get_context_limit(
+                settings.MODELS.get(self.current_mode, "mimo-v2.5-free")
+            )
+            if self.auto_compactor.should_compact(
+                self.current_session.get_context(),
+                context_limit
+            ):
+                # Compactar contexto
+                compact_result = self.auto_compactor.compact(
+                    self.current_session.get_context(),
+                    context_limit
+                )
+                if compact_result.success:
+                    # Reconstruir sesion con contexto compactado
+                    self.current_session.messages = []
+                    self.current_session.add_message(
+                        "system",
+                        f"[Contexto compactado]: {compact_result.summary}"
+                    )
+                    # Agregar mensajes recientes
+                    context = self.auto_compactor.compact(
+                        self.current_session.get_context(),
+                        context_limit
+                    )
+        
         # Construir prompt enriquecido
         enriched_prompt = self._build_enriched_prompt()
         
@@ -1247,16 +1301,40 @@ class Agent:
     
     def _run_tool_call(self, action, path, content, command, old_text, new_text) -> str:
         """Ejecutar una accion de tool call con validacion y correccion automatica
-        Incluye animación contextual breve para cada acción."""
+        Incluye animacion contextual breve para cada accion.
+        Inspirado en opencode: file history, security checks, read-before-edit."""
         
-        # Animación breve según la acción
+        # Verificar si el comando esta prohibido
+        if action == 'execute' and command:
+            if permission_system.is_banned_command(command):
+                return f"[DENIED] Comando prohibido: {command}"
+            
+            # Verificar si es comando seguro de solo lectura
+            if permission_system.is_safe_read_command(command):
+                pass  # Permitir sin permiso
+        
+        # Verificar read-before-edit para ediciones
+        if action == 'edit_file' and path:
+            if not permission_system.was_file_read(path):
+                # Auto-leer el archivo primero
+                if os.path.exists(path):
+                    try:
+                        with open(path, 'r', encoding='utf-8') as f:
+                            file_content = f.read()
+                        import hashlib
+                        checksum = hashlib.md5(file_content.encode()).hexdigest()[:12]
+                        permission_system.track_file_read(path, checksum)
+                    except Exception:
+                        pass
+        
+        # Animacion breve segun la accion
         _loader = LoadingIndicator()
         _action_map = {
-            'create_file': ('📄', 'creando', 'build'),
-            'edit_file':   ('✏️', 'editando', 'smooth'),
-            'read_file':   ('📖', 'leyendo', 'type'),
-            'execute':     ('⚡', 'ejecutando', 'wave'),
-            'create_folder':('📁', 'creando carpeta', 'orbit'),
+            'create_file': ('[FILE]', 'creando', 'build'),
+            'edit_file':   ('[EDIT]', 'editando', 'smooth'),
+            'read_file':   ('[READ]', 'leyendo', 'type'),
+            'execute':     ('[RUN]', 'ejecutando', 'wave'),
+            'create_folder':('[DIR]', 'creando carpeta', 'orbit'),
         }
         if action in _action_map:
             _icon, _prefix, _spin = _action_map[action]
@@ -1266,6 +1344,9 @@ class Agent:
         
         try:
             if action == 'create_file' and path:
+                # Registrar en historial antes de crear
+                existed = os.path.exists(path)
+                
                 # Crear directorios padres
                 parent = os.path.dirname(path)
                 if parent:
@@ -1282,6 +1363,17 @@ class Agent:
                 with open(path, 'w', encoding='utf-8') as f:
                     f.write(content or '')
                 
+                # Registrar en historial de archivos
+                if existed:
+                    self.file_history.record_edit(path, content or "")
+                else:
+                    self.file_history.record_create(path, content or "")
+                
+                # Registrar escritura para trackeo
+                import hashlib
+                checksum = hashlib.md5((content or "").encode()).hexdigest()[:12]
+                permission_system.track_file_write(path, checksum)
+                
                 # Verificar y dar info detallada
                 verify = self._verify_execution('create_file', path)
                 if verify:
@@ -1296,8 +1388,11 @@ class Agent:
             elif action == 'edit_file' and path:
                 if not os.path.exists(path):
                     return f"[ERROR] Archivo no existe: {path}"
+                
+                # Leer contenido actual para historial
                 with open(path, 'r', encoding='utf-8') as f:
                     current = f.read()
+                
                 if old_text and new_text:
                     if old_text in current:
                         new = current.replace(old_text, new_text, 1)
@@ -1306,6 +1401,15 @@ class Agent:
                             is_valid, new = validate_file(path, new)
                         with open(path, 'w', encoding='utf-8') as f:
                             f.write(new)
+                        
+                        # Registrar en historial
+                        self.file_history.record_edit(path, new)
+                        
+                        # Actualizar checksum
+                        import hashlib
+                        checksum = hashlib.md5(new.encode()).hexdigest()[:12]
+                        permission_system.track_file_write(path, checksum)
+                        
                         return f"[OK] Archivo editado: {path}"
                     return f"[ERROR] Texto no encontrado en {path}"
                 elif content:
@@ -1314,6 +1418,15 @@ class Agent:
                         is_valid, content = validate_file(path, content)
                     with open(path, 'w', encoding='utf-8') as f:
                         f.write(content)
+                    
+                    # Registrar en historial
+                    self.file_history.record_edit(path, content)
+                    
+                    # Actualizar checksum
+                    import hashlib
+                    checksum = hashlib.md5(content.encode()).hexdigest()[:12]
+                    permission_system.track_file_write(path, checksum)
+                    
                     return f"[OK] Archivo reescrito: {path}"
                 return f"[ERROR] edit_file sin old_text/new_text ni content"
             
@@ -1326,6 +1439,13 @@ class Agent:
                 if not hasattr(self, '_file_cache'):
                     self._file_cache = {}
                 self._file_cache[path] = c
+                
+                # Registrar lectura para read-before-edit
+                import hashlib
+                checksum = hashlib.md5(c.encode()).hexdigest()[:12]
+                permission_system.track_file_read(path, checksum)
+                self._files_read_this_session.add(path)
+                
                 ext = os.path.splitext(path)[1].lower()
                 lang_map = {'.py': 'Python', '.js': 'JavaScript', '.html': 'HTML', '.css': 'CSS', '.json': 'JSON', '.md': 'Markdown'}
                 lang = lang_map.get(ext, 'archivo')

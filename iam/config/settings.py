@@ -42,8 +42,8 @@ class IAMSettings:
     USER_ALIAS: str = "User"
     
     # Versión
-    VERSION: str = "3.4"
-    CODENAME: str = "Multi-AI"
+    VERSION: str = "4.0"
+    CODENAME: str = "OpenCode-Inspired"
     
     # Configuración de IA
     DEFAULT_ENGINE: str = "opencode"

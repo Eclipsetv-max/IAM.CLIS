@@ -158,6 +158,124 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
             cli.print_error("tkinter no disponible. Usa: pip install tk")
         return True
 
+    # ==================== NUEVOS COMANDOS (inspirados en OpenCode) ====================
+    
+    if cmd == "/history":
+        # Mostrar historial de archivos del proyecto
+        from iam.core.file_history import file_history
+        if router.agent.active_project:
+            file_history.project_path = router.agent.active_project
+        all_files = file_history.get_all_files()
+        if all_files:
+            print("\n  HISTORIAL DE ARCHIVOS:")
+            print("  " + "=" * 40)
+            for f in all_files[:20]:
+                print(f"  {f['path']} - {f['versions']} versiones")
+            print(f"\n  Total: {len(all_files)} archivos trackeados")
+        else:
+            print("  No hay historial de archivos todavia")
+        return True
+    
+    if cmd.startswith("/rollback"):
+        parts = user_input.split()
+        if len(parts) >= 2:
+            filepath = parts[1]
+            version = parts[2] if len(parts) >= 3 else None
+            from iam.core.file_history import file_history
+            if router.agent.active_project:
+                file_history.project_path = router.agent.active_project
+            if version:
+                success, msg = file_history.rollback(filepath, version)
+            else:
+                success, msg = file_history.rollback_last(filepath)
+            if success:
+                cli.print_success(msg)
+            else:
+                cli.print_error(msg)
+        else:
+            print("  Uso: /rollback <archivo> [version]")
+        return True
+    
+    if cmd.startswith("/history-show"):
+        parts = user_input.split()
+        if len(parts) >= 2:
+            filepath = parts[1]
+            from iam.core.file_history import file_history
+            if router.agent.active_project:
+                file_history.project_path = router.agent.active_project
+            print(file_history.format_history(filepath))
+        else:
+            print("  Uso: /history-show <archivo>")
+        return True
+    
+    if cmd == "/cost":
+        # Mostrar costos y uso de tokens
+        from iam.core.cost_tracking import cost_tracker
+        session_id = router.agent.current_session.id if router.agent.current_session else None
+        print(cost_tracker.format_cost_display(session_id))
+        return True
+    
+    if cmd == "/compact":
+        # Mostrar estadisticas de compactacion o ejecutar compactacion manual
+        from iam.core.auto_compact import auto_compactor
+        parts = user_input.split()
+        if len(parts) > 1 and parts[1] == "stats":
+            print(auto_compactor.format_stats())
+        else:
+            if router.agent.current_session:
+                context = router.agent.current_session.get_context()
+                from iam.core.cost_tracking import cost_tracker
+                limit = cost_tracker.get_context_limit(
+                    settings.MODELS.get(router.agent.current_mode, "mimo-v2.5-free")
+                )
+                result = auto_compactor.compact(context, limit)
+                if result.success:
+                    cli.print_success(f"Contexto compactado: {result.original_tokens} -> {result.compacted_tokens} tokens")
+                    cli.print_info(f"Compresion: {result.compression_ratio:.1%}")
+                else:
+                    cli.print_warning("No se pudo compactar")
+            else:
+                print(auto_compactor.format_stats())
+        return True
+    
+    if cmd == "/context":
+        # Mostrar contexto del proyecto (archivos de instrucciones)
+        from iam.core.context_loader import context_loader
+        if router.agent.active_project:
+            context_loader.project_path = router.agent.active_project
+            context_loader.load_project_context(force=True)
+            print(context_loader.get_context_summary())
+        else:
+            print("  Selecciona un proyecto primero con /project")
+        return True
+    
+    if cmd == "/security":
+        # Mostrar reporte de seguridad
+        from iam.core.permissions import permission_system
+        print(permission_system.get_security_report())
+        return True
+    
+    if cmd.startswith("/subagent"):
+        # Lanzar sub-agente de solo lectura
+        parts = user_input.split(maxsplit=1)
+        if len(parts) >= 2:
+            from iam.core.sub_agent import sub_agent, SubAgentType
+            task = sub_agent.create_task(
+                SubAgentType.READER,
+                "Tarea de lectura",
+                parts[1],
+                allowed_paths=[router.agent.active_project] if router.agent.active_project else None
+            )
+            cli.print_info("Lanzando sub-agente...")
+            result = sub_agent.run_task(task)
+            if result.status.value == "completed":
+                print(result.output[:2000])
+            else:
+                cli.print_error(f"Error: {result.error}")
+        else:
+            print("  Uso: /subagent <descripcion de la tarea>")
+        return True
+    
     return False
 
 
