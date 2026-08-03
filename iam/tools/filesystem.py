@@ -545,8 +545,8 @@ class FileSystem:
         try:
             # Usar mbcs (Windows) o cp1252 para caracteres latinos
             try:
-                import _locale
-                system_encoding = _locale._getdefaultlocale()[1] or 'cp1252'
+                import locale
+                system_encoding = locale.getpreferredencoding(False) or 'cp1252'
             except:
                 system_encoding = 'cp1252'
             

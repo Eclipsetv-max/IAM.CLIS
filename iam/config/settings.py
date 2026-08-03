@@ -46,8 +46,8 @@ class IAMSettings:
     CODENAME: str = "Acceso Total"
     
     # Configuración de IA
-    DEFAULT_ENGINE: str = "opencode"
-    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["opencode", "groq", "huggingface"])
+    DEFAULT_ENGINE: str = "mimo"
+    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["mimo", "opencode", "local", "gemini", "freetheai"])
     
     # Modelos por defecto (OpenCode - MiMo v2.5 Free)
     MODELS: Dict[str, str] = field(default_factory=lambda: {
@@ -60,18 +60,15 @@ class IAMSettings:
         "security": "mimo-v2.5-free"
     })
     
+    # Modelo local fine-tuned
+    LOCAL_MODEL_DIR: Path = field(default_factory=lambda: Path(__file__).parent.parent / "training" / "models")
+    LOCAL_MODEL_NAME: str = "tinyllama"  # Nombre del modelo local por defecto
+    
     # Modelos alternativos por motor
     FALLBACK_MODELS: Dict[str, Dict[str, str]] = field(default_factory=lambda: {
         "opencode": {
             "general": "mimo-v2.5",
             "builder": "mimo-v2.5-pro"
-        },
-        "groq": {
-            "general": "llama-3.1-8b-instant",
-            "builder": "llama-3.3-70b-versatile"
-        },
-        "huggingface": {
-            "general": "meta-llama/Meta-Llama-3-8B-Instruct"
         }
     })
     
@@ -81,7 +78,6 @@ class IAMSettings:
     SCREENSHOT_INTERVAL: int = 5
     
     # API Keys (desde variables de entorno)
-    GROQ_API_KEY: str = field(default_factory=lambda: os.environ.get("GROQ_API_KEY", ""))
     HF_API_KEY: str = field(default_factory=lambda: os.environ.get("HF_API_KEY", ""))
     OPENCODE_API_KEY: str = field(default_factory=lambda: os.environ.get("OPENCODE_API_KEY", ""))
     

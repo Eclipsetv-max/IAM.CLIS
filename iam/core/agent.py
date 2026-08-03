@@ -16,6 +16,8 @@ from ..config.prompts import AGENT_PROMPTS, get_agent_prompt
 from .session import Session, SessionManager
 from .reasoning import ReasoningEngine, ThinkingLevel
 from .memory import MemorySystem
+from .gemini import gemini_client
+from .freetheai import freetheai_client
 from ..tools.filesystem import filesystem
 from ..tools.system import system_info
 from ..tools.code import code_manager
@@ -88,6 +90,7 @@ class Agent:
         self.thinking_level: ThinkingLevel = ThinkingLevel.DEEP
         self.memory = memory or MemorySystem()
         self.active_project: str = None  # Carpeta activa del proyecto
+        self._local_model = None  # Modelo local fine-tuned
     
     @property
     def current_session(self) -> Optional[Session]:
@@ -257,8 +260,49 @@ class Agent:
         """Cambiar motor de IA"""
         if engine in settings.AVAILABLE_ENGINES:
             self.engine = engine
+            # Si cambia a local, cargar modelo
+            if engine == "local":
+                self._load_local_model()
             return True
         return False
+    
+    def _load_local_model(self, model_path: str = None) -> bool:
+        """Cargar modelo local fine-tuned"""
+        try:
+            from ..training.local_model import IAMLocalModel, find_local_models
+            
+            if self._local_model and self._local_model.is_available():
+                return True
+            
+            # Buscar modelo disponible
+            if model_path is None:
+                models = find_local_models()
+                if models:
+                    model_path = models[0]["path"]
+                else:
+                    print("[IAM] No hay modelos locales. Entrena uno con: python iam/training/train.py")
+                    return False
+            
+            self._local_model = IAMLocalModel()
+            self._local_model.load(model_path)
+            return True
+        except Exception as e:
+            print(f"[IAM] Error cargando modelo local: {e}")
+            return False
+    
+    def _call_local_model(self, prompt: str) -> str:
+        """Llamar al modelo local fine-tuned"""
+        if not self._local_model or not self._local_model.is_available():
+            return "[ERROR] Modelo local no disponible"
+        
+        system_prompt = self.system_prompt
+        response = self._local_model.generate(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            max_new_tokens=1024,
+            temperature=0.7,
+        )
+        return response or ""
     
     def set_thinking_level(self, level: str) -> bool:
         """Cambiar nivel de pensamiento"""
@@ -1404,7 +1448,7 @@ class Agent:
         return "\n".join(lines)
     
     def _chat_streaming(self, enriched_prompt: str) -> str:
-        """Chat con streaming - muestra Pensando... y respuesta limpia"""
+        """Chat con streaming - respuesta rapida"""
         import time
         
         start_time = time.time()
@@ -1414,10 +1458,16 @@ class Agent:
         loader.start(msg, self._get_mode_spinner())
         
         try:
-            if self.engine == "opencode" or self.engine == "mimo":
-                response = self._call_opencode_streaming(enriched_prompt, loader)
+            if self.engine == "local":
+                response = self._call_local_model(enriched_prompt)
+            elif self.engine == "gemini":
+                response = self._call_gemini(enriched_prompt)
+            elif self.engine == "freetheai":
+                response = self._call_freetheai(enriched_prompt)
+            elif self.engine == "opencode" or self.engine == "mimo":
+                response = self._call_opencode_fast(enriched_prompt)
             else:
-                response = self._call_opencode_streaming(enriched_prompt, loader)
+                response = self._call_opencode_fast(enriched_prompt)
             
             elapsed = time.time() - start_time
             return response
@@ -1425,18 +1475,90 @@ class Agent:
             loader.stop()
     
     def _chat_normal(self, enriched_prompt: str) -> str:
-        """Chat normal sin streaming"""
+        """Chat normal - respuesta rapida"""
         loader = LoadingIndicator()
         msg = self._get_mode_message()
         loader.start(msg, self._get_mode_spinner())
         
         try:
-            if self.engine == "opencode" or self.engine == "mimo":
-                return self._call_opencode(enriched_prompt)
+            if self.engine == "local":
+                return self._call_local_model(enriched_prompt)
+            elif self.engine == "gemini":
+                return self._call_gemini(enriched_prompt)
+            elif self.engine == "freetheai":
+                return self._call_freetheai(enriched_prompt)
+            elif self.engine == "opencode" or self.engine == "mimo":
+                return self._call_opencode_fast(enriched_prompt)
             else:
-                return self._call_opencode(enriched_prompt)
+                return self._call_opencode_fast(enriched_prompt)
         finally:
             loader.stop()
+    
+    def _call_opencode_fast(self, enriched_prompt: str = None) -> str:
+        """Llamar a OpenCode API - modo rapido sin reintentos"""
+        import time
+        
+        if not settings.OPENCODE_API_KEY:
+            return self._fallback_response("opencode")
+        
+        try:
+            context = self.current_session.get_context()
+            messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
+            
+            response = requests.post(
+                "https://opencode.ai/zen/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://iam-ai.local",
+                    "X-Title": "IAM AI Assistant"
+                },
+                json={
+                    "model": "mimo-v2.5-free",
+                    "messages": messages,
+                    "temperature": 0.7,
+                    "max_tokens": 4096,
+                    "top_p": 0.9
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                msg = data["choices"][0]["message"]
+                content = msg.get("content")
+                if not content:
+                    content = msg.get("reasoning", "")
+                return content or ""
+            else:
+                return f"Error OpenCode ({response.status_code})"
+                
+        except requests.exceptions.Timeout:
+            return "Timeout: OpenCode no responde."
+        except requests.exceptions.ConnectionError:
+            return "Error de conexion a OpenCode."
+        except Exception as e:
+            return f"Error: {str(e)}"
+    
+    def _call_freetheai(self, enriched_prompt: str = None) -> str:
+        """Llamar a FreeTheAi API"""
+        if not freetheai_client.is_available():
+            return "[ERROR] FreeTheAi API key no configurada"
+        
+        return freetheai_client.chat(
+            prompt=enriched_prompt or "",
+            system_prompt=self.system_prompt
+        )
+    
+    def _call_gemini(self, enriched_prompt: str = None) -> str:
+        """Llamar a Google Gemini API"""
+        if not gemini_client.is_available():
+            return "[ERROR] Gemini API key no configurada. Usa: set GEMINI_API_KEY=tu_key"
+        
+        return gemini_client.chat(
+            prompt=enriched_prompt or "",
+            system_prompt=self.system_prompt
+        )
     
     def _call_opencode(self, enriched_prompt: str = None) -> str:
         """Llamar a OpenCode API con MiMo v2.5 Free"""
