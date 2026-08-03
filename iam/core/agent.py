@@ -697,6 +697,10 @@ class Agent:
         if not self.current_session:
             self.session_manager.create_session(mode=self.current_mode)
         
+        # Generar titulo automatico de sesion (como OpenCode)
+        if self.current_session and len(self.current_session.messages) == 0:
+            self._auto_generate_title(user_message)
+        
         # Detectar imagenes pegadas [IMAGE:path]
         import base64
         self._pending_images = []
@@ -1510,6 +1514,19 @@ class Agent:
                 return self._call_multi_engine(enriched_prompt)
         finally:
             loader.stop()
+    
+    def _auto_generate_title(self, first_message: str):
+        """Generar titulo automatico de sesion basado en el primer mensaje"""
+        try:
+            # Generar titulo corto (max 40 chars)
+            title = first_message[:40].strip()
+            if len(first_message) > 40:
+                title += "..."
+            # Guardar en sesion
+            if hasattr(self.current_session, 'title'):
+                self.current_session.title = title
+        except:
+            pass
     
     def _call_opencode_fast(self, enriched_prompt: str = None) -> str:
         """Llamar a OpenCode API - modo rapido sin reintentos"""

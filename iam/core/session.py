@@ -65,6 +65,10 @@ class Session:
             # Preservar primer mensaje (system) y últimos N
             self.messages = [self.messages[0]] + self.messages[-(settings.MAX_SESSION_MESSAGES - 1):]
         
+        # Auto-generar resumen cuando hay muchos mensajes (como OpenCode)
+        if len(self.messages) > 30 and not self.metadata.get('summary'):
+            self._auto_summarize()
+        
         return msg
     
     def get_context(self, max_messages: int = None) -> List[Dict[str, str]]:
@@ -72,8 +76,16 @@ class Session:
         if max_messages is None:
             max_messages = settings.MAX_CONTEXT_MESSAGES
         
-        # Retornar últimos mensajes en formato API
         context = []
+        
+        # Incluir resumen si existe (como OpenCode)
+        if self.metadata.get('summary'):
+            context.append({
+                "role": "system",
+                "content": f"[Resumen de sesion anterior]: {self.metadata['summary']}"
+            })
+        
+        # Retornar últimos mensajes en formato API
         for msg in self.messages[-max_messages:]:
             context.append({
                 "role": msg.role,
@@ -95,6 +107,23 @@ class Session:
         else:
             self.messages = []
         self.updated_at = datetime.datetime.now()
+    
+    def _auto_summarize(self):
+        """Auto-resumir conversacion cuando es muy larga"""
+        try:
+            # Tomar los primeros 5 y ultimos 5 mensajes
+            if len(self.messages) < 10:
+                return
+            first_msgs = self.messages[1:6]  # Saltar system
+            last_msgs = self.messages[-5:]
+            summary_parts = []
+            for m in first_msgs + last_msgs:
+                role = "User" if m.role == "user" else "IA"
+                summary_parts.append(f"{role}: {m.content[:100]}")
+            self.metadata['summary'] = "\n".join(summary_parts)
+            self.metadata['summary_at'] = str(len(self.messages))
+        except:
+            pass
     
     def to_dict(self) -> Dict[str, Any]:
         return {

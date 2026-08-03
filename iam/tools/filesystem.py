@@ -28,6 +28,38 @@ class FileSystem:
         self.desktop = self.home_dir / "Desktop"
         self.documents = self.home_dir / "Documents"
         self.downloads = self.home_dir / "Downloads"
+        self._history_dir = Path.home() / ".iam" / "history"
+        self._history_dir.mkdir(parents=True, exist_ok=True)
+    
+    def _backup_file(self, file_path: Path):
+        """Backup de archivo antes de editar (como OpenCode)"""
+        try:
+            if not file_path.exists():
+                return
+            import hashlib
+            content = file_path.read_bytes()
+            file_hash = hashlib.md5(content).hexdigest()[:8]
+            backup_name = f"{file_path.name}.{file_hash}.bak"
+            backup_path = self._history_dir / backup_name
+            if not backup_path.exists():
+                backup_path.write_bytes(content)
+        except:
+            pass
+    
+    def undo_last_edit(self, file_path: str) -> Tuple[bool, str]:
+        """Deshacer ultima edicion (como OpenCode)"""
+        try:
+            path = Path(file_path)
+            # Buscar backup mas reciente
+            backups = sorted(self._history_dir.glob(f"{path.name}.*.bak"), key=lambda p: p.stat().st_mtime, reverse=True)
+            if not backups:
+                return False, "No hay backups disponibles"
+            latest = backups[0]
+            content = latest.read_bytes()
+            path.write_bytes(content)
+            return True, f"Archivo restaurado desde: {latest.name}"
+        except Exception as e:
+            return False, f"Error al restaurar: {e}"
         
         # Templates inteligentes para diferentes tipos de archivo
         self.templates = {
@@ -99,6 +131,9 @@ class FileSystem:
         try:
             file_path = Path(path)
             file_path.parent.mkdir(parents=True, exist_ok=True)
+            # Backup si existe (como OpenCode)
+            if file_path.exists():
+                self._backup_file(file_path)
             file_path.write_text(content, encoding='utf-8')
             file_name = os.path.basename(path)
             parent = os.path.dirname(path)
@@ -341,6 +376,9 @@ class FileSystem:
             
             if old_text not in content:
                 return False, "TEXTO NO ENCONTRADO"
+            
+            # Backup antes de editar (como OpenCode)
+            self._backup_file(Path(path))
             
             count = content.count(old_text)
             new_content = content.replace(old_text, new_text)
