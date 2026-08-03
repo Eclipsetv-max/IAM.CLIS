@@ -1202,7 +1202,12 @@ class Agent:
         html_match = re.search(r'(<!DOCTYPE[^>]*>[\s\S]*?</html>)', clean_response, re.IGNORECASE)
         if html_match:
             html_content = html_match.group(1).strip()
-            if len(html_content) > 50:
+            # Ignorar paginas de error del proxy
+            is_error_page = any(error in html_content.lower() for error in [
+                'internal server error', '500 error', 'bad gateway', 
+                'service unavailable', 'gateway timeout', '<title>error</title>'
+            ])
+            if len(html_content) > 50 and not is_error_page:
                 path = os.path.join(folder, 'index.html')
                 try:
                     os.makedirs(folder, exist_ok=True)
@@ -1219,7 +1224,12 @@ class Agent:
                 html_content = html_partial.group(1).strip()
                 # Limpiar al final si hay texto no-HTML
                 html_content = re.sub(r'\n[^<\n]*$', '', html_content)
-                if len(html_content) > 50 and ('<html' in html_content.lower() or '<body' in html_content.lower()):
+                # Ignorar paginas de error del proxy
+                is_error_page = any(error in html_content.lower() for error in [
+                    'internal server error', '500 error', 'bad gateway', 
+                    'service unavailable', 'gateway timeout', '<title>error</title>'
+                ])
+                if len(html_content) > 50 and ('<html' in html_content.lower() or '<body' in html_content.lower()) and not is_error_page:
                     path = os.path.join(folder, 'index.html')
                     try:
                         os.makedirs(folder, exist_ok=True)
@@ -1763,7 +1773,7 @@ class Agent:
             pass
     
     def _call_opencode_fast(self, enriched_prompt: str = None) -> str:
-        """Llamar a OpenCode API - modo rapido sin reintentos"""
+        """Llamar a OpenCode API - modo rapido con reintentos"""
         import time
         
         # Usar proxy (no necesita API key local)
@@ -1773,73 +1783,89 @@ class Agent:
         if not proxy_url and not settings.OPENCODE_API_KEY:
             return self._fallback_response("opencode")
         
-        try:
-            context = self.current_session.get_context()
-            messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
-            
-            # Si hay imagenes, agregar al ultimo mensaje del usuario
-            if hasattr(self, '_pending_images') and self._pending_images:
-                last_msg = messages[-1] if messages else {"role": "user", "content": ""}
-                content_parts = [{"type": "text", "text": last_msg.get("content", "")}]
-                for img_b64 in self._pending_images:
-                    content_parts.append({
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/png;base64,{img_b64}"}
-                    })
-                messages[-1] = {"role": "user", "content": content_parts}
-                self._pending_images = []
-            
-            # Si hay proxy, usarlo (key oculta en servidor)
-            if proxy_url:
-                url = f"{proxy_url}/v1/chat/completions"
-                headers = {"Content-Type": "application/json"}
-                payload = {
-                    "model": "mimo-v2.5-free",
-                    "messages": messages,
-                    "temperature": 0.7,
-                    "max_tokens": 4096,
-                    "top_p": 0.9
-                }
-            else:
-                # Fallback: llamada directa (key visible)
-                url = "https://opencode.ai/zen/v1/chat/completions"
-                headers = {
-                    "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://iam-ai.local",
-                    "X-Title": "IAM AI Assistant"
-                }
-                payload = {
-                    "model": "mimo-v2.5-free",
-                    "messages": messages,
-                    "temperature": 0.7,
-                    "max_tokens": 4096,
-                    "top_p": 0.9
-                }
-            
-            response = requests.post(url, headers=headers, json=payload, timeout=60)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if "choices" in data and data["choices"]:
-                    msg = data["choices"][0]["message"]
-                    content = msg.get("content")
-                    if not content:
-                        content = msg.get("reasoning", "")
-                    return content or ""
-                elif "error" in data:
-                    return f"[ERROR] OpenCode: {data['error']}"
-                else:
-                    return "[ERROR] OpenCode: respuesta inesperada"
-            else:
-                return "Fernando está chambeando, esperen a que arregle el error 🫠"
+        # Reintentos para el proxy
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                context = self.current_session.get_context()
+                messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
                 
-        except requests.exceptions.Timeout:
-            return "Timeout: OpenCode no responde."
-        except requests.exceptions.ConnectionError:
-            return "Error de conexion a OpenCode."
-        except Exception as e:
-            return f"Error: {str(e)}"
+                # Si hay imagenes, agregar al ultimo mensaje del usuario
+                if hasattr(self, '_pending_images') and self._pending_images:
+                    last_msg = messages[-1] if messages else {"role": "user", "content": ""}
+                    content_parts = [{"type": "text", "text": last_msg.get("content", "")}]
+                    for img_b64 in self._pending_images:
+                        content_parts.append({
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/png;base64,{img_b64}"}
+                        })
+                    messages[-1] = {"role": "user", "content": content_parts}
+                    self._pending_images = []
+                
+                # Si hay proxy, usarlo (key oculta en servidor)
+                if proxy_url:
+                    url = f"{proxy_url}/v1/chat/completions"
+                    headers = {"Content-Type": "application/json"}
+                    payload = {
+                        "model": "mimo-v2.5-free",
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 4096,
+                        "top_p": 0.9
+                    }
+                else:
+                    # Fallback: llamada directa (key visible)
+                    url = "https://opencode.ai/zen/v1/chat/completions"
+                    headers = {
+                        "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://iam-ai.local",
+                        "X-Title": "IAM AI Assistant"
+                    }
+                    payload = {
+                        "model": "mimo-v2.5-free",
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 4096,
+                        "top_p": 0.9
+                    }
+                
+                response = requests.post(url, headers=headers, json=payload, timeout=180)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "choices" in data and data["choices"]:
+                        msg = data["choices"][0]["message"]
+                        content = msg.get("content")
+                        if not content:
+                            content = msg.get("reasoning", "")
+                        return content or ""
+                    elif "error" in data:
+                        return f"[ERROR] OpenCode: {data['error']}"
+                    else:
+                        return "[ERROR] OpenCode: respuesta inesperada"
+                else:
+                    # Log del error para debugging
+                    error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
+                    if attempt < max_retries - 1:
+                        time.sleep(2 * (attempt + 1))  # Backoff exponencial
+                        continue
+                    return f"[ERROR] OpenCode: {error_msg}"
+                    
+            except requests.exceptions.Timeout:
+                if attempt < max_retries - 1:
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                return "Timeout: OpenCode no responde."
+            except requests.exceptions.ConnectionError:
+                if attempt < max_retries - 1:
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                return "Error de conexion a OpenCode."
+            except Exception as e:
+                return f"Error: {str(e)}"
+        
+        return "[ERROR] OpenCode: max reintentos alcanzados"
     
     def _call_freetheai(self, enriched_prompt: str = None) -> str:
         """Llamar a FreeTheAi API"""
