@@ -1,0 +1,303 @@
+{
+  "trackers": {
+    "..\\IAM_TEST\\index.html": {
+      "path": "..\\IAM_TEST\\index.html",
+      "versions": [
+        {
+          "id": "..\\IAM_TEST\\index.html_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_TEST\\index.html",
+          "content": "<!DOCTYPE html><html lang=\"es\"><head><title>Test</title></head><body><h1>Hello</h1></body></html>",
+          "version_type": "create",
+          "version": "initial",
+          "size": 97,
+          "checksum": "bbc8f0475430",
+          "created_at": "2026-08-03T18:08:17.466910",
+          "metadata": {}
+        },
+        {
+          "id": "..\\IAM_TEST\\index.html_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_TEST\\index.html",
+          "content": "<!DOCTYPE html><html lang=\"es\"><head><title>Test</title></head><body><h1>Hola Mundo</h1></body></html>",
+          "version_type": "edit",
+          "version": "v1",
+          "size": 102,
+          "checksum": "0439cc0de66a",
+          "created_at": "2026-08-03T18:08:17.514056",
+          "metadata": {}
+        }
+      ],
+      "current_version": "v1",
+      "created_at": "2026-08-03T18:08:17.466910",
+      "updated_at": "2026-08-03T18:08:17.514056"
+    },
+    "..\\IAM_TEST\\style.css": {
+      "path": "..\\IAM_TEST\\style.css",
+      "versions": [
+        {
+          "id": "..\\IAM_TEST\\style.css_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_TEST\\style.css",
+          "content": "body { background: #000; color: #fff; }",
+          "version_type": "create",
+          "version": "initial",
+          "size": 39,
+          "checksum": "7472746e4b6b",
+          "created_at": "2026-08-03T18:08:17.478963",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.478963",
+      "updated_at": "2026-08-03T18:08:17.478963"
+    },
+    "..\\IAM_TEST\\script.js": {
+      "path": "..\\IAM_TEST\\script.js",
+      "versions": [
+        {
+          "id": "..\\IAM_TEST\\script.js_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_TEST\\script.js",
+          "content": "console.log(\"hello\");",
+          "version_type": "create",
+          "version": "initial",
+          "size": 21,
+          "checksum": "0c115107c1a5",
+          "created_at": "2026-08-03T18:08:17.486969",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.486969",
+      "updated_at": "2026-08-03T18:08:17.486969"
+    },
+    "..\\IAM_TEST\\history_test.txt": {
+      "path": "..\\IAM_TEST\\history_test.txt",
+      "versions": [
+        {
+          "id": "..\\IAM_TEST\\history_test.txt_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_TEST\\history_test.txt",
+          "content": "version 1",
+          "version_type": "create",
+          "version": "initial",
+          "size": 9,
+          "checksum": "db3ec040e20d",
+          "created_at": "2026-08-03T18:08:17.704496",
+          "metadata": {}
+        },
+        {
+          "id": "..\\IAM_TEST\\history_test.txt_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_TEST\\history_test.txt",
+          "content": "version 2",
+          "version_type": "edit",
+          "version": "v1",
+          "size": 9,
+          "checksum": "d4ca1ed7571e",
+          "created_at": "2026-08-03T18:08:17.705776",
+          "metadata": {}
+        },
+        {
+          "id": "..\\IAM_TEST\\history_test.txt_rollback_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_TEST\\history_test.txt",
+          "content": "version 1",
+          "version_type": "restore",
+          "version": "v2",
+          "size": 9,
+          "checksum": "db3ec040e20d",
+          "created_at": "2026-08-03T18:08:17.706777",
+          "metadata": {
+            "restored_from": "initial"
+          }
+        }
+      ],
+      "current_version": "v2",
+      "created_at": "2026-08-03T18:08:17.704496",
+      "updated_at": "2026-08-03T18:08:17.706777"
+    },
+    "..\\IAM_LARGE_TEST\\index.html": {
+      "path": "..\\IAM_LARGE_TEST\\index.html",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\index.html_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\index.html",
+          "content": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Proyecto Grande</title>\n    <link rel=\"stylesheet\" href=\"css/style.css\">\n</head>\n<body>\n    <header>\n        <nav>\n            <a href=\"index.html\">Inicio</a>\n            <a href=\"pages/about.html\">About</a>\n            <a href=\"pages/contact.html\">Contact</a>\n        </nav>\n    </header>\n    <main>\n        <h1>Bienvenido al Proyecto Grande</h1>\n        <p>Este es un proyecto de prueba con many archivos.</p>\n        <div id=\"app\"></div>\n    </main>\n    <script src=\"js/main.js\"></script>\n</body>\n</html>",
+          "version_type": "create",
+          "version": "initial",
+          "size": 660,
+          "checksum": "f0d095224467",
+          "created_at": "2026-08-03T18:08:17.721859",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.721859",
+      "updated_at": "2026-08-03T18:08:17.721859"
+    },
+    "..\\IAM_LARGE_TEST\\css\\style.css": {
+      "path": "..\\IAM_LARGE_TEST\\css\\style.css",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\css\\style.css_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\css\\style.css",
+          "content": "/* Estilos principales */\n* {\n    margin: 0;\n    padding: 0;\n    box-sizing: border-box;\n}\n\n:root {\n    --primary: #6366f1;\n    --bg: #0f172a;\n    --text: #f8fafc;\n}\n\nbody {\n    background: var(--bg);\n    color: var(--text);\n    font-family: system-ui, sans-serif;\n}\n\nheader {\n    background: var(--primary);\n    padding: 1rem;\n}\n\nnav a {\n    color: white;\n    text-decoration: none;\n    margin: 0 1rem;\n}\n\nmain {\n    max-width: 1200px;\n    margin: 2rem auto;\n    padding: 0 1rem;\n}",
+          "version_type": "create",
+          "version": "initial",
+          "size": 482,
+          "checksum": "9dac9f6e6a09",
+          "created_at": "2026-08-03T18:08:17.724861",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.724861",
+      "updated_at": "2026-08-03T18:08:17.724861"
+    },
+    "..\\IAM_LARGE_TEST\\css\\responsive.css": {
+      "path": "..\\IAM_LARGE_TEST\\css\\responsive.css",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\css\\responsive.css_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\css\\responsive.css",
+          "content": "/* Responsive */\n@media (max-width: 768px) {\n    nav {\n        display: flex;\n        flex-direction: column;\n    }\n    \n    nav a {\n        margin: 0.5rem 0;\n    }\n}",
+          "version_type": "create",
+          "version": "initial",
+          "size": 166,
+          "checksum": "ec0ff5238efc",
+          "created_at": "2026-08-03T18:08:17.726887",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.726887",
+      "updated_at": "2026-08-03T18:08:17.726887"
+    },
+    "..\\IAM_LARGE_TEST\\js\\main.js": {
+      "path": "..\\IAM_LARGE_TEST\\js\\main.js",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\js\\main.js_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\js\\main.js",
+          "content": "// Main JavaScript\ndocument.addEventListener('DOMContentLoaded', () => {\n    console.log('App loaded');\n    \n    const app = document.getElementById('app');\n    if (app) {\n        app.innerHTML = '<p>App loaded successfully</p>';\n    }\n});",
+          "version_type": "create",
+          "version": "initial",
+          "size": 239,
+          "checksum": "adaa1476e720",
+          "created_at": "2026-08-03T18:08:17.730419",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.730419",
+      "updated_at": "2026-08-03T18:08:17.730419"
+    },
+    "..\\IAM_LARGE_TEST\\js\\utils.js": {
+      "path": "..\\IAM_LARGE_TEST\\js\\utils.js",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\js\\utils.js_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\js\\utils.js",
+          "content": "// Utility functions\nfunction formatDate(date) {\n    return new Intl.DateTimeFormat('es').format(date);\n}\n\nfunction debounce(func, wait) {\n    let timeout;\n    return function executedFunction(...args) {\n        const later = () => {\n            clearTimeout(timeout);\n            func(...args);\n        };\n        clearTimeout(timeout);\n        timeout = setTimeout(later, wait);\n    };\n}",
+          "version_type": "create",
+          "version": "initial",
+          "size": 389,
+          "checksum": "6b2fa607eeba",
+          "created_at": "2026-08-03T18:08:17.733418",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.733418",
+      "updated_at": "2026-08-03T18:08:17.733418"
+    },
+    "..\\IAM_LARGE_TEST\\pages\\about.html": {
+      "path": "..\\IAM_LARGE_TEST\\pages\\about.html",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\pages\\about.html_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\pages\\about.html",
+          "content": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>About</title>\n    <link rel=\"stylesheet\" href=\"../css/style.css\">\n</head>\n<body>\n    <h1>About Page</h1>\n    <a href=\"../index.html\">Volver</a>\n</body>\n</html>",
+          "version_type": "create",
+          "version": "initial",
+          "size": 237,
+          "checksum": "50c636039882",
+          "created_at": "2026-08-03T18:08:17.736417",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.736417",
+      "updated_at": "2026-08-03T18:08:17.736417"
+    },
+    "..\\IAM_LARGE_TEST\\pages\\contact.html": {
+      "path": "..\\IAM_LARGE_TEST\\pages\\contact.html",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\pages\\contact.html_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\pages\\contact.html",
+          "content": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Contact</title>\n    <link rel=\"stylesheet\" href=\"../css/style.css\">\n</head>\n<body>\n    <h1>Contact Page</h1>\n    <form>\n        <input type=\"text\" placeholder=\"Nombre\">\n        <input type=\"email\" placeholder=\"Email\">\n        <textarea placeholder=\"Mensaje\"></textarea>\n        <button type=\"submit\">Enviar</button>\n    </form>\n    <a href=\"../index.html\">Volver</a>\n</body>\n</html>",
+          "version_type": "create",
+          "version": "initial",
+          "size": 460,
+          "checksum": "f002b68a2c8a",
+          "created_at": "2026-08-03T18:08:17.738932",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.738932",
+      "updated_at": "2026-08-03T18:08:17.738932"
+    },
+    "..\\IAM_LARGE_TEST\\README.md": {
+      "path": "..\\IAM_LARGE_TEST\\README.md",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\README.md_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\README.md",
+          "content": "# Proyecto Grande\n\nEste es un proyecto de prueba para IAM.\n\n## Estructura\n- index.html - Pagina principal\n- css/ - Estilos\n- js/ - JavaScript\n- pages/ - Paginas adicionales\n",
+          "version_type": "create",
+          "version": "initial",
+          "size": 173,
+          "checksum": "b4eef88e1796",
+          "created_at": "2026-08-03T18:08:17.742930",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.742930",
+      "updated_at": "2026-08-03T18:08:17.742930"
+    },
+    "..\\IAM_LARGE_TEST\\package.json": {
+      "path": "..\\IAM_LARGE_TEST\\package.json",
+      "versions": [
+        {
+          "id": "..\\IAM_LARGE_TEST\\package.json_20260803180817",
+          "session_id": "20260803_180817",
+          "path": "..\\IAM_LARGE_TEST\\package.json",
+          "content": "{\n    \"name\": \"proyecto-grande\",\n    \"version\": \"1.0.0\",\n    \"description\": \"Proyecto de prueba\",\n    \"main\": \"js/main.js\",\n    \"scripts\": {\n        \"start\": \"python -m http.server 8000\"\n    }\n}",
+          "version_type": "create",
+          "version": "initial",
+          "size": 194,
+          "checksum": "9bed3af7f631",
+          "created_at": "2026-08-03T18:08:17.744931",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:08:17.744931",
+      "updated_at": "2026-08-03T18:08:17.744931"
+    }
+  },
+  "last_updated": "2026-08-03T18:08:17.745932"
+}

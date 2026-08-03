@@ -1,0 +1,31 @@
+{
+  "entries": [
+    {
+      "id": "cost_20260803180817_714328",
+      "session_id": "test_session",
+      "model": "mimo-v2.5-free",
+      "provider": "opencode",
+      "prompt_tokens": 100,
+      "completion_tokens": 50,
+      "total_tokens": 150,
+      "cost_usd": 0.0,
+      "timestamp": "2026-08-03T18:08:17.714328",
+      "query_preview": "test query"
+    }
+  ],
+  "session_stats": {
+    "test_session": {
+      "session_id": "test_session",
+      "total_prompt_tokens": 100,
+      "total_completion_tokens": 50,
+      "total_tokens": 150,
+      "total_cost_usd": 0.0,
+      "query_count": 1,
+      "avg_tokens_per_query": 150.0,
+      "first_query_at": "2026-08-03T18:08:17.714328",
+      "last_query_at": "2026-08-03T18:08:17.714328",
+      "model_used": "mimo-v2.5-free"
+    }
+  },
+  "last_updated": "2026-08-03T18:08:17.714328"
+}
