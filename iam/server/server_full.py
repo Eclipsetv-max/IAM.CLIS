@@ -12,6 +12,12 @@ from pathlib import Path
 from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 from functools import wraps
+from dotenv import load_dotenv
+
+# Cargar variables del .env
+env_path = Path(__file__).parent.parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(env_path)
 
 app = Flask(__name__)
 CORS(app)
