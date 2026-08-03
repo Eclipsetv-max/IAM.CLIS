@@ -45,9 +45,9 @@ class IAMSettings:
     VERSION: str = "4.0"
     CODENAME: str = "OpenCode-Inspired"
     
-    # Configuración de IA
+    # Configuración de IA - Solo OpenCode/MiMo
     DEFAULT_ENGINE: str = "opencode"
-    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["multi", "freetheai", "gemini", "mimo", "opencode", "local"])
+    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["opencode"])
     
     # Modelos por defecto (OpenCode - MiMo v2.5 Free)
     MODELS: Dict[str, str] = field(default_factory=lambda: {
