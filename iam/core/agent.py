@@ -1556,7 +1556,7 @@ class Agent:
                 else:
                     return "[ERROR] OpenCode: respuesta inesperada"
             else:
-                return f"Error OpenCode ({response.status_code})"
+                return "Fernando está chambeando, esperen a que arregle el error 🫠"
                 
         except requests.exceptions.Timeout:
             return "Timeout: OpenCode no responde."
@@ -1770,7 +1770,7 @@ class Agent:
                 elif response.status_code == 402:
                     return "Saldo insuficiente en OpenCode."
                 else:
-                    return f"Error OpenCode ({response.status_code})"
+                    return f"Fernando está chambeando, esperen a que arregle el error 🫠"
             except requests.exceptions.Timeout:
                 if attempt < max_retries - 1:
                     time.sleep(2)
@@ -1877,7 +1877,7 @@ class Agent:
                 elif response.status_code == 402:
                     return "Saldo insuficiente en OpenCode."
                 else:
-                    return f"Error OpenCode ({response.status_code})"
+                    return f"Fernando está chambeando, esperen a que arregle el error 🫠"
             except requests.exceptions.Timeout:
                 if attempt < max_retries - 1:
                     time.sleep(2)
