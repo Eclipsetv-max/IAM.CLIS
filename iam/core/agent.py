@@ -779,11 +779,6 @@ class Agent:
                         "system",
                         f"[Contexto compactado]: {compact_result.summary}"
                     )
-                    # Agregar mensajes recientes
-                    context = self.auto_compactor.compact(
-                        self.current_session.get_context(),
-                        context_limit
-                    )
         
         # Construir prompt enriquecido
         enriched_prompt = self._build_enriched_prompt()

@@ -1,5 +1,5 @@
 @echo off
-title IAM v3.4 - Multi-AI
+title IAM v4.0 - OpenCode-Inspired
 color 0B
 
 set PYTHONIOENCODING=utf-8
@@ -14,7 +14,7 @@ echo   ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
 echo   ┌───────────────────────┐
 echo   │  INTELIGENCIA         │
 echo   │  ARTIFICIAL UNIDA     │
-echo   │  v3.4                │
+echo   │  v4.0                │
 echo   └───────────────────────┘
 echo   ════════════════════════════════════════════════════════════════════════════════
 echo   ┌──────────────────────────────────────────────────────────────────────────────┐

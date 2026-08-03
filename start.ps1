@@ -1,4 +1,4 @@
-# IAM v3.4 - Multi-AI
+# IAM v4.0 - OpenCode-Inspired
 # PowerShell Start Script
 
 $env:PYTHONIOENCODING = "utf-8"
@@ -13,7 +13,7 @@ Write-Host "  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝" -ForegroundC
 Write-Host "  ┌───────────────────────┐" -ForegroundColor DarkCyan
 Write-Host "  │  INTELIGENCIA         │" -ForegroundColor DarkCyan
 Write-Host "  │  ARTIFICIAL UNIDA     │" -ForegroundColor DarkCyan
-Write-Host "  │  v3.4                │" -ForegroundColor Gray
+Write-Host "  │  v4.0                │" -ForegroundColor Gray
 Write-Host "  └───────────────────────┘" -ForegroundColor DarkCyan
 Write-Host "  ════════════════════════════════════════════════════════════════════════════════" -ForegroundColor DarkCyan
 Write-Host "  ┌──────────────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkCyan

@@ -1095,7 +1095,7 @@ class EnhancedCLI:
         print(" _| |_ / ____ \\| |  | |")
         print("|_____/_/    \\_\\_|  |_|")
         print(f"{r}")
-        print(f"{s}\033[1m    IAM Core V3.1{r}")
+        print(f"{s}\033[1m    IAM Core V4.0{r}")
         print(f"{d}")
         print("    Ctrl+K  Command Palette    Ctrl+R  Reverse Search")
         print("    TAB     Cambiar modo       /help   Ayuda")
@@ -1212,7 +1212,7 @@ class EnhancedCLI:
 
 ---
 
-*IAM v3.2.0*
+*IAM v4.0.0*
 """
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)

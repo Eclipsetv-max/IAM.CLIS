@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IAM v3.2.0 - Claude Code-like Experience
+IAM v4.0.0 - OpenCode-Inspired Experience
 Punto de entrada principal
 
 Uso: python main.py [--theme claude|cyberpunk|dracula|nord|monokai]
