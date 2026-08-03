@@ -56,7 +56,7 @@ class FreeTheAiClient:
         if online_url:
             proxy_url = online_url
         else:
-            proxy_url = "http://localhost:5000"
+            proxy_url = "https://iam-proxy.onrender.com"  # Servidor online por defecto
         
         # Verificar si el proxy esta disponible
         use_proxy = True
