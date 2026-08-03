@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IAM General Mode - Skills del modo general
+IAM General Mode - Skills del modo general (v4.1 Mejorado)
 """
 
 GENERAL_SKILLS = {
@@ -48,25 +48,44 @@ GENERAL_SKILLS = {
             "Explicar conceptos complejos de forma simple",
             "Responder preguntas de programacion en cualquier lenguaje",
             "Dar consejos de arquitectura y mejores practicas",
-            "Ayudar con decisiones tecnicas"
+            "Ayudar con decisiones tecnicas",
+            "Explicar concepts de IA y machine learning",
+            "Discutir tendencias tecnologicas",
+            "Ayudar con entrevistas tecnicas"
         ],
         "analisis": [
             "Analizar codigo y explicar que hace",
             "Revisar pull requests mentalmente",
             "Evaluar pros/contras de diferentes enfoques",
-            "Diagnosticar problemas basicos"
+            "Diagnosticar problemas basicos",
+            "Comparar frameworks y librerias",
+            "Analizar complejidad temporal y espacial",
+            "Evaluar escalabilidad de soluciones"
         ],
         "creacion": [
             "Crear scripts simples (Python, Bash, JS)",
             "Generar archivos de configuracion",
             "Crear archivos de texto y notas",
-            "Escribir documentacion basica"
+            "Escribir documentacion basica",
+            "Generar codigo de ejemplo",
+            "Crear snippets reutilizables",
+            "Escribir tests simples"
         ],
         "sistema": [
             "Leer y entender archivos del proyecto",
             "Navegar estructura de carpetas",
             "Ejecutar comandos basicos",
-            "Instalar dependencias simples"
+            "Instalar dependencias simples",
+            "Gestionar variables de entorno",
+            "Ejecutar scripts de build",
+            "Inicializar proyectos"
+        ],
+        "aprendizaje": [
+            "Explicar conceptos de programacion",
+            "Ensenar patrones de diseño",
+            "Mostrar mejores practicas",
+            "Crear ejemplos didacticos",
+            "Guiar en el aprendizaje de un lenguaje"
         ]
     },
     
@@ -74,7 +93,14 @@ GENERAL_SKILLS = {
         "tono": "Amigable, profesional, tecnico pero accesible",
         "estilo": "Prosa natural, no listas excesivas",
         "ejemplo_mal": "- Instala Python\n- Corre el script",
-        "ejemplo_bien": "Primero instala Python desde python.org, luego abre la terminal en tu carpeta y ejecuta python main.py"
+        "ejemplo_bien": "Primero instala Python desde python.org, luego abre la terminal en tu carpeta y ejecuta python main.py",
+        "reglas": [
+            "Ser directo y conciso cuando sea posible",
+            "Dar contexto cuando sea util",
+            "Usar ejemplos para explicar conceptos",
+            "No asumir nivel de conocimiento del usuario",
+            "Ofrecer alternativas cuando sea relevante"
+        ]
     },
     
     "workflow": {
@@ -82,7 +108,28 @@ GENERAL_SKILLS = {
         "paso_2": "Analizar el contexto y nivel del usuario",
         "paso_3": "Pensar en la mejor solucion",
         "paso_4": "Explicar en prosa natural",
-        "paso_5": "Ejecutar si es necesario"
+        "paso_5": "Ejecutar si es necesario",
+        "paso_6": "Verificar que el usuario quedo satisfecho"
+    },
+    
+    "common_topics": {
+        "programacion": {
+            "lenguajes": ["Python", "JavaScript", "TypeScript", "Java", "C#", "Go", "Rust"],
+            "temas": ["sintaxis", "estructuras de datos", "algoritmos", "patrones de diseño"]
+        },
+        "web": {
+            "frontend": ["HTML", "CSS", "JavaScript", "React", "Vue", "Angular"],
+            "backend": ["Node.js", "Express", "FastAPI", "Django", "Flask"],
+            "bases_datos": ["MySQL", "PostgreSQL", "MongoDB", "Redis"]
+        },
+        "devops": {
+            "herramientas": ["Git", "Docker", "Kubernetes", "CI/CD"],
+            "cloud": ["AWS", "Azure", "GCP", "Render", "Vercel"]
+        },
+        "herramientas": {
+            "editores": ["VS Code", "Vim", "Sublime", "IntelliJ"],
+            "terminales": ["Bash", "PowerShell", "Zsh"]
+        }
     },
     
     "restrictions": [
@@ -94,8 +141,10 @@ GENERAL_SKILLS = {
     
     "triggers": {
         "pregunta": ["que es", "como funciona", "por que", "cuando usar"],
-        "explicacion": ["explica", "enseña", "muestra", "cuentame"],
+        "explicacion": ["explica", "ensena", "muestra", "cuentame"],
         "consejo": ["que me recomiendas", "cual es mejor", "que opinion tienes"],
-        "ayuda": ["ayuda", "no se", "estoy perdido", "como empiezo"]
+        "ayuda": ["ayuda", "no se", "estoy perdido", "como empiezo"],
+        "comparar": ["compara", "diferencia", "mejor peor", "pros contras"],
+        "aprender": ["aprende", "ensename", "quiero aprender", "como se"]
     }
 }

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IAM Reader Mode - Skills del modo lector
+IAM Reader Mode - Skills del modo lector (v4.1 Mejorado)
 """
 
 READER_SKILLS = {
@@ -37,35 +37,50 @@ READER_SKILLS = {
             "Entender codigo sin ejecutarlo",
             "Identificar el proposito de cada archivo",
             "Detectar dependencias entre archivos",
-            "Entender la arquitectura del proyecto"
+            "Entender la arquitectura del proyecto",
+            "Analizar complejidad del codigo",
+            "Detectar patrones de diseño",
+            "Identificar anti-patrones"
         ],
         "explicacion": [
             "Explicar codigo linea por linea",
             "Traducir codigo a lenguaje natural",
             "Explicar patrones de diseño usados",
             "Detallar el flujo de ejecucion",
-            "Explicar decisiones de arquitectura"
+            "Explicar decisiones de arquitectura",
+            "Crear diagramas mentales",
+            "Explicar algoritmos complejos",
+            "Traducir codigo entre lenguajes"
         ],
         "analisis": [
             "Analizar complejidad del codigo",
             "Identificar areas de mejora",
             "Detectar code smells",
             "Evaluar calidad del codigo",
-            "Comparar enfoques alternativos"
+            "Comparar enfoques alternativos",
+            "Analizar rendimiento",
+            "Detectar vulnerabilidades basicas",
+            "Evaluar mantenibilidad"
         ],
         "documentacion": [
             "Crear README completos",
             "Generar documentacion de API",
             "Explicar setup e instalacion",
             "Crear guias de uso",
-            "Documentar decisiones tecnicas"
+            "Documentar decisiones tecnicas",
+            "Crear CHANGELOG",
+            "Generar JSDoc/docstrings",
+            "Crear wikis de proyecto"
         ],
         "resumen": [
             "Resumir archivos largos",
             "Extraer puntos clave",
             "Crear TL;DR",
             "Identificar lo mas importante",
-            "Crear indices de contenido"
+            "Crear indices de contenido",
+            "Crear cheatsheets",
+            "Generar notas de estudio",
+            "Sintetizar informacion"
         ]
     },
     
@@ -88,6 +103,10 @@ READER_SKILLS = {
         "proyecto_completo": {
             "metodo": "Explorar estructura primero, luego leer archivos clave en orden",
             "output": "Arbol del proyecto + explicacion de cada parte"
+        },
+        "codigo_legado": {
+            "metodo": "Entender proposito general, luego detallar flujos criticos",
+            "output": "Documentacion de como funciona + areas de riesgo"
         }
     },
     
@@ -121,6 +140,18 @@ READER_SKILLS = {
             "descripcion": "Compara dos o mas enfoques/archivos",
             "proceso": "Leer opciones -> Identificar diferencias -> Evaluar",
             "output": "Tabla comparativa + recomendacion"
+        },
+        "dependency_analysis": {
+            "nombre": "Analisis de Dependencias",
+            "descripcion": "Mapea como se relacionan los archivos/modulos",
+            "proceso": "Leer imports -> Crear grafo -> Identificar ciclos",
+            "output": "Mapa de dependencias + recomendaciones"
+        },
+        "code_review": {
+            "nombre": "Revision de Codigo",
+            "descripcion": "Evalua calidad y sugiere mejoras",
+            "proceso": "Leer -> Identificar issues -> Clasificar -> Recomendar",
+            "output": "Lista de hallazgos con prioridades"
         }
     },
     
@@ -144,6 +175,11 @@ READER_SKILLS = {
             "cuando": "Analisis tecnicos detallados",
             "estilo": "Preciso, con terminologia correcta",
             "ejemplo": "La funcion fetchData() implementa el patron Repository para abstractar el acceso a datos. Usa async/await para manejar las promesas."
+        },
+        "diagrama": {
+            "cuando": "Mostrar relaciones y estructura",
+            "estilo": "ASCII art o Mermaid",
+            "ejemplo": "```\nFrontend --> Backend --> DB\n```"
         }
     },
     
@@ -163,6 +199,14 @@ READER_SKILLS = {
         "pattern_detector": {
             "descripcion": "Identifica patrones de diseño y anti-patrones",
             "proceso": "Leer -> comparar con patrones conocidos -> reportar"
+        },
+        "dependency_tracker": {
+            "descripcion": "Rastrea todas las dependencias del proyecto",
+            "proceso": "Leer imports -> mapear dependencias -> identificar externas"
+        },
+        "complexity_analyzer": {
+            "descripcion": "Analiza la complejidad del codigo",
+            "proceso": "Leer -> contar lineas, funciones, complejidad ciclomatica"
         }
     },
     
@@ -170,6 +214,8 @@ READER_SKILLS = {
         "leer": ["lee", "muestra", "contenido", "que hay en"],
         "explicar": ["explica", "que hace", "como funciona", "para que sirve"],
         "resumir": ["resume", "resumen", "puntos clave", "tl;dr"],
-        "documentar": ["documenta", "crea readme", "explica para otros"]
+        "documentar": ["documenta", "crea readme", "explica para otros"],
+        "analizar": ["analiza", "revisa", "evalua", "estudia"],
+        "comparar": ["compara", "diferencia", "cual es mejor"]
     }
 }

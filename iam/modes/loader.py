@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IAM Mode Loader - Carga las skills de cada modo
+IAM Mode Loader - Carga las skills de cada modo (v4.1 Mejorado)
 """
 
 from typing import Dict, Any
@@ -34,7 +34,12 @@ def get_mode_tools(mode: str) -> list:
 def get_mode_capabilities(mode: str) -> list:
     """Obtener capacidades de un modo"""
     skills = get_mode_skills(mode)
-    return skills.get("capabilities", [])
+    caps = skills.get("capabilities", {})
+    result = []
+    for category, items in caps.items():
+        if isinstance(items, list):
+            result.extend(items)
+    return result
 
 def get_mode_color(mode: str) -> str:
     """Obtener color de un modo"""
@@ -45,3 +50,50 @@ def get_mode_icon(mode: str) -> str:
     """Obtener icono de un modo"""
     skills = get_mode_skills(mode)
     return skills.get("icon", "[?]")
+
+def get_mode_description(mode: str) -> str:
+    """Obtener descripcion de un modo"""
+    skills = get_mode_skills(mode)
+    return skills.get("description", "Modo desconocido")
+
+def get_mode_triggers(mode: str) -> Dict[str, list]:
+    """Obtener triggers de un modo"""
+    skills = get_mode_skills(mode)
+    return skills.get("triggers", {})
+
+def get_mode_templates(mode: str) -> Dict[str, Any]:
+    """Obtener templates de un modo (solo builder)"""
+    skills = get_mode_skills(mode)
+    return skills.get("templates", {})
+
+def get_mode_quality_checklist(mode: str) -> list:
+    """Obtener checklist de calidad (solo builder)"""
+    skills = get_mode_skills(mode)
+    return skills.get("quality_checklist", [])
+
+def detect_mode_from_message(message: str) -> str:
+    """Detectar modo basado en el mensaje del usuario"""
+    message_lower = message.lower()
+    
+    # Triggers para cada modo
+    mode_triggers = {
+        "builder": ["crea", "haz", "genera", "construye", "desarrolla", "web", "pagina", "landing", "portfolio", "app"],
+        "debug": ["error", "fallo", "no funciona", "bug", "arregla", "fix", "corrige"],
+        "security": ["seguridad", "vulnerabilidad", "audita", "revisa", "password", "secret", "token"],
+        "reader": ["lee", "muestra", "contenido", "explica", "resume", "documenta"],
+        "general": ["que es", "como funciona", "ayuda", "explica", "ensena"]
+    }
+    
+    # Contar matches por modo
+    scores = {}
+    for mode, triggers in mode_triggers.items():
+        score = sum(1 for trigger in triggers if trigger in message_lower)
+        scores[mode] = score
+    
+    # Retornar el modo con mayor score
+    if scores:
+        best_mode = max(scores, key=scores.get)
+        if scores[best_mode] > 0:
+            return best_mode
+    
+    return "general"
