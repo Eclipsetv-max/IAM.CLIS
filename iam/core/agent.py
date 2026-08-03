@@ -1502,19 +1502,12 @@ class Agent:
         """Llamar a OpenCode API - modo rapido sin reintentos"""
         import time
         
-        if not settings.OPENCODE_API_KEY:
-            return self._fallback_response("opencode")
+        # Usar proxy (no necesita API key local)
+        proxy_url = "https://iam-proxy.onrender.com"
         
-        # Usar proxy para ocultar API key
-        proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
-        if not proxy_url:
-            # Cargar desde .env
-            env_path = Path(__file__).parent.parent.parent / ".env"
-            if env_path.exists():
-                with open(env_path, 'r') as f:
-                    for line in f:
-                        if line.startswith("OPENCODE_PROXY_URL="):
-                            proxy_url = line.split("=", 1)[1].strip()
+        # Sin proxy, verificar API key local
+        if not proxy_url and not settings.OPENCODE_API_KEY:
+            return self._fallback_response("opencode")
         
         try:
             context = self.current_session.get_context()
@@ -1624,55 +1617,54 @@ class Agent:
                 system_prompt=self.system_prompt
             )))
         
-        # OpenCode/MiMo
-        if settings.OPENCODE_API_KEY:
-            def call_opencode():
-                context = self.current_session.get_context()
-                messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
-                
-                # Usar proxy para ocultar API key
-                proxy_url = os.environ.get("OPENCODE_PROXY_URL", "https://iam-proxy.onrender.com")
-                
-                if proxy_url:
-                    url = f"{proxy_url}/v1/chat/completions"
-                    headers = {"Content-Type": "application/json"}
-                else:
-                    url = "https://opencode.ai/zen/v1/chat/completions"
-                    headers = {
-                        "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://iam-ai.local",
-                        "X-Title": "IAM AI Assistant"
-                    }
-                
-                response = requests.post(
-                    url,
-                    headers=headers,
-                    json={
-                        "model": "mimo-v2.5-free",
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 4096,
-                        "top_p": 0.9
-                    },
-                    timeout=60
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    if "choices" in data and data["choices"]:
-                        msg = data["choices"][0]["message"]
-                        content = msg.get("content")
-                        if not content:
-                            content = msg.get("reasoning", "")
-                        return content or ""
-                    elif "error" in data:
-                        raise Exception(data['error'])
-                    else:
-                        raise Exception("respuesta inesperada")
-                else:
-                    raise Exception(f"Error {response.status_code}")
+        # OpenCode/MiMo (siempre disponible via proxy)
+        def call_opencode():
+            context = self.current_session.get_context()
+            messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
             
-            engines.append(("OpenCode", call_opencode))
+            # Usar proxy
+            proxy_url = "https://iam-proxy.onrender.com"
+            
+            if proxy_url:
+                url = f"{proxy_url}/v1/chat/completions"
+                headers = {"Content-Type": "application/json"}
+            else:
+                url = "https://opencode.ai/zen/v1/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://iam-ai.local",
+                    "X-Title": "IAM AI Assistant"
+                }
+            
+            response = requests.post(
+                url,
+                headers=headers,
+                json={
+                    "model": "mimo-v2.5-free",
+                    "messages": messages,
+                    "temperature": 0.7,
+                    "max_tokens": 4096,
+                    "top_p": 0.9
+                },
+                timeout=60
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if "choices" in data and data["choices"]:
+                    msg = data["choices"][0]["message"]
+                    content = msg.get("content")
+                    if not content:
+                        content = msg.get("reasoning", "")
+                    return content or ""
+                elif "error" in data:
+                    raise Exception(data['error'])
+                else:
+                    raise Exception("respuesta inesperada")
+            else:
+                raise Exception(f"Error {response.status_code}")
+        
+        engines.append(("OpenCode", call_opencode))
         
         # Ejecutar en paralelo
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
@@ -1715,11 +1707,12 @@ class Agent:
         """Llamar a OpenCode API con MiMo v2.5 Free"""
         import time
         
-        if not settings.OPENCODE_API_KEY:
-            return self._fallback_response("opencode")
+        # Usar proxy (no necesita API key local)
+        proxy_url = "https://iam-proxy.onrender.com"
         
-        # Usar proxy para ocultar API key
-        proxy_url = os.environ.get("OPENCODE_PROXY_URL", "https://iam-proxy.onrender.com")
+        # Sin proxy, verificar API key local
+        if not proxy_url and not settings.OPENCODE_API_KEY:
+            return self._fallback_response("opencode")
         
         max_retries = 5
         retry_delay = 3
