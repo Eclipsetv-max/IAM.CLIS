@@ -46,8 +46,8 @@ class IAMSettings:
     CODENAME: str = "Acceso Total"
     
     # Configuración de IA
-    DEFAULT_ENGINE: str = "mimo"
-    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["mimo", "opencode", "local", "gemini", "freetheai"])
+    DEFAULT_ENGINE: str = "freetheai"
+    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["freetheai", "gemini", "mimo", "opencode", "local"])
     
     # Modelos por defecto (OpenCode - MiMo v2.5 Free)
     MODELS: Dict[str, str] = field(default_factory=lambda: {
