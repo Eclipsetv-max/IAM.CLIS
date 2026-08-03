@@ -1529,11 +1529,16 @@ class Agent:
             
             if response.status_code == 200:
                 data = response.json()
-                msg = data["choices"][0]["message"]
-                content = msg.get("content")
-                if not content:
-                    content = msg.get("reasoning", "")
-                return content or ""
+                if "choices" in data and data["choices"]:
+                    msg = data["choices"][0]["message"]
+                    content = msg.get("content")
+                    if not content:
+                        content = msg.get("reasoning", "")
+                    return content or ""
+                elif "error" in data:
+                    return f"[ERROR] OpenCode: {data['error']}"
+                else:
+                    return "[ERROR] OpenCode: respuesta inesperada"
             else:
                 return f"Error OpenCode ({response.status_code})"
                 
@@ -1620,11 +1625,16 @@ class Agent:
                 )
                 if response.status_code == 200:
                     data = response.json()
-                    msg = data["choices"][0]["message"]
-                    content = msg.get("content")
-                    if not content:
-                        content = msg.get("reasoning", "")
-                    return content or ""
+                    if "choices" in data and data["choices"]:
+                        msg = data["choices"][0]["message"]
+                        content = msg.get("content")
+                        if not content:
+                            content = msg.get("reasoning", "")
+                        return content or ""
+                    elif "error" in data:
+                        raise Exception(data['error'])
+                    else:
+                        raise Exception("respuesta inesperada")
                 else:
                     raise Exception(f"Error {response.status_code}")
             
@@ -1702,11 +1712,16 @@ class Agent:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    msg = data["choices"][0]["message"]
-                    content = msg.get("content")
-                    if not content:
-                        content = msg.get("reasoning", "")
-                    return content or ""
+                    if "choices" in data and data["choices"]:
+                        msg = data["choices"][0]["message"]
+                        content = msg.get("content")
+                        if not content:
+                            content = msg.get("reasoning", "")
+                        return content or ""
+                    elif "error" in data:
+                        return f"[ERROR] OpenCode: {data['error']}"
+                    else:
+                        return "[ERROR] OpenCode: respuesta inesperada"
                 elif response.status_code == 429:
                     if attempt < max_retries - 1:
                         wait_time = retry_delay * (2 ** attempt)

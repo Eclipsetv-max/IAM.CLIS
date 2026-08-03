@@ -119,7 +119,12 @@ class FreeTheAiClient:
             
             if response.status_code == 200:
                 data = response.json()
-                return data["choices"][0]["message"]["content"]
+                if "choices" in data and data["choices"]:
+                    return data["choices"][0]["message"]["content"]
+                elif "error" in data:
+                    return f"[ERROR] FreeTheAi: {data['error']}"
+                else:
+                    return f"[ERROR] FreeTheAi: respuesta inesperada"
             elif response.status_code == 503:
                 return "[MANTENIMIENTO] Servidor temporalmente desactivado"
             else:
