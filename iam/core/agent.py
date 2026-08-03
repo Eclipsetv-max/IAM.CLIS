@@ -51,6 +51,9 @@ from .cost_tracking import CostTracker, cost_tracker
 from .auto_compact import AutoCompactor, auto_compactor
 from .context_loader import ContextLoader, context_loader
 from .sub_agent import SubAgent, SubAgentType, sub_agent
+from .events import events, Event, EventType, on_event
+from .persistent_shell import get_shell, run_command, CommandResult
+from .patch import PatchApplier, DiffGenerator, apply_patch_to_files
 
 
 class Agent:
@@ -105,9 +108,14 @@ class Agent:
         self.auto_compactor = auto_compactor
         self.context_loader = context_loader
         self.sub_agent = sub_agent
+        self.events = events
+        self.shell = get_shell()
         
         # Tracking de archivos leidos (para read-before-edit)
         self._files_read_this_session: set = set()
+        
+        # File records para read-before-edit (inspirado en OpenCode)
+        self._file_records: Dict[str, Dict] = {}
     
     @property
     def current_session(self) -> Optional[Session]:
@@ -1365,10 +1373,23 @@ class Agent:
                 else:
                     self.file_history.record_create(path, content or "")
                 
-                # Registrar escritura para trackeo
+                # Registrar escritura para trackeo (inspirado en OpenCode)
                 import hashlib
                 checksum = hashlib.md5((content or "").encode()).hexdigest()[:12]
+                self._file_records[path] = {
+                    "write_time": datetime.now(),
+                    "checksum": checksum,
+                    "size": len(content or "")
+                }
                 permission_system.track_file_write(path, checksum)
+                
+                # Publicar evento de escritura
+                event_type = EventType.UPDATED if existed else EventType.CREATED
+                self.events.files.publish(event_type, {
+                    "action": "create" if not existed else "update",
+                    "path": path,
+                    "size": len(content or "")
+                })
                 
                 # Verificar y dar info detallada
                 verify = self._verify_execution('create_file', path)
@@ -1385,9 +1406,21 @@ class Agent:
                 if not os.path.exists(path):
                     return f"[ERROR] Archivo no existe: {path}"
                 
+                # Verificar read-before-edit (inspirado en OpenCode)
+                if path not in self._file_records:
+                    return f"[ERROR] Lee el archivo primero antes de editarlo: {os.path.basename(path)}"
+                
                 # Leer contenido actual para historial
                 with open(path, 'r', encoding='utf-8') as f:
                     current = f.read()
+                
+                # Verificar que el archivo no cambio desde la ultima lectura
+                import hashlib
+                current_checksum = hashlib.md5(current.encode()).hexdigest()[:12]
+                if path in self._file_records:
+                    last_checksum = self._file_records[path].get("checksum", "")
+                    if last_checksum and last_checksum != current_checksum:
+                        return f"[ERROR] Archivo fue modificado externamente desde la ultima lectura: {os.path.basename(path)}"
                 
                 if old_text and new_text:
                     if old_text in current:
@@ -1436,11 +1469,23 @@ class Agent:
                     self._file_cache = {}
                 self._file_cache[path] = c
                 
-                # Registrar lectura para read-before-edit
+                # Registrar lectura para read-before-edit (inspirado en OpenCode)
                 import hashlib
                 checksum = hashlib.md5(c.encode()).hexdigest()[:12]
+                self._file_records[path] = {
+                    "read_time": datetime.now(),
+                    "checksum": checksum,
+                    "size": len(c)
+                }
                 permission_system.track_file_read(path, checksum)
                 self._files_read_this_session.add(path)
+                
+                # Publicar evento de lectura
+                self.events.files.publish(EventType.UPDATED, {
+                    "action": "read",
+                    "path": path,
+                    "lines": lines_count
+                })
                 
                 ext = os.path.splitext(path)[1].lower()
                 lang_map = {'.py': 'Python', '.js': 'JavaScript', '.html': 'HTML', '.css': 'CSS', '.json': 'JSON', '.md': 'Markdown'}
@@ -1452,21 +1497,19 @@ class Agent:
                 return f"[OK] Carpeta creada: {path}"
             
             elif action == 'execute' and command:
-                try:
-                    import _locale
-                    enc = _locale._getdefaultlocale()[1] or 'cp1252'
-                except:
-                    enc = 'cp1252'
-                result = subprocess.run(command, shell=True, capture_output=True, timeout=60, encoding=enc, errors='replace')
+                # Usar shell persistente (inspirado en OpenCode)
+                result = self.shell.exec(command, timeout=60, cwd=self.active_project)
                 output_parts = []
                 if result.stdout:
                     output_parts.append(result.stdout.strip())
                 if result.stderr:
                     output_parts.append(f"STDERR: {result.stderr.strip()}")
-                if result.returncode != 0:
-                    output_parts.append(f"[ERROR] Comando fallo (codigo {result.returncode})")
+                if result.exit_code != 0:
+                    output_parts.append(f"[ERROR] Comando fallo (codigo {result.exit_code})")
                 elif not output_parts:
                     output_parts.append("[OK] Comando ejecutado exitosamente")
+                if result.duration_ms > 0:
+                    output_parts.append(f"({result.duration_ms}ms)")
                 return "\n".join(output_parts)
             
             return f"[ERROR] Accion no reconocida: {action}"
