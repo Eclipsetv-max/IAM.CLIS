@@ -1458,7 +1458,9 @@ class Agent:
         loader.start(msg, self._get_mode_spinner())
         
         try:
-            if self.engine == "local":
+            if self.engine == "multi":
+                response = self._call_multi_engine(enriched_prompt)
+            elif self.engine == "local":
                 response = self._call_local_model(enriched_prompt)
             elif self.engine == "gemini":
                 response = self._call_gemini(enriched_prompt)
@@ -1467,7 +1469,7 @@ class Agent:
             elif self.engine == "opencode" or self.engine == "mimo":
                 response = self._call_opencode_fast(enriched_prompt)
             else:
-                response = self._call_opencode_fast(enriched_prompt)
+                response = self._call_multi_engine(enriched_prompt)
             
             elapsed = time.time() - start_time
             return response
@@ -1481,7 +1483,9 @@ class Agent:
         loader.start(msg, self._get_mode_spinner())
         
         try:
-            if self.engine == "local":
+            if self.engine == "multi":
+                return self._call_multi_engine(enriched_prompt)
+            elif self.engine == "local":
                 return self._call_local_model(enriched_prompt)
             elif self.engine == "gemini":
                 return self._call_gemini(enriched_prompt)
@@ -1490,7 +1494,7 @@ class Agent:
             elif self.engine == "opencode" or self.engine == "mimo":
                 return self._call_opencode_fast(enriched_prompt)
             else:
-                return self._call_opencode_fast(enriched_prompt)
+                return self._call_multi_engine(enriched_prompt)
         finally:
             loader.stop()
     
@@ -1559,6 +1563,109 @@ class Agent:
             prompt=enriched_prompt or "",
             system_prompt=self.system_prompt
         )
+    
+    def _call_multi_engine(self, enriched_prompt: str = None) -> str:
+        """Llamar a todas las IAs disponibles simultaneamente y combinar respuestas"""
+        import concurrent.futures
+        import time
+        
+        start_time = time.time()
+        results = {}
+        errors = []
+        
+        def call_engine(name, func, *args):
+            try:
+                result = func(*args)
+                return name, result, None
+            except Exception as e:
+                return name, None, str(e)
+        
+        engines = []
+        
+        # FreeTheAi
+        if freetheai_client.is_available():
+            engines.append(("FreeTheAi", lambda: freetheai_client.chat(
+                prompt=enriched_prompt or "",
+                system_prompt=self.system_prompt
+            )))
+        
+        # Gemini
+        if gemini_client.is_available():
+            engines.append(("Gemini", lambda: gemini_client.chat(
+                prompt=enriched_prompt or "",
+                system_prompt=self.system_prompt
+            )))
+        
+        # OpenCode/MiMo
+        if settings.OPENCODE_API_KEY:
+            def call_opencode():
+                context = self.current_session.get_context()
+                messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
+                response = requests.post(
+                    "https://opencode.ai/zen/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://iam-ai.local",
+                        "X-Title": "IAM AI Assistant"
+                    },
+                    json={
+                        "model": "mimo-v2.5-free",
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 4096,
+                        "top_p": 0.9
+                    },
+                    timeout=60
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    msg = data["choices"][0]["message"]
+                    content = msg.get("content")
+                    if not content:
+                        content = msg.get("reasoning", "")
+                    return content or ""
+                else:
+                    raise Exception(f"Error {response.status_code}")
+            
+            engines.append(("OpenCode", call_opencode))
+        
+        # Ejecutar en paralelo
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {executor.submit(func): name for name, func in engines}
+            for future in concurrent.futures.as_completed(futures, timeout=90):
+                name, result, error = future.result()
+                if error:
+                    errors.append(f"{name}: {error}")
+                else:
+                    results[name] = result
+        
+        elapsed = time.time() - start_time
+        
+        # Si no hay resultados, usar fallback
+        if not results:
+            return f"[MULTI-AI] Todas las IAs fallaron: {', '.join(errors)}"
+        
+        # Si solo hay 1 resultado, mostrarlo directamente
+        if len(results) == 1:
+            engine_name = list(results.keys())[0]
+            return f"[{engine_name}] {results[engine_name]}"
+        
+        # Si hay multiples resultados, mostrar los nombres y la mejor respuesta
+        engine_names = list(results.keys())
+        
+        # Elegir la respuesta mas larga (generalmente mas completa)
+        best_engine = max(results.items(), key=lambda x: len(x[1]))
+        
+        # Construir respuesta combinada
+        output_parts = []
+        output_parts.append(f"[MULTI-AI: {', '.join(engine_names)}] ({elapsed:.1f}s)\n")
+        
+        # Mostrar la mejor respuesta
+        output_parts.append(f"--- Respuesta de {best_engine[0]} ---")
+        output_parts.append(best_engine[1])
+        
+        return "\n".join(output_parts)
     
     def _call_opencode(self, enriched_prompt: str = None) -> str:
         """Llamar a OpenCode API con MiMo v2.5 Free"""
