@@ -46,7 +46,7 @@ class IAMSettings:
     CODENAME: str = "Multi-AI"
     
     # Configuración de IA
-    DEFAULT_ENGINE: str = "multi"
+    DEFAULT_ENGINE: str = "opencode"
     AVAILABLE_ENGINES: list = field(default_factory=lambda: ["multi", "freetheai", "gemini", "mimo", "opencode", "local"])
     
     # Modelos por defecto (OpenCode - MiMo v2.5 Free)
