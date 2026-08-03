@@ -729,6 +729,7 @@ class Agent:
             self._auto_generate_title(user_message)
         
         # Detectar imagenes pegadas [IMAGE:path]
+        import re
         import base64
         self._pending_images = []
         img_matches = re.findall(r'\[IMAGE:(.+?)\]', user_message)
