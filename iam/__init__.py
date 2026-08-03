@@ -6,7 +6,7 @@ v3.0.0 - Claude Style with Deep Reasoning
 Arquitectura modular con razonamiento profundo y memoria a largo plazo
 """
 
-__version__ = "3.1.0"
+__version__ = "3.4"
 __author__ = "IAM Team"
 
 from .config.settings import settings, COLORS

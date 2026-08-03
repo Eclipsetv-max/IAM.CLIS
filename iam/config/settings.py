@@ -42,8 +42,8 @@ class IAMSettings:
     USER_ALIAS: str = "User"
     
     # Versión
-    VERSION: str = "3.1.1"
-    CODENAME: str = "Acceso Total"
+    VERSION: str = "3.4"
+    CODENAME: str = "Multi-AI"
     
     # Configuración de IA
     DEFAULT_ENGINE: str = "freetheai"

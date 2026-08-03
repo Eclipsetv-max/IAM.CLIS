@@ -1,5 +1,5 @@
 @echo off
-title IAM v3.1.1 - Intencional Artificial Multitarea
+title IAM v3.4 - Multi-AI
 color 0B
 
 set PYTHONIOENCODING=utf-8
@@ -14,7 +14,7 @@ echo   ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
 echo   ┌───────────────────────┐
 echo   │  INTELIGENCIA         │
 echo   │  ARTIFICIAL UNIDA     │
-echo   │  v3.1.1               │
+echo   │  v3.4                │
 echo   └───────────────────────┘
 echo   ════════════════════════════════════════════════════════════════════════════════
 echo   ┌──────────────────────────────────────────────────────────────────────────────┐
