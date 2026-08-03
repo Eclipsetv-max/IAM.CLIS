@@ -7,7 +7,7 @@ Arquitectura modular con razonamiento profundo, memoria a largo plazo,
 historial de archivos, cost tracking, auto-compaction y sub-agentes
 """
 
-__version__ = "4.0"
+__version__ = "4.1"
 __author__ = "IAM Team"
 
 from .config.settings import settings, COLORS

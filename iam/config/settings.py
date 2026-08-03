@@ -42,7 +42,7 @@ class IAMSettings:
     USER_ALIAS: str = "User"
     
     # Versión
-    VERSION: str = "4.0"
+    VERSION: str = "4.1"
     CODENAME: str = "OpenCode-Inspired"
     
     # Configuración de IA - Solo OpenCode/MiMo

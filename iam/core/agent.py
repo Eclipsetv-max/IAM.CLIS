@@ -801,6 +801,36 @@ class Agent:
         if response:
             tool_result = self._execute_tool_calls(response)
             
+            # Detectar si la IA dijo que NO puede crear archivos (respuesta inválida)
+            no_creation_phrases = [
+                "no tengo acceso", "no puedo crear", "no tengo herramientas",
+                "no tengo tool_call", "no puedo ejecutar", "no tengo permisos",
+                "no puedo generar", "no tengo capacidad", "no puedo hacer"
+            ]
+            ia_says_no = any(phrase in response.lower() for phrase in no_creation_phrases)
+            
+            # Si la IA dijo que no puede pero el usuario pidió crear algo
+            user_wants_creation = any(word in user_message.lower() for word in 
+                ["crea", "crear", "haz", "genera", "construye", "desarrolla", "web", "pagina", "app",
+                 "portfolio", "landing", "tienda", "blog", "api", "formulario"])
+            
+            if ia_says_no and user_wants_creation and self.active_project:
+                # Forzar reintento con instrucciones muy claras
+                force_follow_up = self._chat_normal(
+                    f"ERROR: La respuesta anterior no usó TOOL_CALL. "
+                    f"El usuario pidió: {user_message}. "
+                    f"DEBES crear archivos usando [TOOL_CALL]. "
+                    f"NO respondas sin TOOL_CALLs. "
+                    f"Usa este formato EXACTAMENTE: "
+                    f"[TOOL_CALL] action: create_file name: \"index.html\" "
+                    f"<!DOCTYPE html><html>...</html> [/TOOL_CALL] "
+                    f"Crea TODOS los archivos necesarios ahora."
+                )
+                if force_follow_up:
+                    force_result = self._execute_tool_calls(force_follow_up)
+                    if force_result and '[OK]' in force_result:
+                        tool_result = force_result
+            
             # Verificar si el usuario quiere accion
             user_wants_action = any(word in user_message.lower() for word in 
                 ["mejora", "mejorar", "edita", "editar", "arregla", "arreglar", "cambia", "cambiar", 
@@ -857,16 +887,36 @@ class Agent:
                         if follow_result and '[OK]' in follow_result:
                             tool_result += "\n" + follow_result
             
-            # Si no hizo nada en absoluto
+            # Si no hizo nada en absoluto - retry agresivo
             if '[OK]' not in tool_result and self.active_project:
+                # Primer reintento: instrucciones más claras
                 follow_up = self._chat_normal(
-                    f"Sin resultados. Archivos: {os.listdir(self.active_project)[:5]}. "
-                    f"Crea archivos ahora con TOOL_CALL."
+                    f"IMPORTANTE: El usuario pidió crear archivos. "
+                    f"Debes usar [TOOL_CALL] para crearlos. "
+                    f"NO digas que no puedes crear archivos. SI PUEDES usando [TOOL_CALL]. "
+                    f"Archivos en proyecto: {os.listdir(self.active_project)[:5]}. "
+                    f"Crea los archivos AHORA usando este formato exacto: "
+                    f"[TOOL_CALL] action: create_file name: \"index.html\" "
+                    f"<!DOCTYPE html>...</html> [/TOOL_CALL]"
                 )
                 if follow_up:
                     follow_result = self._execute_tool_calls(follow_up)
-                    if follow_result:
+                    if follow_result and '[OK]' in follow_result:
                         tool_result = follow_result
+                    else:
+                        # Segundo reintento: ser aún más directo
+                        follow_up2 = self._chat_normal(
+                            f"RESPOSTA ANTERIOR NO VÁLIDA. "
+                            f"Debes crear archivos usando [TOOL_CALL]. "
+                            f"Ejemplo: "
+                            f"[TOOL_CALL] action: create_file name: \"index.html\" "
+                            f"contenido del archivo [/TOOL_CALL] "
+                            f"Crea index.html ahora."
+                        )
+                        if follow_up2:
+                            follow_result2 = self._execute_tool_calls(follow_up2)
+                            if follow_result2:
+                                tool_result = follow_result2
             
             response = tool_result
         
@@ -935,6 +985,31 @@ class Agent:
                     tool_blocks.append(tool_block)
                 elif 'function' in content or 'const ' in content or 'document.' in content or 'addEventListener' in content:
                     tool_block = f'action: create_file name: "script.js"\n{content}'
+                    tool_blocks.append(tool_block)
+        
+        # Fallback agresivo: buscar código sin bloques markdown
+        if not tool_blocks:
+            # Buscar HTML/CSS/JS directamente en el texto
+            html_pattern = r'(<!DOCTYPE[^>]*>[\s\S]*?</html>)'
+            html_matches = re.findall(html_pattern, text, re.DOTALL)
+            for content in html_matches:
+                tool_block = f'action: create_file name: "index.html"\n{content.strip()}'
+                tool_blocks.append(tool_block)
+            
+            # Buscar CSS
+            css_pattern = r'(\{[\s\S]*?\})'
+            if not tool_blocks:
+                css_matches = re.findall(r'(:root\s*\{[\s\S]*?\})', text, re.DOTALL)
+                for content in css_matches:
+                    tool_block = f'action: create_file name: "style.css"\n{content.strip()}'
+                    tool_blocks.append(tool_block)
+            
+            # Buscar JS
+            js_pattern = r'(document\.[\s\S]*?\})'
+            if not tool_blocks:
+                js_matches = re.findall(js_pattern, text, re.DOTALL)
+                for content in js_matches:
+                    tool_block = f'action: create_file name: "script.js"\n{content.strip()}'
                     tool_blocks.append(tool_block)
         
         return tool_blocks, unclosed_block

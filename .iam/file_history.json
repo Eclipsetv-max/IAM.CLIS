@@ -297,7 +297,67 @@
       "current_version": "initial",
       "created_at": "2026-08-03T18:08:17.744931",
       "updated_at": "2026-08-03T18:08:17.744931"
+    },
+    "..\\CafeWebTest3\\index.html": {
+      "path": "..\\CafeWebTest3\\index.html",
+      "versions": [
+        {
+          "id": "..\\CafeWebTest3\\index.html_20260803181142",
+          "session_id": "20260803_181124",
+          "path": "..\\CafeWebTest3\\index.html",
+          "content": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Mi Proyecto</title>\n    <link rel=\"stylesheet\" href=\"css/style.css\">\n</head>\n<body>\n    <h1>¡Hola Mundo!</h1>\n    <script src=\"js/main.js\"></script>\n</body>\n</html>",
+          "version_type": "edit",
+          "version": "initial",
+          "size": 317,
+          "checksum": "b9880d7031a4",
+          "created_at": "2026-08-03T18:11:42.027084",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:11:42.027084",
+      "updated_at": "2026-08-03T18:11:42.027084"
+    },
+    "..\\CafeWebTest3\\style.css": {
+      "path": "..\\CafeWebTest3\\style.css",
+      "versions": [
+        {
+          "id": "..\\CafeWebTest3\\style.css_20260803181142",
+          "session_id": "20260803_181124",
+          "path": "..\\CafeWebTest3\\style.css",
+          "content": "* {\n    margin: 0;\n    padding: 0;\n    box-sizing: border-box;\n}\n\nbody {\n    font-family: Arial, sans-serif;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    min-height: 100vh;\n    background-color: #f0f0f0;\n}\n\nh1 {\n    color: #333;\n}",
+          "version_type": "create",
+          "version": "initial",
+          "size": 262,
+          "checksum": "242ade778fb6",
+          "created_at": "2026-08-03T18:11:42.031637",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:11:42.031637",
+      "updated_at": "2026-08-03T18:11:42.031637"
+    },
+    "..\\CafeWebTest3\\script.js": {
+      "path": "..\\CafeWebTest3\\script.js",
+      "versions": [
+        {
+          "id": "..\\CafeWebTest3\\script.js_20260803181142",
+          "session_id": "20260803_181124",
+          "path": "..\\CafeWebTest3\\script.js",
+          "content": "console.log('Proyecto funcionando ✅');",
+          "version_type": "create",
+          "version": "initial",
+          "size": 38,
+          "checksum": "4b90bf81568f",
+          "created_at": "2026-08-03T18:11:42.036630",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-03T18:11:42.036630",
+      "updated_at": "2026-08-03T18:11:42.036630"
     }
   },
-  "last_updated": "2026-08-03T18:08:17.745932"
+  "last_updated": "2026-08-03T18:11:42.037693"
 }
