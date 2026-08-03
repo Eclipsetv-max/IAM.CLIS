@@ -1505,27 +1505,50 @@ class Agent:
         if not settings.OPENCODE_API_KEY:
             return self._fallback_response("opencode")
         
+        # Usar proxy para ocultar API key
+        proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
+        if not proxy_url:
+            # Cargar desde .env
+            env_path = Path(__file__).parent.parent.parent / ".env"
+            if env_path.exists():
+                with open(env_path, 'r') as f:
+                    for line in f:
+                        if line.startswith("OPENCODE_PROXY_URL="):
+                            proxy_url = line.split("=", 1)[1].strip()
+        
         try:
             context = self.current_session.get_context()
             messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
             
-            response = requests.post(
-                "https://opencode.ai/zen/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://iam-ai.local",
-                    "X-Title": "IAM AI Assistant"
-                },
-                json={
+            # Si hay proxy, usarlo (key oculta en servidor)
+            if proxy_url:
+                url = f"{proxy_url}/v1/chat/completions"
+                headers = {"Content-Type": "application/json"}
+                payload = {
                     "model": "mimo-v2.5-free",
                     "messages": messages,
                     "temperature": 0.7,
                     "max_tokens": 4096,
                     "top_p": 0.9
-                },
-                timeout=60
-            )
+                }
+            else:
+                # Fallback: llamada directa (key visible)
+                url = "https://opencode.ai/zen/v1/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://iam-ai.local",
+                    "X-Title": "IAM AI Assistant"
+                }
+                payload = {
+                    "model": "mimo-v2.5-free",
+                    "messages": messages,
+                    "temperature": 0.7,
+                    "max_tokens": 4096,
+                    "top_p": 0.9
+                }
+            
+            response = requests.post(url, headers=headers, json=payload, timeout=60)
             
             if response.status_code == 200:
                 data = response.json()
@@ -1606,14 +1629,32 @@ class Agent:
             def call_opencode():
                 context = self.current_session.get_context()
                 messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
-                response = requests.post(
-                    "https://opencode.ai/zen/v1/chat/completions",
-                    headers={
+                
+                # Usar proxy para ocultar API key
+                proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
+                if not proxy_url:
+                    env_path = Path(__file__).parent.parent.parent / ".env"
+                    if env_path.exists():
+                        with open(env_path, 'r') as f:
+                            for line in f:
+                                if line.startswith("OPENCODE_PROXY_URL="):
+                                    proxy_url = line.split("=", 1)[1].strip()
+                
+                if proxy_url:
+                    url = f"{proxy_url}/v1/chat/completions"
+                    headers = {"Content-Type": "application/json"}
+                else:
+                    url = "https://opencode.ai/zen/v1/chat/completions"
+                    headers = {
                         "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
                         "Content-Type": "application/json",
                         "HTTP-Referer": "https://iam-ai.local",
                         "X-Title": "IAM AI Assistant"
-                    },
+                    }
+                
+                response = requests.post(
+                    url,
+                    headers=headers,
                     json={
                         "model": "mimo-v2.5-free",
                         "messages": messages,
@@ -1684,6 +1725,16 @@ class Agent:
         if not settings.OPENCODE_API_KEY:
             return self._fallback_response("opencode")
         
+        # Usar proxy para ocultar API key
+        proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
+        if not proxy_url:
+            env_path = Path(__file__).parent.parent.parent / ".env"
+            if env_path.exists():
+                with open(env_path, 'r') as f:
+                    for line in f:
+                        if line.startswith("OPENCODE_PROXY_URL="):
+                            proxy_url = line.split("=", 1)[1].strip()
+        
         max_retries = 5
         retry_delay = 3
         
@@ -1692,14 +1743,21 @@ class Agent:
                 context = self.current_session.get_context()
                 messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
                 
-                response = requests.post(
-                    "https://opencode.ai/zen/v1/chat/completions",
-                    headers={
+                if proxy_url:
+                    url = f"{proxy_url}/v1/chat/completions"
+                    headers = {"Content-Type": "application/json"}
+                else:
+                    url = "https://opencode.ai/zen/v1/chat/completions"
+                    headers = {
                         "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
                         "Content-Type": "application/json",
                         "HTTP-Referer": "https://iam-ai.local",
                         "X-Title": "IAM AI Assistant"
-                    },
+                    }
+                
+                response = requests.post(
+                    url,
+                    headers=headers,
                     json={
                         "model": "mimo-v2.5-free",
                         "messages": messages,
