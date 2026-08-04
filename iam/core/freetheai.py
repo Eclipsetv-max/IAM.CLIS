@@ -56,7 +56,7 @@ class FreeTheAiClient:
         if online_url:
             proxy_url = online_url
         else:
-            proxy_url = "https://iam-ai-proxy.fly.dev"  # Fly.io
+            proxy_url = "https://iam-proxy.onrender.com"  # Render
         
         # Verificar si el proxy esta disponible
         use_proxy = True

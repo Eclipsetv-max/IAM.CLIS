@@ -10,7 +10,7 @@ IAM (Inteligencia Artificial Multitarea) es un asistente de IA que funciona **si
 Tu PC (sin keys) → Servidor Proxy (tiene las keys) → APIs de IA
 ```
 
-**El servidor proxy** (`https://iam-ai-proxy.fly.dev`) maneja todas las API keys. Tu solo instalas IAM y usas las IAs sin configurar nada.
+**El servidor proxy** (`https://iam-proxy.onrender.com`) maneja todas las API keys. Tu solo instalas IAM y usas las IAs sin configurar nada.
 
 ## IAs Disponibles
 
@@ -40,7 +40,7 @@ python main.py
 
 ## Dashboard del Servidor
 
-- URL: `https://iam-ai-proxy.fly.dev/dashboard`
+- URL: `https://iam-proxy.onrender.com/dashboard`
 - Password: Configurado como variable de entorno `ADMIN_PASSWORD`
 - Funciones:
   - Activar/desactivar servidor

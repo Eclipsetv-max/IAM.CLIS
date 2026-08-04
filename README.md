@@ -71,7 +71,7 @@ Hola! Soy IAM, puedo ayudarte con:
 ```
 IAM CLI (Python)
     ↓
-Fly.io Server (https://iam-ai-proxy.fly.dev)
+Render Server (https://iam-proxy.onrender.com)
     ↓
 FreeTheAi API
 Gemini API
@@ -89,7 +89,7 @@ OpenCode/MiMo API
 
 ## Dashboard del Servidor
 
-- URL: `https://iam-ai-proxy.fly.dev/health`
+- URL: `https://iam-proxy.onrender.com/dashboard`
 - Estado del servidor en tiempo real
 
 ## Archivos importantes
