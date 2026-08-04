@@ -180,7 +180,12 @@ export default {
         service: 'IAM Proxy',
         version: '2.0',
         dashboard: url.origin + '/dashboard',
-        endpoints: ['/v1/chat/completions', '/v1/models', '/v1/gemini']
+        endpoints: ['/v1/chat/completions', '/v1/models', '/v1/gemini'],
+        debug: {
+          hasOpenCodeKey: !!env.OPENCODE_API_KEY,
+          hasFreeTheAiKey: !!env.FREETHEAI_API_KEY,
+          openCodeKeyPrefix: env.OPENCODE_API_KEY ? env.OPENCODE_API_KEY.substring(0, 10) + '...' : 'none'
+        }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });

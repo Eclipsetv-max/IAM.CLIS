@@ -71,7 +71,7 @@ Hola! Soy IAM, puedo ayudarte con:
 ```
 IAM CLI (Python)
     ↓
-Cloudflare Worker (https://iam-proxy.feabpemu12345.workers.dev)
+Fly.io Server (https://iam-ai-proxy.fly.dev)
     ↓
 FreeTheAi API
 Gemini API
@@ -89,7 +89,7 @@ OpenCode/MiMo API
 
 ## Dashboard del Servidor
 
-- URL: `https://iam-proxy.feabpemu12345.workers.dev/health`
+- URL: `https://iam-ai-proxy.fly.dev/health`
 - Estado del servidor en tiempo real
 
 ## Archivos importantes

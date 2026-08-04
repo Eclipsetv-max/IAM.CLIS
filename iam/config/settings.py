@@ -45,19 +45,19 @@ class IAMSettings:
     VERSION: str = "4.1"
     CODENAME: str = "Multi-AI Assistant"
     
-    # Configuración de IA - Solo OpenCode/MiMo
-    DEFAULT_ENGINE: str = "opencode"
-    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["opencode"])
+    # Configuración de IA - FreeTheAi por defecto
+    DEFAULT_ENGINE: str = "freetheai"
+    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["freetheai", "opencode"])
     
-    # Modelos por defecto (OpenCode - MiMo v2.5 Free)
+    # Modelos por defecto (FreeTheAi - gratis)
     MODELS: Dict[str, str] = field(default_factory=lambda: {
-        "general": "mimo-v2.5-free",
-        "builder": "mimo-v2.5-free",
-        "plan": "mimo-v2.5-free",
-        "frontend": "mimo-v2.5-free",
-        "backend": "mimo-v2.5-free",
-        "debug": "mimo-v2.5-free",
-        "security": "mimo-v2.5-free"
+        "general": "opc/deepseek-v4-flash-free",
+        "builder": "opc/deepseek-v4-flash-free",
+        "plan": "opc/deepseek-v4-flash-free",
+        "frontend": "opc/deepseek-v4-flash-free",
+        "backend": "opc/deepseek-v4-flash-free",
+        "debug": "opc/deepseek-v4-flash-free",
+        "security": "opc/deepseek-v4-flash-free"
     })
     
     # Modelo local fine-tuned
@@ -66,6 +66,10 @@ class IAMSettings:
     
     # Modelos alternativos por motor
     FALLBACK_MODELS: Dict[str, Dict[str, str]] = field(default_factory=lambda: {
+        "freetheai": {
+            "general": "opc/deepseek-v4-flash-free",
+            "builder": "opc/deepseek-v4-flash-free"
+        },
         "opencode": {
             "general": "mimo-v2.5-free",
             "builder": "mimo-v2.5-free"

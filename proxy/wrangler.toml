@@ -5,5 +5,4 @@ compatibility_date = "2024-01-01"
 # URL: https://iam-proxy.feabpemu12345.workers.dev
 # Desplegado: 2026-08-04
 
-[vars]
-OPENCODE_API_KEY = ""
+# API keys configuradas via: wrangler secret put OPENCODE_API_KEY
