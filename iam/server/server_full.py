@@ -446,6 +446,8 @@ def chat_completions():
         return jsonify({"error": "API key not configured"}), 500
     
     try:
+        import time
+        
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
@@ -455,26 +457,45 @@ def chat_completions():
             headers["HTTP-Referer"] = "https://iam-ai.local"
             headers["X-Title"] = "IAM AI Assistant"
         
-        response = requests.post(
-            f"{base_url}/chat/completions",
-            headers=headers,
-            json=data,
-            timeout=180
-        )
-        
-        if response.status_code != 200:
-            # Si la respuesta es HTML (error de servidor), dar mensaje claro
-            if '<html' in response.text.lower():
+        # Reintentar hasta 3 veces si falla
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"{base_url}/chat/completions",
+                    headers=headers,
+                    json=data,
+                    timeout=180
+                )
+                
+                if response.status_code == 200:
+                    return jsonify(response.json())
+                
+                # Si es error de servidor (502, 503, 504), reintentar
+                if response.status_code in [502, 503, 504]:
+                    if attempt < max_retries - 1:
+                        time.sleep(3 * (attempt + 1))
+                        continue
+                
+                # Si la respuesta es HTML (error de servidor), dar mensaje claro
+                if '<html' in response.text.lower():
+                    return jsonify({
+                        "error": "Fernando esta viendo en donde esta el error espere un rato 🫠",
+                        "status": "server_error"
+                    }), 503
+                
                 return jsonify({
-                    "error": "Fernando esta viendo en donde esta el error espere un rato 🫠",
-                    "status": "server_error"
-                }), 503
-            return jsonify({
-                "error": f"API error: {response.status_code}",
-                "details": response.text[:500]
-            }), response.status_code
+                    "error": f"API error: {response.status_code}",
+                    "details": response.text[:500]
+                }), response.status_code
+                
+            except requests.ConnectionError:
+                if attempt < max_retries - 1:
+                    time.sleep(3 * (attempt + 1))
+                    continue
+                return jsonify({"error": "Error de conexion con la API"}), 502
         
-        return jsonify(response.json())
+        return jsonify({"error": "Maximo de reintentos alcanzado"}), 503
         
     except requests.Timeout:
         return jsonify({"error": "Timeout: La API tardó demasiado en responder"}), 504

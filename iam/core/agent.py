@@ -1891,6 +1891,13 @@ class Agent:
                         time.sleep(wait_time)
                         continue
                     return "Fernando esta viendo en donde esta el error espere un rato 🫠"
+                elif response.status_code == 502:
+                    # Bad Gateway - servidor no responde correctamente
+                    if attempt < max_retries - 1:
+                        wait_time = 3 * (attempt + 1)  # 3s, 6s, 9s
+                        time.sleep(wait_time)
+                        continue
+                    return "Fernando esta viendo en donde esta el error espere un rato 🫠"
                 else:
                     # Log del error para debugging
                     error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
