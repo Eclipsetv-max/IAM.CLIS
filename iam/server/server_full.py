@@ -430,7 +430,7 @@ def chat_completions():
     if not data or 'messages' not in data:
         return jsonify({"error": "Invalid request"}), 400
     
-    model = data.get('model', 'opc/deepseek-v4-flash-free')
+    model = data.get('model', 'mimo-v2.5-free')
     
     if any(model.startswith(p) for p in ['opc/', 'glm/', 'bbl/', 'rev/', 'olm/', 'min/', 'mim/']):
         api_key = API_KEYS.get('FREETHEAI_API_KEY', '')
@@ -459,11 +459,21 @@ def chat_completions():
             f"{base_url}/chat/completions",
             headers=headers,
             json=data,
-            timeout=120
+            timeout=180
         )
+        
+        if response.status_code != 200:
+            return jsonify({
+                "error": f"API error: {response.status_code}",
+                "details": response.text[:500]
+            }), response.status_code
         
         return jsonify(response.json())
         
+    except requests.Timeout:
+        return jsonify({"error": "Timeout: La API tardó demasiado en responder"}), 504
+    except requests.ConnectionError:
+        return jsonify({"error": "Error de conexión con la API"}), 502
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
