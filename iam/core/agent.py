@@ -530,6 +530,11 @@ class Agent:
                 return False, f"Ruta contiene caracteres invalidos: {path}"
             return True, "OK"
         
+        elif action == "delete_file":
+            if not path:
+                return False, "Falta ruta del archivo a eliminar"
+            return True, "OK"
+        
         elif action == "execute":
             if not command:
                 return False, "Falta el comando a ejecutar"
@@ -1309,7 +1314,7 @@ class Agent:
         
         lines = block.split('\n')
         
-        # 1. Detectar Acción
+        # 1. Detectar Accion
         for line in lines[:5]:
             line_l = line.lower().strip()
             if 'action:' in line_l:
@@ -1320,6 +1325,8 @@ class Agent:
                     result['action'] = 'edit_file'
                 elif 'read_file' in action_part or 'readfile' in action_part:
                     result['action'] = 'read_file'
+                elif 'delete_file' in action_part or 'deletefile' in action_part or 'delete' in action_part or 'remove' in action_part:
+                    result['action'] = 'delete_file'
                 elif 'create_folder' in action_part or 'createfolder' in action_part:
                     result['action'] = 'create_folder'
                 elif 'execute' in action_part:
@@ -1435,6 +1442,7 @@ class Agent:
             'create_file': ('[FILE]', 'creando', 'build'),
             'edit_file':   ('[EDIT]', 'editando', 'smooth'),
             'read_file':   ('[READ]', 'leyendo', 'type'),
+            'delete_file': ('[DEL]', 'eliminando', 'pulse'),
             'execute':     ('[RUN]', 'ejecutando', 'wave'),
             'create_folder':('[DIR]', 'creando carpeta', 'orbit'),
         }
@@ -1609,6 +1617,13 @@ class Agent:
                 if result.duration_ms > 0:
                     output_parts.append(f"({result.duration_ms}ms)")
                 return "\n".join(output_parts)
+            
+            elif action == 'delete_file' and path:
+                if os.path.exists(path):
+                    os.remove(path)
+                    return f"[OK] Archivo eliminado: {os.path.basename(path)}"
+                else:
+                    return f"[ERROR] Archivo no existe: {path}"
             
             return f"[ERROR] Accion no reconocida: {action}"
         

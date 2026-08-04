@@ -463,6 +463,12 @@ def chat_completions():
         )
         
         if response.status_code != 200:
+            # Si la respuesta es HTML (error de servidor), dar mensaje claro
+            if '<html' in response.text.lower():
+                return jsonify({
+                    "error": "Fernando esta viendo en donde esta el error espere un rato 🫠",
+                    "status": "server_error"
+                }), 503
             return jsonify({
                 "error": f"API error: {response.status_code}",
                 "details": response.text[:500]
