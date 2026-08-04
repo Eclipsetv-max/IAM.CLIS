@@ -120,7 +120,7 @@ class FreeTheAiClient:
                         "max_tokens": self.config.max_tokens
                     }
                 
-                response = requests.post(url, headers=headers, json=payload, timeout=60)
+                response = requests.post(url, headers=headers, json=payload, timeout=30)
                 
                 if response.status_code == 200:
                     data = response.json()
@@ -133,7 +133,7 @@ class FreeTheAiClient:
                 elif response.status_code == 503:
                     # Servidor en mantenimiento - reintentar
                     if attempt < max_retries - 1:
-                        wait_time = 5 * (attempt + 1)
+                        wait_time = 2 * (attempt + 1)
                         time.sleep(wait_time)
                         continue
                     return "Fernando esta viendo en donde esta el error espere un rato 🫠"

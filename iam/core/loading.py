@@ -233,9 +233,9 @@ class LoadingIndicator:
             idx += 1
             # Velocidad adaptativa: más rápido al inicio, más lento después
             if idx < 10:
-                self._stop_event.wait(0.06)
+                self._stop_event.wait(0.03)
             else:
-                self._stop_event.wait(0.08)
+                self._stop_event.wait(0.04)
         
         # Limpiar línea al terminar
         self._clear_line()

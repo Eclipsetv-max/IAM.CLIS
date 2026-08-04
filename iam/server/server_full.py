@@ -465,16 +465,16 @@ def chat_completions():
                     f"{base_url}/chat/completions",
                     headers=headers,
                     json=data,
-                    timeout=180
+                    timeout=60
                 )
                 
                 if response.status_code == 200:
                     return jsonify(response.json())
                 
                 # Si es error de servidor (502, 503, 504), reintentar
-                if response.status_code in [502, 503, 504]:
+                    if response.status_code in [502, 503, 504]:
                     if attempt < max_retries - 1:
-                        time.sleep(3 * (attempt + 1))
+                        time.sleep(1 * (attempt + 1))
                         continue
                 
                 # Si la respuesta es HTML (error de servidor), dar mensaje claro
@@ -491,7 +491,7 @@ def chat_completions():
                 
             except requests.ConnectionError:
                 if attempt < max_retries - 1:
-                    time.sleep(3 * (attempt + 1))
+                    time.sleep(1 * (attempt + 1))
                     continue
                 return jsonify({"error": "Error de conexion con la API"}), 502
         

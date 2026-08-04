@@ -71,7 +71,7 @@ class PersistentShell:
         """Obtener instancia del shell"""
         return cls(working_dir)
     
-    def exec(self, command: str, timeout: int = 60, 
+    def exec(self, command: str,         timeout: int = 30, 
              cwd: str = None) -> CommandResult:
         """
         Ejecutar comando en el shell persistente
@@ -212,13 +212,13 @@ def get_shell(working_dir: str = None) -> PersistentShell:
     return PersistentShell.get_instance(working_dir)
 
 
-def run_command(command: str, timeout: int = 60, cwd: str = None) -> CommandResult:
+def run_command(command: str,         timeout: int = 30, cwd: str = None) -> CommandResult:
     """Ejecutar comando rapidamente"""
     shell = get_shell(cwd)
     return shell.exec(command, timeout=timeout)
 
 
-def run_command_safe(command: str, timeout: int = 60, cwd: str = None) -> Tuple[bool, str]:
+def run_command_safe(command: str,         timeout: int = 30, cwd: str = None) -> Tuple[bool, str]:
     """
     Ejecutar comando de forma segura
     Retorna: (exito, salida)
@@ -245,7 +245,7 @@ class WindowsPersistentShell(PersistentShell):
         else:
             self._shell_type = 'bash'
     
-    def exec(self, command: str, timeout: int = 60, 
+    def exec(self, command: str,         timeout: int = 30, 
              cwd: str = None) -> CommandResult:
         """Ejecutar comando con soporte Windows"""
         start_time = time.time()

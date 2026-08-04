@@ -1850,7 +1850,7 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 16384,
+                        "max_tokens": 8192,
                         "top_p": 0.9
                     }
                 else:
@@ -1866,11 +1866,11 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 16384,
+                        "max_tokens": 8192,
                         "top_p": 0.9
                     }
                 
-                response = requests.post(url, headers=headers, json=payload, timeout=180)
+                response = requests.post(url, headers=headers, json=payload, timeout=60)
                 
                 if response.status_code == 200:
                     data = response.json()
@@ -1887,14 +1887,14 @@ class Agent:
                 elif response.status_code == 503:
                     # Servidor en mantenimiento - Render despertando
                     if attempt < max_retries - 1:
-                        wait_time = 5 * (attempt + 1)  # 5s, 10s, 15s
+                        wait_time = 2 * (attempt + 1)  # 2s, 4s
                         time.sleep(wait_time)
                         continue
                     return "Fernando esta viendo en donde esta el error espere un rato 🫠"
                 elif response.status_code == 502:
                     # Bad Gateway - servidor no responde correctamente
                     if attempt < max_retries - 1:
-                        wait_time = 3 * (attempt + 1)  # 3s, 6s, 9s
+                        wait_time = 2 * (attempt + 1)  # 2s, 4s
                         time.sleep(wait_time)
                         continue
                     return "Fernando esta viendo en donde esta el error espere un rato 🫠"
@@ -1902,18 +1902,18 @@ class Agent:
                     # Log del error para debugging
                     error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
                     if attempt < max_retries - 1:
-                        time.sleep(2 * (attempt + 1))  # Backoff exponencial
+                        time.sleep(1 * (attempt + 1))  # 1s, 2s
                         continue
-                    return f"[ERROR] OpenCode: {error_msg}"
+                    return f"Fernando esta viendo en donde esta el error espere un rato 🫠"
                     
             except requests.exceptions.Timeout:
                 if attempt < max_retries - 1:
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(1 * (attempt + 1))
                     continue
                 return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except requests.exceptions.ConnectionError:
                 if attempt < max_retries - 1:
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(1 * (attempt + 1))
                     continue
                 return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except Exception as e:
@@ -2097,10 +2097,10 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 131072,
+                        "max_tokens": 8192,
                         "top_p": 0.9
                     },
-                    timeout=120
+                    timeout=60
                 )
                 
                 if response.status_code == 200:
@@ -2175,11 +2175,11 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 131072,
+                        "max_tokens": 8192,
                         "top_p": 0.9,
                         "stream": True
                     },
-                    timeout=120,
+                    timeout=60,
                     stream=True
                 )
                 
