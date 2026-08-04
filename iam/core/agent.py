@@ -41,7 +41,7 @@ from .permissions import (
     permission_system, request_permission, require_permission
 )
 
-# Nuevos modulos v4.0
+# Nuevos modulos v4.1
 from ..tools.code_validator import code_validator, quality_checker, validate_file, get_quality_report
 from ..tools.smart_templates import smart_templates
 

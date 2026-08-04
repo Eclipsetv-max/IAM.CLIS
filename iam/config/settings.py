@@ -43,7 +43,7 @@ class IAMSettings:
     
     # Versión
     VERSION: str = "4.1"
-    CODENAME: str = "OpenCode-Inspired"
+    CODENAME: str = "Multi-AI Assistant"
     
     # Configuración de IA - Solo OpenCode/MiMo
     DEFAULT_ENGINE: str = "opencode"

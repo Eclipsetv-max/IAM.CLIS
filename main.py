@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IAM v4.0.0 - OpenCode-Inspired Experience
+IAM v4.1 - Asistente de IA
 Punto de entrada principal
 
 Uso: python main.py [--theme claude|cyberpunk|dracula|nord|monokai]

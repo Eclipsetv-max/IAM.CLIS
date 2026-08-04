@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-IAM - Intencional Artificial Multitarea
-v4.0.0 - OpenCode-Inspired with Advanced Features
+IAM - Inteligencia Artificial Multitarea
+v4.1 - Multi-AI Assistant
 
 Arquitectura modular con razonamiento profundo, memoria a largo plazo,
 historial de archivos, cost tracking, auto-compaction y sub-agentes
