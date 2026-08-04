@@ -1512,9 +1512,21 @@ class Agent:
                 if not os.path.exists(path):
                     return f"[ERROR] Archivo no existe: {path}"
                 
-                # Verificar read-before-edit (inspirado en OpenCode)
+                # Auto-leer si no se ha leido antes (no bloquear edicion)
                 if path not in self._file_records:
-                    return f"[ERROR] Lee el archivo primero antes de editarlo: {os.path.basename(path)}"
+                    try:
+                        with open(path, 'r', encoding='utf-8') as f:
+                            file_content = f.read()
+                        import hashlib
+                        checksum = hashlib.md5(file_content.encode()).hexdigest()[:12]
+                        permission_system.track_file_read(path, checksum)
+                        self._file_records[path] = {
+                            "read_time": datetime.now(),
+                            "checksum": checksum,
+                            "size": len(file_content)
+                        }
+                    except Exception:
+                        pass
                 
                 # Leer contenido actual para historial
                 with open(path, 'r', encoding='utf-8') as f:
