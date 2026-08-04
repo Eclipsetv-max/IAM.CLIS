@@ -1,4 +1,4 @@
-# IAM v3.4 - Multi-AI Assistant
+# IAM v4.1 - Historial de Cambios
 
 ## Que es IAM?
 
@@ -16,9 +16,9 @@ Tu PC (sin keys) → Servidor Proxy (tiene las keys) → APIs de IA
 
 | IA | Estado | Requiere Key |
 |----|--------|--------------|
-| FreeTheAi | ✅ Activo | No (proxy) |
-| Gemini | ✅ Activo | No (proxy) |
-| OpenCode/MiMo | ⚠️ Pendiente | Si (key del usuario) |
+| OpenCode/MiMo v2.5-free | ✅ Activo | No (proxy) |
+| FreeTheAi | ⚠️ Pendiente | No (proxy) |
+| Gemini | ⚠️ Pendiente | No (proxy) |
 
 ## Instalacion
 
@@ -33,10 +33,11 @@ python main.py
 
 ## Comandos
 
-- `/engine multi` - Usar todas las IAs juntas (default)
-- `/engine freetheai` - Solo FreeTheAi
-- `/engine gemini` - Solo Gemini
-- `/engine opencode` - Solo OpenCode (requiere key)
+- `/engine opencode` - Usar OpenCode/MiMo (default)
+- `/engine freetheai` - Usar FreeTheAi
+- `/engine gemini` - Usar Gemini
+- `/project` - Seleccionar proyecto
+- `/help` - Ver ayuda
 
 ## Dashboard del Servidor
 
@@ -54,40 +55,60 @@ python main.py
 - Los usuarios solo ven la URL del proxy
 - Puedes desactivar el servidor desde el dashboard
 
-## Cambios recientes (v3.4)
-
-### Multi-AI Engine
-- Todas las IAs trabajan en paralelo
-- Si una falla, las otras siguen funcionando
-- Respuesta de la IA mas completa
-
-### Proxy Server
-- Servidor en Render.com (gratis)
-- Dashboard con control total
-- Modo mantenimiento
-- Endpoints: `/v1/chat/completions`, `/v1/gemini`, `/health`
-
-### Seguridad
-- API keys en variables de entorno del servidor
-- `.env` en `.gitignore` (no se sube a GitHub)
-- Solo placeholders en `.env.example`
-
 ## Arquitectura
 
 ```
 IAM CLI (Python)
     ↓
-Proxy Server (Flask en Render)
+Render Server (https://iam-proxy.onrender.com)
     ↓
+OpenCode/MiMo API
 FreeTheAi API
 Gemini API
-OpenCode API
 ```
 
-## Archivos importantes
+## Servidores
 
-- `iam/core/freetheai.py` - Cliente FreeTheAi
-- `iam/core/gemini.py` - Cliente Gemini
-- `iam/core/agent.py` - Motor Multi-AI
-- `iam/server/server_full.py` - Servidor Proxy
-- `.env.example` - Ejemplo de configuracion
+| Servidor | URL | Estado |
+|----------|-----|--------|
+| Render (Produccion) | https://iam-proxy.onrender.com | ✅ Activo |
+| Cloudflare Worker | https://iam-proxy.feabpemu12345.workers.dev | ✅ Activo |
+| Fly.io (Backup) | https://iam-ai-proxy.fly.dev | ✅ Activo |
+
+**UptimeRobot** mantiene el servidor de Render siempre despierto (ping cada 5 min).
+
+## Cambios Recientes (4 Agosto 2026)
+
+### v4.1 - Migracion a Cloudflare/Fly.io/Render
+- ✅ Cloudflare Worker desplegado con dashboard web
+- ✅ Fly.io desplegado con servidor completo
+- ✅ Render configurado con UptimeRobot
+- ✅ API keys configuradas en todos los servidores
+- ✅ Motor por defecto: OpenCode/MiMo v2.5-free
+- ✅ Quitado "OpenCode-Inspired" del titulo
+- ✅ VERSION actualizada a v4.1
+
+### API Keys Configuradas
+- `OPENCODE_API_KEY` - OpenCode/MiMo
+- `FREETHEAI_API_KEY` - FreeTheAi
+- `GEMINI_API_KEY` - Google Gemini
+
+### Archivos Importantes
+
+| Archivo | Descripcion |
+|---------|-------------|
+| `main.py` | Punto de entrada |
+| `iam/config/settings.py` | Configuracion global |
+| `iam/core/agent.py` | Motor Multi-AI |
+| `iam/core/freetheai.py` | Cliente FreeTheAi |
+| `iam/core/gemini.py` | Cliente Gemini |
+| `iam/server/server_full.py` | Servidor Proxy |
+| `proxy/worker.js` | Cloudflare Worker |
+| `.env.example` | Ejemplo de configuracion |
+
+## Proximos Pasos
+
+- [ ] Configurar FreeTheAi (check-in diario en Discord)
+- [ ] Configurar Gemini
+- [ ] Agregar mas modos de IA
+- [ ] Mejorar dashboard con estadisticas de uso
