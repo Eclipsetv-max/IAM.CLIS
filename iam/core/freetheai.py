@@ -82,56 +82,71 @@ class FreeTheAiClient:
     
     def chat(self, prompt: str, system_prompt: str = "") -> str:
         """Enviar mensaje y recibir respuesta"""
+        import time
+        
         if not self.is_available():
             return "[ERROR] FreeTheAi no disponible"
         
-        try:
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": prompt})
-            
-            if self.config.use_proxy:
-                # Usar proxy (local o online)
-                url = f"{self.config.proxy_url}/v1/chat/completions"
-                headers = {"Content-Type": "application/json"}
-                payload = {
-                    "model": self.config.model,
-                    "messages": messages,
-                    "temperature": self.config.temperature,
-                    "max_tokens": self.config.max_tokens
-                }
-            else:
-                # Modo directo (fallback)
-                url = "https://api.freetheai.xyz/v1/chat/completions"
-                headers = {
-                    "Authorization": f"Bearer {self.config.api_key}",
-                    "Content-Type": "application/json"
-                }
-                payload = {
-                    "model": self.config.model,
-                    "messages": messages,
-                    "temperature": self.config.temperature,
-                    "max_tokens": self.config.max_tokens
-                }
-            
-            response = requests.post(url, headers=headers, json=payload, timeout=60)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if "choices" in data and data["choices"]:
-                    return data["choices"][0]["message"]["content"]
-                elif "error" in data:
-                    return f"[ERROR] FreeTheAi: {data['error']}"
-                else:
-                    return f"[ERROR] FreeTheAi: respuesta inesperada"
-            elif response.status_code == 503:
-                return "[MANTENIMIENTO] Servidor temporalmente desactivado"
-            else:
-                return f"[ERROR] FreeTheAi: {response.status_code}"
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                messages = []
+                if system_prompt:
+                    messages.append({"role": "system", "content": system_prompt})
+                messages.append({"role": "user", "content": prompt})
                 
-        except Exception as e:
-            return f"[ERROR] FreeTheAi: {str(e)}"
+                if self.config.use_proxy:
+                    # Usar proxy (local o online)
+                    url = f"{self.config.proxy_url}/v1/chat/completions"
+                    headers = {"Content-Type": "application/json"}
+                    payload = {
+                        "model": self.config.model,
+                        "messages": messages,
+                        "temperature": self.config.temperature,
+                        "max_tokens": self.config.max_tokens
+                    }
+                else:
+                    # Modo directo (fallback)
+                    url = "https://api.freetheai.xyz/v1/chat/completions"
+                    headers = {
+                        "Authorization": f"Bearer {self.config.api_key}",
+                        "Content-Type": "application/json"
+                    }
+                    payload = {
+                        "model": self.config.model,
+                        "messages": messages,
+                        "temperature": self.config.temperature,
+                        "max_tokens": self.config.max_tokens
+                    }
+                
+                response = requests.post(url, headers=headers, json=payload, timeout=60)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "choices" in data and data["choices"]:
+                        return data["choices"][0]["message"]["content"]
+                    elif "error" in data:
+                        return f"[ERROR] FreeTheAi: {data['error']}"
+                    else:
+                        return f"[ERROR] FreeTheAi: respuesta inesperada"
+                elif response.status_code == 503:
+                    # Servidor en mantenimiento - reintentar
+                    if attempt < max_retries - 1:
+                        wait_time = 5 * (attempt + 1)
+                        time.sleep(wait_time)
+                        continue
+                    return "[MANTENIMIENTO] Servidor en mantenimiento. Render esta despertando, intenta en unos segundos."
+                else:
+                    return f"[ERROR] FreeTheAi: {response.status_code}"
+                    
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    time.sleep(2)
+                    continue
+                return f"[ERROR] FreeTheAi: {str(e)}"
+        
+        return "[ERROR] FreeTheAi: max reintentos alcanzados"
     
     def chat_stream(self, prompt: str, system_prompt: str = "") -> Generator[str, None, None]:
         """Enviar mensaje y recibir respuesta con streaming"""

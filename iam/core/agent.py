@@ -1844,6 +1844,13 @@ class Agent:
                         return f"[ERROR] OpenCode: {data['error']}"
                     else:
                         return "[ERROR] OpenCode: respuesta inesperada"
+                elif response.status_code == 503:
+                    # Servidor en mantenimiento - Render despertando
+                    if attempt < max_retries - 1:
+                        wait_time = 5 * (attempt + 1)  # 5s, 10s, 15s
+                        time.sleep(wait_time)
+                        continue
+                    return "Servidor en mantenimiento (503). Render esta despertando, intenta en unos segundos."
                 else:
                     # Log del error para debugging
                     error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
