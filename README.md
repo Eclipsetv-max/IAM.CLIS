@@ -71,12 +71,14 @@ Hola! Soy IAM, puedo ayudarte con:
 ```
 IAM CLI (Python)
     ↓
-Proxy Server (https://iam-proxy.onrender.com)
+Cloudflare Worker (https://iam-proxy.feabpemu12345.workers.dev)
     ↓
-FreeTheAi API (sin key requerida)
-Gemini API (sin key requerida)
-OpenCode API (key del usuario)
+FreeTheAi API
+Gemini API
+OpenCode/MiMo API
 ```
+
+**Las API keys ya estan configuradas.** No necesitas nada mas.
 
 ## Seguridad
 
@@ -87,8 +89,8 @@ OpenCode API (key del usuario)
 
 ## Dashboard del Servidor
 
-- URL: `https://iam-proxy.onrender.com/dashboard`
-- Control total: activar/desactivar, ver estado, modo mantenimiento
+- URL: `https://iam-proxy.feabpemu12345.workers.dev/health`
+- Estado del servidor en tiempo real
 
 ## Archivos importantes
 
@@ -104,6 +106,7 @@ OpenCode API (key del usuario)
 
 ## Cambios recientes
 
+- **v3.5:** Cloudflare Worker - sin cold start, acceso global
 - **v3.4:** Multi-AI engine, proxy server auto-conectado
 - **v3.1:** Animaciones mejoradas, loading indicators
 - **v3.0:** Sistema de modos, TOOL_CALL parser

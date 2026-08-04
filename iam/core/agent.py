@@ -1777,7 +1777,7 @@ class Agent:
         import time
         
         # Usar proxy (no necesita API key local)
-        proxy_url = "https://iam-proxy.onrender.com"
+        proxy_url = "https://iam-proxy.feabpemu12345.workers.dev"
         
         # Sin proxy, verificar API key local
         if not proxy_url and not settings.OPENCODE_API_KEY:
@@ -1925,7 +1925,7 @@ class Agent:
             messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
             
             # Usar proxy
-            proxy_url = "https://iam-proxy.onrender.com"
+            proxy_url = "https://iam-proxy.feabpemu12345.workers.dev"
             
             if proxy_url:
                 url = f"{proxy_url}/v1/chat/completions"
@@ -2010,7 +2010,7 @@ class Agent:
         import time
         
         # Usar proxy (no necesita API key local)
-        proxy_url = "https://iam-proxy.onrender.com"
+        proxy_url = "https://iam-proxy.feabpemu12345.workers.dev"
         
         # Sin proxy, verificar API key local
         if not proxy_url and not settings.OPENCODE_API_KEY:
