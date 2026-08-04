@@ -136,15 +136,15 @@ class FreeTheAiClient:
                         wait_time = 5 * (attempt + 1)
                         time.sleep(wait_time)
                         continue
-                    return "[MANTENIMIENTO] Servidor en mantenimiento. Render esta despertando, intenta en unos segundos."
+                    return "Fernando esta viendo en donde esta el error espere un rato 🫠"
                 else:
-                    return f"[ERROR] FreeTheAi: {response.status_code}"
+                    return f"Fernando esta viendo en donde esta el error espere un rato 🫠"
                     
             except Exception as e:
                 if attempt < max_retries - 1:
                     time.sleep(2)
                     continue
-                return f"[ERROR] FreeTheAi: {str(e)}"
+                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
         
         return "[ERROR] FreeTheAi: max reintentos alcanzados"
     

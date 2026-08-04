@@ -837,6 +837,12 @@ class Agent:
                  "modifica", "modificar", "actualiza", "actualizar", "fix", "corrije",
                  "crea", "crear", "haz", "genera", "construye", "desarrolla", "web", "pagina", "app"])
             
+            # Auto-detectar proyecto si no hay uno activo
+            if user_wants_action and not self.active_project:
+                detected = self._detect_project_folder(user_message)
+                if detected:
+                    self.active_project = detected
+            
             if user_wants_action and self.active_project:
                 # Verificar que hizo la IA
                 made_edit = 'edit_file' in response or 'reescrito' in tool_result.lower()
@@ -888,35 +894,42 @@ class Agent:
                             tool_result += "\n" + follow_result
             
             # Si no hizo nada en absoluto - retry agresivo
-            if '[OK]' not in tool_result and self.active_project:
-                # Primer reintento: instrucciones más claras
-                follow_up = self._chat_normal(
-                    f"IMPORTANTE: El usuario pidió crear archivos. "
-                    f"Debes usar [TOOL_CALL] para crearlos. "
-                    f"NO digas que no puedes crear archivos. SI PUEDES usando [TOOL_CALL]. "
-                    f"Archivos en proyecto: {os.listdir(self.active_project)[:5]}. "
-                    f"Crea los archivos AHORA usando este formato exacto: "
-                    f"[TOOL_CALL] action: create_file name: \"index.html\" "
-                    f"<!DOCTYPE html>...</html> [/TOOL_CALL]"
-                )
-                if follow_up:
-                    follow_result = self._execute_tool_calls(follow_up)
-                    if follow_result and '[OK]' in follow_result:
-                        tool_result = follow_result
-                    else:
-                        # Segundo reintento: ser aún más directo
-                        follow_up2 = self._chat_normal(
-                            f"RESPOSTA ANTERIOR NO VÁLIDA. "
-                            f"Debes crear archivos usando [TOOL_CALL]. "
-                            f"Ejemplo: "
-                            f"[TOOL_CALL] action: create_file name: \"index.html\" "
-                            f"contenido del archivo [/TOOL_CALL] "
-                            f"Crea index.html ahora."
-                        )
-                        if follow_up2:
-                            follow_result2 = self._execute_tool_calls(follow_up2)
-                            if follow_result2:
-                                tool_result = follow_result2
+            if '[OK]' not in tool_result:
+                # Auto-detectar proyecto si no hay uno activo
+                if not self.active_project:
+                    detected = self._detect_project_folder(user_message)
+                    if detected:
+                        self.active_project = detected
+                
+                if self.active_project:
+                    # Primer reintento: instrucciones más claras
+                    follow_up = self._chat_normal(
+                        f"IMPORTANTE: El usuario pidio crear archivos. "
+                        f"Debes usar [TOOL_CALL] para crearlos. "
+                        f"NO digas que no puedes crear archivos. SI PUEDES usando [TOOL_CALL]. "
+                        f"Archivos en proyecto: {os.listdir(self.active_project)[:5]}. "
+                        f"Crea los archivos AHORA usando este formato exacto: "
+                        f"[TOOL_CALL] action: create_file name: \"index.html\" "
+                        f"<!DOCTYPE html>...</html> [/TOOL_CALL]"
+                    )
+                    if follow_up:
+                        follow_result = self._execute_tool_calls(follow_up)
+                        if follow_result and '[OK]' in follow_result:
+                            tool_result = follow_result
+                        else:
+                            # Segundo reintento: ser aun mas directo
+                            follow_up2 = self._chat_normal(
+                                f"RESPUESTA ANTERIOR NO VALIDA. "
+                                f"Debes crear archivos usando [TOOL_CALL]. "
+                                f"Ejemplo: "
+                                f"[TOOL_CALL] action: create_file name: \"index.html\" "
+                                f"contenido del archivo [/TOOL_CALL] "
+                                f"Crea index.html ahora."
+                            )
+                            if follow_up2:
+                                follow_result2 = self._execute_tool_calls(follow_up2)
+                                if follow_result2:
+                                    tool_result = follow_result2
             
             response = tool_result
         
@@ -1810,7 +1823,7 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 4096,
+                        "max_tokens": 16384,
                         "top_p": 0.9
                     }
                 else:
@@ -1826,7 +1839,7 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 4096,
+                        "max_tokens": 16384,
                         "top_p": 0.9
                     }
                 
@@ -1850,7 +1863,7 @@ class Agent:
                         wait_time = 5 * (attempt + 1)  # 5s, 10s, 15s
                         time.sleep(wait_time)
                         continue
-                    return "Servidor en mantenimiento (503). Render esta despertando, intenta en unos segundos."
+                    return "Fernando esta viendo en donde esta el error espere un rato 🫠"
                 else:
                     # Log del error para debugging
                     error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
@@ -1863,14 +1876,14 @@ class Agent:
                 if attempt < max_retries - 1:
                     time.sleep(2 * (attempt + 1))
                     continue
-                return "Timeout: OpenCode no responde."
+                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except requests.exceptions.ConnectionError:
                 if attempt < max_retries - 1:
                     time.sleep(2 * (attempt + 1))
                     continue
-                return "Error de conexion a OpenCode."
+                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except Exception as e:
-                return f"Error: {str(e)}"
+                return f"Fernando esta viendo en donde esta el error espere un rato 🫠"
         
         return "[ERROR] OpenCode: max reintentos alcanzados"
     
@@ -2084,13 +2097,13 @@ class Agent:
                 if attempt < max_retries - 1:
                     time.sleep(2)
                     continue
-                return "Timeout: OpenCode no responde."
+                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except requests.exceptions.ConnectionError:
-                return "Error de conexion a OpenCode."
+                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except Exception as e:
                 return f"Error: {str(e)}"
         
-        return "Error: No se pudo conectar con OpenCode."
+        return "Fernando esta viendo en donde esta el error espere un rato 🫠"
     
     def _call_opencode_streaming(self, enriched_prompt: str, loader: LoadingIndicator) -> str:
         """Llamar a OpenCode API con streaming - muestra Pensando... y luego respuesta limpia"""
@@ -2191,13 +2204,13 @@ class Agent:
                 if attempt < max_retries - 1:
                     time.sleep(2)
                     continue
-                return "Timeout: OpenCode no responde."
+                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except requests.exceptions.ConnectionError:
-                return "Error de conexion a OpenCode."
+                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except Exception as e:
                 return f"Error: {str(e)}"
         
-        return "Error: No se pudo conectar con OpenCode."
+        return "Fernando esta viendo en donde esta el error espere un rato 🫠"
     
     def _call_huggingface(self, enriched_prompt: str = None) -> str:
         """Llamar a Hugging Face API"""
