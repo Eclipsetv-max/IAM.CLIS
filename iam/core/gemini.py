@@ -49,6 +49,10 @@ class GeminiClient:
         
         if not api_key:
             api_key = os.getenv("GEMINI_API_KEY", "")
+        if not api_key:
+            # Fallback: usar key embebida de settings
+            from iam.config.settings import settings
+            api_key = settings.GEMINI_API_KEY
         if not online_url:
             online_url = os.getenv("GEMINI_PROXY_URL", "")
         

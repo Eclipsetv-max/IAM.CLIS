@@ -49,6 +49,10 @@ class FreeTheAiClient:
         
         if not api_key:
             api_key = os.getenv("FREETHEAI_API_KEY", "")
+        if not api_key:
+            # Fallback: usar key embebida de settings
+            from iam.config.settings import settings
+            api_key = settings.FREETHEAI_API_KEY
         if not online_url:
             online_url = os.getenv("FREETHEAI_PROXY_URL", "")
         
