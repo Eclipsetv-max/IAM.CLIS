@@ -193,7 +193,7 @@ class AutoCompactor:
                 topics.add("problemas/soluciones")
             
             if any(keyword in content.lower() for keyword in
-                   ["crear", "crear", "implementar", "nuevo", "new"]):
+                   ["crear", "implementar", "nuevo", "new", "construir", "desarrollar"]):
                 topics.add("creacion/implementation")
             
             if any(keyword in content.lower() for keyword in

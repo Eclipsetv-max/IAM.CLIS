@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-IAM Enhanced CLI v3.0 - Claude Code-like Experience
-Streaming, Multi-line, Diff Editor, Permissions, Context Window
+IAM Enhanced CLI v3.1 - Claude Code-like Experience
+Streaming, Multi-line, Diff Editor, Permissions, Context Window, ESC Interrupt
 """
 
 import os
@@ -41,6 +41,70 @@ from rich.live import Live
 from rich import box
 
 from ..config.settings import settings, COLORS
+
+
+# ============================================================================
+# INTERRUPT MANAGER - ESC para cancelar procesos
+# ============================================================================
+
+class InterruptManager:
+    """Gestor global de interrupciones por ESC"""
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance._interrupt_event = threading.Event()
+                cls._instance._esc_listener_thread = None
+                cls._instance._listening = False
+            return cls._instance
+
+    @property
+    def is_interrupted(self) -> bool:
+        return self._interrupt_event.is_set()
+
+    def interrupt(self):
+        """Senyal de interrupcion"""
+        self._interrupt_event.set()
+
+    def clear(self):
+        """Limpiar senyal"""
+        self._interrupt_event.clear()
+
+    def wait(self, timeout=None) -> bool:
+        """Esperar senyal de interrupcion. Retorna True si fue interrumpido"""
+        return self._interrupt_event.wait(timeout=timeout)
+
+    def start_listening(self):
+        """Iniciar listener de ESC en background"""
+        if self._listening:
+            return
+        self._listening = True
+        self._esc_listener_thread = threading.Thread(target=self._esc_listener, daemon=True)
+        self._esc_listener_thread.start()
+
+    def stop_listening(self):
+        """Detener listener"""
+        self._listening = False
+
+    def _esc_listener(self):
+        """Escuchar tecla ESC globalmente"""
+        try:
+            import msvcrt
+            while self._listening:
+                if msvcrt.kbhit():
+                    ch = msvcrt.getch()
+                    if ch == b'\x1b':  # ESC
+                        self.interrupt()
+                time.sleep(0.05)
+        except Exception:
+            pass
+
+
+# Instancia global
+interrupt = InterruptManager()
 
 
 # ============================================================================
@@ -875,9 +939,24 @@ class EnhancedCLI:
                         sys.stdout.flush()
                     continue
 
-                # Escape sequences (arrow keys etc)
-                if ch == b'\xe0' or ch == b'\x00':
-                    msvcrt.getch()
+                # Escape = limpiar input (ESC solo, no secuencias)
+                if ch == b'\x1b':
+                    # Verificar si es ESC solo (no secuencia de flecha)
+                    if msvcrt.kbhit():
+                        next_ch = msvcrt.getch()
+                        if next_ch in (b'\xe0', b'\x00'):
+                            msvcrt.getch()  # consumir tecla de flecha
+                            continue
+                    # ESC solo: limpiar linea
+                    chars.clear()
+                    sys.stdout.write(f"\r\033[2K")
+                    try:
+                        mc = self.MODE_COLORS.get(mode, "#89b4fa")
+                        r, g, b = int(mc[1:3],16), int(mc[3:5],16), int(mc[5:7],16)
+                        sys.stdout.write(f"\033[38;2;189;147;249m  >\033[0m \033[38;2;{r};{g};{b}miam/{mode}\033[0m\033[2m{project_tag}\033[0m ")
+                    except:
+                        sys.stdout.write(f"  > iam/{mode}{project_tag} ")
+                    sys.stdout.flush()
                     continue
 
                 # Ctrl+C

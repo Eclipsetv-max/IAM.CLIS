@@ -211,12 +211,21 @@ class LoadingIndicator:
         return ''.join(parts)
 
     def _animate(self):
-        """Animación fluida en thread separado"""
+        """Animacion fluida en thread separado - responde a ESC"""
         spinner = self.SPINNERS.get(self._spinner_type, self.SPINNERS['dots'])
         color = self.SPINNER_COLORS.get(self._spinner_type, self.SPINNER_COLORS['dots'])
         idx = 0
         
         while not self._stop_event.is_set():
+            # Verificar interrupcion por ESC
+            try:
+                from .enhanced_cli import interrupt
+                if interrupt.is_interrupted:
+                    self._stop_event.set()
+                    break
+            except Exception:
+                pass
+
             with self._lock:
                 char = spinner[idx % len(spinner)]
                 
@@ -231,13 +240,8 @@ class LoadingIndicator:
                         pass
             
             idx += 1
-            # Velocidad adaptativa: más rápido al inicio, más lento después
-            if idx < 10:
-                self._stop_event.wait(0.03)
-            else:
-                self._stop_event.wait(0.04)
+            self._stop_event.wait(0.04)
         
-        # Limpiar línea al terminar
         self._clear_line()
     
     def _clear_line(self):

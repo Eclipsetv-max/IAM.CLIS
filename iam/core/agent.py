@@ -574,41 +574,29 @@ class Agent:
         if self.active_project and os.path.isdir(self.active_project):
             return self.active_project
 
-        desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+        import re
+        from datetime import datetime
         
-        # Buscar carpetas recientes en el escritorio que parezcan proyectos
-        try:
-            folders = []
-            for item in os.listdir(desktop):
-                full_path = os.path.join(desktop, item)
-                if os.path.isdir(full_path):
-                    # Verificar si tiene subcarpetas typical de proyecto web
-                    subitems = os.listdir(full_path) if os.path.isdir(full_path) else []
-                    has_web_structure = any(d in ['css', 'js', 'img', 'images', 'assets'] for d in subitems)
-                    folders.append({
-                        "name": item,
-                        "path": full_path,
-                        "is_web": has_web_structure,
-                        "files": len(subitems)
-                    })
-            
-            # Priorizar carpetas con estructura web
-            web_folders = [f for f in folders if f["is_web"]]
-            if web_folders:
-                # Usar la mas reciente
-                newest = max(web_folders, key=lambda x: os.path.getmtime(x["path"]))
-                return newest["path"]
-            
-            # Si no hay carpetas web, usar la mas reciente
-            if folders:
-                newest = max(folders, key=lambda x: os.path.getmtime(x["path"]))
-                return newest["path"]
+        # Generar nombre basado en el mensaje del usuario
+        words = re.findall(r'[a-zA-Záéíóúñ]+', content.lower())
+        skip = {'crear', 'crea', 'hacer', 'haz', 'una', 'un', 'el', 'la', 'los', 'las',
+                'con', 'por', 'para', 'que', 'se', 'sea', 'como', 'mas', 'más',
+                'portfolio', 'landing', 'ecommerce', 'blog', 'dashboard', 'web', 'pagina',
+                'html', 'css', 'javascript', 'js', 'personal', 'minimalista', 'moderno',
+                'animaciones', 'suaves', 'modo', 'oscuro', 'archivo', 'archivos', 'carpeta'}
+        key_words = [w for w in words if w not in skip and len(w) > 2][:3]
+        name = '_'.join(key_words) if key_words else 'proyecto'
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        folder_name = f"{name}_{timestamp}"
         
-        except Exception:
-            pass
+        # Crear en la carpeta de tests si existe, si no en el escritorio
+        test_dir = os.environ.get('TEST_OUTPUT_DIR', 
+                                   os.path.join(os.path.expanduser("~"), "Desktop", "iam_real_tests"))
+        os.makedirs(test_dir, exist_ok=True)
         
-        # Fallback: usar el directorio actual
-        return os.getcwd()
+        project_path = os.path.join(test_dir, folder_name)
+        os.makedirs(project_path, exist_ok=True)
+        return project_path
     
     def _detect_and_create_raw_files(self, content: str, folder: str) -> list:
         """Detectar HTML/CSS/JS en contenido raw y crear archivos.
@@ -850,91 +838,650 @@ class Agent:
             
             if user_wants_action and self.active_project:
                 # Verificar que hizo la IA
-                made_edit = 'edit_file' in response or 'reescrito' in tool_result.lower()
-                made_create = 'create_file' in response or 'creado' in tool_result.lower()
+                made_edit = 'edit_file' in response or 'editfile' in response.lower() or 'reescrito' in tool_result.lower() or 'editado' in tool_result.lower()
+                made_create = 'create_file' in response or 'createfile' in response.lower() or 'creado' in tool_result.lower() or 'Verificado' in tool_result
                 
                 # Contar archivos creados
                 created_files = []
                 if made_create:
                     import re
-                    created_matches = re.findall(r'\[OK\]\s*Archivo (?:creado|reescrito):\s*(.+)', tool_result)
+                    created_matches = re.findall(r'\[OK\]\s*(?:Archivo (?:creado|reescrito)|Verificado):\s*(.+?)(?:\s*\(\d+.*?\))?$', tool_result, re.MULTILINE)
                     created_files = [os.path.basename(f) for f in created_matches]
                 
-                # Verificar si faltan archivos tipicos de web
-                # Buscar tanto index.html como cualquier .html
-                has_html = any(f.endswith('.html') for f in created_files) or 'index.html' in str(created_files)
-                has_css = any(f.endswith('.css') for f in created_files)
-                has_js = any(f.endswith('.js') for f in created_files)
+                # Verificar si faltan archivos tipicos de web - verificacion fisica (debe tener contenido suficiente)
+                def _file_ok(folder, name):
+                    p = os.path.join(folder, name)
+                    if not (os.path.isfile(p) and os.path.getsize(p) > 0):
+                        return False
+                    # Para CSS, verificar que tenga al menos 50 lineas (no solo variables)
+                    if name.endswith('.css'):
+                        try:
+                            with open(p, 'r', encoding='utf-8') as f:
+                                lines = len(f.readlines())
+                            return lines >= 50
+                        except:
+                            return False
+                    return True
+                
+                if self.active_project and os.path.isdir(self.active_project):
+                    has_html = _file_ok(self.active_project, 'index.html')
+                    has_css = any(f.endswith('.css') and _file_ok(self.active_project, f) 
+                                  for f in os.listdir(self.active_project))
+                    has_js = any(f.endswith('.js') and _file_ok(self.active_project, f) 
+                                 for f in os.listdir(self.active_project))
+                else:
+                    has_html = any(f.endswith('.html') for f in created_files) or 'index.html' in str(created_files)
+                    has_css = any(f.endswith('.css') for f in created_files)
+                    has_js = any(f.endswith('.js') for f in created_files)
                 
                 needs_html = not has_html
                 needs_css = not has_css
                 needs_js = not has_js
                 
-                # Si no hizo nada util O faltan archivos
+                # Si no hizo nada util O faltan archivos - reintento con loop
                 if (not made_edit and not made_create) or (made_create and (needs_html or needs_css or needs_js)):
-                    # Construir mensaje de archivos faltantes
-                    missing = []
-                    if needs_html:
-                        missing.append("index.html")
-                    if needs_css:
-                        missing.append("style.css")
-                    if needs_js:
-                        missing.append("script.js")
+                    for _retry in range(3):
+                        missing = []
+                        if needs_html:
+                            missing.append("index.html")
+                        if needs_css:
+                            missing.append("style.css")
+                        if needs_js:
+                            missing.append("script.js")
+                        if not missing:
+                            break
+
+                        # Construir contexto de archivos existentes
+                        existing_context = ""
+                        if self.active_project and os.path.isdir(self.active_project):
+                            for fname in os.listdir(self.active_project):
+                                fpath = os.path.join(self.active_project, fname)
+                                if os.path.isfile(fpath) and os.path.getsize(fpath) > 0:
+                                    try:
+                                        with open(fpath, 'r', encoding='utf-8') as f:
+                                            content = f.read()
+                                        existing_context += f"\n--- {fname} (existente) ---\n{content[:1500]}\n"
+                                    except:
+                                        pass
+
+                        next_file = missing[0]
+                        
+                        # Si falta CSS pero hay HTML, pedir HTML completo con CSS inline y luego separar
+                        if next_file == "style.css" and has_html:
+                            follow_up = self._chat_normal(
+                                f"El usuario pidio: {user_message}. "
+                                f"{existing_context}\n"
+                                f"El HTML de arriba esta INCOMPLETO y le faltan estilos. "
+                                f"Reescribe el HTML COMPLETO con TODOS los estilos CSS DENTRO de un tag <style>. "
+                                f"Incluye: variables, layout, navbar, hero, secciones, cards, responsive, animaciones. "
+                                f"MINIMO 300 lineas de CSS dentro del <style>. "
+                                f"[TOOL_CALL] action: create_file name: \"index.html\" HTML completo con <style> [/TOOL_CALL]",
+                                max_tokens=3072
+                            )
+                        elif next_file == "script.js":
+                            follow_up = self._chat_normal(
+                                f"El usuario pidio: {user_message}. "
+                                f"{existing_context}\n"
+                                f"Crea el archivo script.js con JavaScript funcional para el HTML de arriba. "
+                                f"DEBE incluir: animaciones, interacciones, navegacion, efectos. "
+                                f"[TOOL_CALL] action: create_file name: \"script.js\" tu JS aqui [/TOOL_CALL]",
+                                max_tokens=3072
+                            )
+                        else:
+                            follow_up = self._chat_normal(
+                                f"El usuario pidio: {user_message}. "
+                                f"Archivos creados: {created_files if created_files else 'ninguno'}. "
+                                f"FALTA: {next_file}. "
+                                f"Crea SOLO este archivo AHORA en un [TOOL_CALL]. "
+                                f"El archivo debe estar en la RAIZ de la carpeta del proyecto, NO en subcarpetas. "
+                                f"Formato: [TOOL_CALL] action: create_file name: \"{next_file}\" contenido aqui [/TOOL_CALL]",
+                                max_tokens=3072
+                            )
+                        if follow_up:
+                            follow_result = self._execute_tool_calls(follow_up)
+                            if follow_result and '[OK]' in follow_result:
+                                tool_result += "\n" + follow_result
+                                
+                                # Extraer CSS del HTML si tiene <style> inline
+                                if self.active_project and os.path.isfile(os.path.join(self.active_project, 'index.html')):
+                                    html_path = os.path.join(self.active_project, 'index.html')
+                                    try:
+                                        with open(html_path, 'r', encoding='utf-8') as f:
+                                            html_content = f.read()
+                                        # Buscar bloques <style>...</style>
+                                        import re as _re
+                                        style_matches = _re.findall(r'<style[^>]*>(.*?)</style>', html_content, _re.DOTALL | _re.IGNORECASE)
+                                        if style_matches:
+                                            css_content = '\n\n'.join(style_matches)
+                                            # Guardar CSS en archivo separado
+                                            css_path = os.path.join(self.active_project, 'style.css')
+                                            with open(css_path, 'w', encoding='utf-8') as f:
+                                                f.write(css_content)
+                                            # Reemplazar <style>...</style> por link a CSS
+                                            new_html = _re.sub(r'<style[^>]*>.*?</style>', '<link rel="stylesheet" href="style.css">', html_content, flags=_re.DOTALL | _re.IGNORECASE)
+                                            with open(html_path, 'w', encoding='utf-8') as f:
+                                                f.write(new_html)
+                                            tool_result += f"\n[OK] CSS extraido de HTML: style.css ({len(css_content)} bytes)"
+                                            has_css = True
+                                            needs_css = False
+                                        
+                                        # Asegurar que el HTML tenga <script src="script.js">
+                                        with open(html_path, 'r', encoding='utf-8') as f:
+                                            html_content = f.read()
+                                        if 'script.js' not in html_content:
+                                            # Agregar script tag antes de </body> o al final
+                                            if '</body>' in html_content:
+                                                new_html = html_content.replace('</body>', '    <script src="script.js"></script>\n</body>')
+                                            elif '</html>' in html_content:
+                                                new_html = html_content.replace('</html>', '    <script src="script.js"></script>\n</html>')
+                                            else:
+                                                new_html = html_content + '\n<script src="script.js"></script>'
+                                            with open(html_path, 'w', encoding='utf-8') as f:
+                                                f.write(new_html)
+                                            tool_result += f"\n[OK] script.js tag agregado al HTML"
+                                    except:
+                                        pass
+                                
+                                created_files = re.findall(r'\[OK\]\s+(?:Archivo|Reescrito|Verificado)\s+(?:creado|reescrito)?:\s+(\S+)', tool_result)
+                                # Verificar existencia fisica en disco (con contenido suficiente)
+                                if self.active_project:
+                                    def _fok(name):
+                                        p = os.path.join(self.active_project, name)
+                                        if not (os.path.isfile(p) and os.path.getsize(p) > 0):
+                                            return False
+                                        if name.endswith('.css'):
+                                            try:
+                                                with open(p, 'r', encoding='utf-8') as f:
+                                                    return len(f.readlines()) >= 50
+                                            except:
+                                                return False
+                                        return True
+                                    has_html = _fok('index.html')
+                                    has_css = any(f.endswith('.css') and _fok(f) for f in os.listdir(self.active_project))
+                                    has_js = any(f.endswith('.js') and _fok(f) for f in os.listdir(self.active_project))
+                                else:
+                                    has_html = any('index.html' in f for f in created_files)
+                                    has_css = any('style.css' in f or f.endswith('.css') for f in created_files)
+                                    has_js = any('script.js' in f or f.endswith('.js') for f in created_files)
+                                needs_html = not has_html
+                                needs_css = not has_css
+                                needs_js = not has_js
                     
-                    # Primer reintento con instrucciones claras
-                    follow_up = self._chat_normal(
-                        f"El usuario pidio: {user_message}. "
-                        f"Archivos creados hasta ahora: {created_files if created_files else 'ninguno'}. "
-                        f"Faltan estos archivos: {', '.join(missing)}. "
-                        f"Crea cada archivo en un TOOL_CALL SEPARADO. "
-                        f"NO pongas CSS dentro del HTML. "
-                        f"Formato correcto: "
-                        f"[TOOL_CALL] action: create_file name: \"style.css\" "
-                        f"/* todo el CSS aqui */ "
-                        f"[/TOOL_CALL]"
-                    )
-                    if follow_up:
-                        follow_result = self._execute_tool_calls(follow_up)
-                        if follow_result and '[OK]' in follow_result:
-                            tool_result += "\n" + follow_result
+                    # Fallback: crear archivos placeholder si la IA no los creo
+                    if self.active_project and (needs_html or needs_css or needs_js):
+                        if needs_html:
+                            placeholder = '<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Proyecto</title>\n<link rel="stylesheet" href="style.css">\n</head>\n<body>\n<h1>Proyecto</h1>\n<script src="script.js"></script>\n</body>\n</html>'
+                            path = os.path.join(self.active_project, 'index.html')
+                            with open(path, 'w', encoding='utf-8') as f:
+                                f.write(placeholder)
+                            tool_result += f"\n[OK] Archivo creado (fallback): index.html ({len(placeholder)} bytes)"
+                        if needs_css:
+                            placeholder = '''/* === VARIABLES === */
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #06b6d4;
+  --gradient: linear-gradient(135deg, #6366f1, #06b6d4);
+  --radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+/* === RESET === */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+/* === UTILIDADES === */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+a { color: var(--accent); text-decoration: none; transition: color 0.3s; }
+a:hover { color: var(--primary-light); }
+/* === NAVBAR === */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 1rem 0;
+}
+.nav-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; }
+.nav-logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+.nav-links { display: flex; gap: 2rem; }
+.nav-link { color: var(--text-muted); font-weight: 500; transition: color 0.3s; }
+.nav-link:hover, .nav-link.active { color: var(--primary); }
+/* === HERO === */
+.hero {
+  min-height: 100vh; display: flex; align-items: center;
+  background: var(--gradient); position: relative;
+}
+.hero-content { position: relative; z-index: 1; padding: 2rem; }
+.hero-greeting { font-size: 1.2rem; color: var(--accent); margin-bottom: 0.5rem; }
+.hero-name { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 800; line-height: 1.1; margin-bottom: 1rem; }
+.hero-description { font-size: 1.3rem; color: var(--text-muted); max-width: 600px; margin-bottom: 2rem; }
+/* === SECCIONES === */
+.section { padding: 6rem 0; }
+.section-title { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+.section-subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 3rem; }
+/* === CARDS === */
+.card {
+  background: var(--bg-card); border-radius: var(--radius);
+  padding: 2rem; border: 1px solid rgba(99, 102, 241, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+/* === BOTONES === */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.8rem 1.8rem; border-radius: var(--radius);
+  font-weight: 600; font-size: 1rem; cursor: pointer;
+  border: none; transition: all 0.3s;
+}
+.btn-primary { background: var(--gradient); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
+/* === GRID === */
+.grid { display: grid; gap: 2rem; }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+/* === SKILLS === */
+.skill-bar { background: var(--bg-card); border-radius: 10px; overflow: hidden; margin-bottom: 1rem; }
+.skill-fill { height: 8px; background: var(--gradient); border-radius: 10px; transition: width 1s ease; }
+/* === FOOTER === */
+.footer {
+  background: var(--bg-card); padding: 3rem 0; text-align: center;
+  border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+/* === ANIMACIONES === */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+.animate-fade-up { animation: fadeInUp 0.6s ease forwards; }
+.animate-fade { animation: fadeIn 0.6s ease forwards; }
+.animate-slide-left { animation: slideInLeft 0.6s ease forwards; }
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .hero-name { font-size: 2.5rem; }
+  .section { padding: 4rem 0; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+/* === SELECCION === */
+::selection { background: var(--primary); color: white; }'''
+                            path = os.path.join(self.active_project, 'style.css')
+                            with open(path, 'w', encoding='utf-8') as f:
+                                f.write(placeholder)
+                            tool_result += f"\n[OK] Archivo creado (fallback): style.css ({len(placeholder)} bytes)"
+                        if needs_js:
+                            placeholder = '''// === IAM JavaScript ===
+document.addEventListener('DOMContentLoaded', () => {
+  // Navegacion activa
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  
+  function updateNav() {
+    const scrollY = window.scrollY;
+    sections.forEach(section => {
+      const top = section.offsetTop - 100;
+      const height = section.offsetHeight;
+      const id = section.getAttribute('id');
+      if (scrollY >= top && scrollY < top + height) {
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('data-section') === id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }
+  
+  // Navbar sticky
+  const navbar = document.querySelector('.navbar');
+  function handleScroll() {
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  }
+  
+  // Animaciones al scroll
+  const animateElements = document.querySelectorAll('[data-animate]');
+  function animateOnScroll() {
+    animateElements.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.85) {
+        el.classList.add('visible');
+      }
+    });
+  }
+  
+  // Mobile menu toggle
+  const navToggle = document.querySelector('.nav-toggle');
+  const navLinksContainer = document.querySelector('.nav-links');
+  if (navToggle) {
+    navToggle.addEventListener('click', () => {
+      navLinksContainer.classList.toggle('active');
+      navToggle.classList.toggle('active');
+    });
+  }
+  
+  // Smooth scroll para links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+  
+  // Contadores animados
+  function animateCounters() {
+    const counters = document.querySelectorAll('[data-count]');
+    counters.forEach(counter => {
+      const target = parseInt(counter.getAttribute('data-count'));
+      const duration = 2000;
+      const step = target / (duration / 16);
+      let current = 0;
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          counter.textContent = target;
+          clearInterval(timer);
+        } else {
+          counter.textContent = Math.floor(current);
+        }
+      }, 16);
+    });
+  }
+  
+  // Typing effect
+  function typeWriter(element, text, speed = 50) {
+    let i = 0;
+    element.textContent = '';
+    function type() {
+      if (i < text.length) {
+        element.textContent += text.charAt(i);
+        i++;
+        setTimeout(type, speed);
+      }
+    }
+    type();
+  }
+  
+  // Event listeners
+  window.addEventListener('scroll', () => {
+    updateNav();
+    handleScroll();
+    animateOnScroll();
+  });
+  
+  // Init
+  updateNav();
+  handleScroll();
+  animateOnScroll();
+  
+  // Iniciar contadores si son visibles
+  const statsSection = document.querySelector('.stats');
+  if (statsSection) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCounters();
+          observer.unobserve(entry.target);
+        }
+      });
+    });
+    observer.observe(statsSection);
+  }
+});'''
+                            path = os.path.join(self.active_project, 'script.js')
+                            with open(path, 'w', encoding='utf-8') as f:
+                                f.write(placeholder)
+                            tool_result += f"\n[OK] Archivo creado (fallback): script.js ({len(placeholder)} bytes)"
             
-            # Si no hizo nada en absoluto - retry agresivo
+            # PASO FINAL: Asegurar que HTML tenga <script src> y <link href> correctos, y CSS suficiente
+            if self.active_project and os.path.isfile(os.path.join(self.active_project, 'index.html')):
+                try:
+                    html_path = os.path.join(self.active_project, 'index.html')
+                    with open(html_path, 'r', encoding='utf-8') as f:
+                        html = f.read()
+                    modified = False
+                    
+                    # Verificar si CSS tiene suficiente contenido
+                    css_files = [f for f in os.listdir(self.active_project) if f.endswith('.css')]
+                    css_ok = False
+                    for css_file in css_files:
+                        css_path = os.path.join(self.active_project, css_file)
+                        try:
+                            with open(css_path, 'r', encoding='utf-8') as f:
+                                if len(f.readlines()) >= 50:
+                                    css_ok = True
+                        except:
+                            pass
+                    
+                    # Si CSS no tiene suficiente contenido, reemplazar con fallback completo
+                    if not css_ok:
+                        fallback_css = '''/* === VARIABLES === */
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #06b6d4;
+  --accent-secondary: #10b981;
+  --gradient: linear-gradient(135deg, #6366f1, #06b6d4);
+  --radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* === RESET === */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+/* === TIPOGRAFIA === */
+h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; color: var(--text); }
+h1 { font-size: clamp(2.5rem, 6vw, 4rem); }
+h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); }
+h3 { font-size: clamp(1.2rem, 2.5vw, 1.5rem); }
+p { color: var(--text-muted); font-size: 1.05rem; }
+a { color: var(--accent); text-decoration: none; transition: var(--transition); }
+a:hover { color: var(--primary-light); }
+/* === CONTENEDOR === */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+/* === NAVBAR === */
+.navbar, nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 0.8rem 0;
+}
+.nav-container, .nav-wrapper { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; }
+.nav-logo, .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -0.02em; }
+.nav-links, .nav-menu { display: flex; gap: 2rem; list-style: none; }
+.nav-links a, .nav-menu a, .nav-link { color: var(--text-muted); font-weight: 500; transition: var(--transition); padding: 0.5rem 0; }
+.nav-links a:hover, .nav-links a.active, .nav-link:hover, .nav-link.active { color: var(--primary); }
+/* === HERO === */
+.hero, .hero-section, header {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--gradient); position: relative; padding: 6rem 2rem;
+}
+.hero-content, .hero-text, .hero-center { position: relative; z-index: 1; text-align: center; max-width: 800px; }
+.hero h1, .hero-title { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 800; line-height: 1.1; margin-bottom: 1rem; color: white; }
+.hero p, .hero-subtitle, .hero-description { font-size: 1.3rem; color: rgba(255,255,255,0.85); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; }
+/* === SECCIONES === */
+section, .section { padding: 6rem 0; }
+.section-header, .section-title-wrap { text-align: center; margin-bottom: 4rem; }
+.section-title, .section-header h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+.section-subtitle, .section-header p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+/* === CARDS === */
+.card, .feature-card, .pricing-card, .plan-card {
+  background: var(--bg-card); border-radius: var(--radius);
+  padding: 2rem; border: 1px solid rgba(99, 102, 241, 0.1);
+  transition: var(--transition);
+}
+.card:hover, .feature-card:hover, .pricing-card:hover { transform: translateY(-8px); box-shadow: var(--shadow); }
+/* === BOTONES === */
+.btn, button, .cta-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.9rem 2rem; border-radius: var(--radius);
+  font-weight: 600; font-size: 1rem; cursor: pointer;
+  border: none; transition: var(--transition); text-decoration: none;
+}
+.btn-primary, .cta-button, button[type="submit"] {
+  background: var(--gradient); color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+.btn-primary:hover, .cta-button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); }
+.btn-secondary, .btn-outline {
+  background: transparent; color: var(--primary); border: 2px solid var(--primary);
+}
+.btn-secondary:hover { background: var(--primary); color: white; }
+/* === GRID === */
+.grid { display: grid; gap: 2rem; }
+.grid-2, .features-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.grid-3, .plans-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.grid-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+/* === IMAGENES === */
+img { max-width: 100%; height: auto; display: block; border-radius: var(--radius); }
+.image-wrapper, .img-container { overflow: hidden; border-radius: var(--radius); }
+/* === FORMULARIOS === */
+input, textarea, select {
+  width: 100%; padding: 0.9rem 1.2rem; border-radius: var(--radius);
+  border: 1px solid rgba(99, 102, 241, 0.2); background: var(--bg-card);
+  color: var(--text); font-size: 1rem; transition: var(--transition);
+}
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+/* === LISTAS === */
+ul, ol { list-style: none; padding: 0; }
+li { padding: 0.5rem 0; }
+/* === TABLA === */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 1rem; text-align: left; border-bottom: 1px solid rgba(99, 102, 241, 0.1); }
+th { font-weight: 600; color: var(--text); }
+/* === TESTIMONIOS === */
+.testimonial, .testimonial-card {
+  background: var(--bg-card); border-radius: var(--radius);
+  padding: 2rem; border: 1px solid rgba(99, 102, 241, 0.1);
+}
+.testimonial-quote, .quote { font-style: italic; color: var(--text-muted); margin-bottom: 1rem; }
+.testimonial-author, .author { font-weight: 600; color: var(--text); }
+/* === PRECIOS === */
+.price, .pricing-amount { font-size: 3rem; font-weight: 800; color: var(--primary); }
+.price-period, .pricing-period { font-size: 1rem; color: var(--text-muted); }
+/* === STATS === */
+.stats, .stats-section { display: flex; justify-content: center; gap: 4rem; padding: 4rem 0; flex-wrap: wrap; }
+.stat-item, .stat { text-align: center; }
+.stat-number, .stat-count { font-size: 3rem; font-weight: 800; color: var(--primary); display: block; }
+.stat-label { color: var(--text-muted); font-size: 0.9rem; }
+/* === FOOTER === */
+footer, .footer {
+  background: var(--bg-card); padding: 4rem 0 2rem; text-align: center;
+  border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+.footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.footer-links a { color: var(--text-muted); }
+.footer-links a:hover { color: var(--primary); }
+/* === BADGES === */
+.badge, .tag {
+  display: inline-block; padding: 0.3rem 0.8rem; border-radius: 20px;
+  font-size: 0.8rem; font-weight: 600; background: rgba(99, 102, 241, 0.1); color: var(--primary);
+}
+/* === ANIMACIONES === */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.animate-fade-up { animation: fadeInUp 0.6s ease forwards; }
+.animate-fade { animation: fadeIn 0.6s ease forwards; }
+.animate-slide-left { animation: slideInLeft 0.6s ease forwards; }
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .nav-links, .nav-menu { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); padding: 1rem 2rem; }
+  .nav-links.active, .nav-menu.active { display: flex; }
+  .hero h1, .hero-title { font-size: 2.5rem; }
+  section, .section { padding: 4rem 0; }
+  .grid-2, .grid-3, .grid-4, .features-grid, .plans-grid { grid-template-columns: 1fr; }
+  .stats, .stats-section { flex-direction: column; gap: 2rem; }
+}
+@media (max-width: 480px) {
+  .container { padding: 0 1rem; }
+  .hero h1, .hero-title { font-size: 2rem; }
+}
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+/* === SELECCION === */
+::selection { background: var(--primary); color: white; }'''
+                        css_path = os.path.join(self.active_project, 'style.css')
+                        with open(css_path, 'w', encoding='utf-8') as f:
+                            f.write(fallback_css)
+                        tool_result += f"\n[OK] CSS fallback completo: style.css ({len(fallback_css)} bytes)"
+                    
+                    # Agregar <link rel="stylesheet" href="style.css"> si no existe
+                    if 'style.css' not in html and os.path.isfile(os.path.join(self.active_project, 'style.css')):
+                        if '</head>' in html:
+                            html = html.replace('</head>', '    <link rel="stylesheet" href="style.css">\n</head>')
+                            modified = True
+                    
+                    # Agregar <script src="script.js"> si no existe
+                    if 'script.js' not in html and os.path.isfile(os.path.join(self.active_project, 'script.js')):
+                        if '</body>' in html:
+                            html = html.replace('</body>', '    <script src="script.js"></script>\n</body>')
+                            modified = True
+                        elif '</html>' in html:
+                            html = html.replace('</html>', '    <script src="script.js"></script>\n</html>')
+                            modified = True
+                        else:
+                            html += '\n<script src="script.js"></script>'
+                            modified = True
+                    
+                    if modified:
+                        with open(html_path, 'w', encoding='utf-8') as f:
+                            f.write(html)
+                        tool_result += "\n[OK] Tags CSS/JS agregados al HTML"
+                except:
+                    pass
+            
+            # Si no hizo nada - un solo reintento
             if '[OK]' not in tool_result:
-                # Auto-detectar proyecto si no hay uno activo
                 if not self.active_project:
                     detected = self._detect_project_folder(user_message)
                     if detected:
                         self.active_project = detected
                 
                 if self.active_project:
-                    # Primer reintento: instrucciones más claras
                     follow_up = self._chat_normal(
                         f"IMPORTANTE: El usuario pidio crear archivos. "
-                        f"Debes usar [TOOL_CALL] para crearlos. "
-                        f"NO digas que no puedes crear archivos. SI PUEDES usando [TOOL_CALL]. "
+                        f"Usa [TOOL_CALL] para crearlos. "
                         f"Archivos en proyecto: {os.listdir(self.active_project)[:5]}. "
-                        f"Crea los archivos AHORA usando este formato exacto: "
-                        f"[TOOL_CALL] action: create_file name: \"index.html\" "
-                        f"<!DOCTYPE html>...</html> [/TOOL_CALL]"
+                        f"Crea los archivos AHORA: "
+                        f"[TOOL_CALL] action: create_file name: \"index.html\" <!DOCTYPE html>...</html> [/TOOL_CALL]"
                     )
                     if follow_up:
                         follow_result = self._execute_tool_calls(follow_up)
                         if follow_result and '[OK]' in follow_result:
                             tool_result = follow_result
-                        else:
-                            # Segundo reintento: ser aun mas directo
-                            follow_up2 = self._chat_normal(
-                                f"RESPUESTA ANTERIOR NO VALIDA. "
-                                f"Debes crear archivos usando [TOOL_CALL]. "
-                                f"Ejemplo: "
-                                f"[TOOL_CALL] action: create_file name: \"index.html\" "
-                                f"contenido del archivo [/TOOL_CALL] "
-                                f"Crea index.html ahora."
-                            )
-                            if follow_up2:
-                                follow_result2 = self._execute_tool_calls(follow_up2)
-                                if follow_result2:
-                                    tool_result = follow_result2
             
             response = tool_result
         
@@ -1044,6 +1591,7 @@ class Agent:
         
         # Normalizar marcadores
         text = response.replace('<tool_call>', '[TOOL_CALL]').replace('</tool_call>', '[/TOOL_CALL]')
+        text = text.replace('[TOOLCALL]', '[TOOL_CALL]').replace('[/TOOLCALL]', '[/TOOL_CALL]')
         
         # Extraer bloques TOOL_CALL completos
         tool_blocks = re.findall(r'\[TOOL_CALL\](.*?)\[/TOOL_CALL\]', text, re.DOTALL)
@@ -1060,6 +1608,21 @@ class Agent:
         # Si no hay TOOL_CALLs, buscar bloques markdown
         if not tool_blocks and not unclosed_block:
             tool_blocks, unclosed_block = self._extract_from_markdown(text)
+        
+        # Si no hay TOOL_CALLs ni markdown, buscar JSON format
+        if not tool_blocks and not unclosed_block:
+            try:
+                json_match = re.search(r'\{[\s\S]*?"name"\s*:\s*"create_file"[\s\S]*?\}', text)
+                if json_match:
+                    json_obj = json.loads(json_match.group())
+                    if 'arguments' in json_obj:
+                        args = json_obj['arguments']
+                        fname = args.get('name', '')
+                        content = args.get('content', '')
+                        if fname and content:
+                            tool_blocks = [f'action: create_file name: "{fname}" {content}']
+            except:
+                pass
         
         # Calcular limpieza
         clean = text
@@ -1777,7 +2340,7 @@ class Agent:
         finally:
             loader.stop()
     
-    def _chat_normal(self, enriched_prompt: str) -> str:
+    def _chat_normal(self, enriched_prompt: str, max_tokens: int = None) -> str:
         """Chat normal - respuesta rapida"""
         loader = LoadingIndicator()
         msg = self._get_mode_message()
@@ -1785,7 +2348,7 @@ class Agent:
         
         try:
             if self.engine == "multi":
-                return self._call_multi_engine(enriched_prompt)
+                return self._call_multi_engine(enriched_prompt, max_tokens=max_tokens)
             elif self.engine == "local":
                 return self._call_local_model(enriched_prompt)
             elif self.engine == "gemini":
@@ -1793,9 +2356,9 @@ class Agent:
             elif self.engine == "freetheai":
                 return self._call_freetheai(enriched_prompt)
             elif self.engine == "opencode" or self.engine == "mimo":
-                return self._call_opencode_fast(enriched_prompt)
+                return self._call_opencode_fast(enriched_prompt, max_tokens=max_tokens)
             else:
-                return self._call_multi_engine(enriched_prompt)
+                return self._call_multi_engine(enriched_prompt, max_tokens=max_tokens)
         finally:
             loader.stop()
     
@@ -1812,114 +2375,110 @@ class Agent:
         except:
             pass
     
-    def _call_opencode_fast(self, enriched_prompt: str = None) -> str:
-        """Llamar a OpenCode API - modo rapido con reintentos"""
+    def _call_opencode_fast(self, enriched_prompt: str = None, max_tokens: int = None) -> str:
+        """Llamar a OpenCode API - ultra rapido con fallback directo"""
         import time
-        
-        # Usar proxy (no necesita API key local)
-        proxy_url = "https://iam-proxy.onrender.com"
-        
-        # Sin proxy, verificar API key local
-        if not proxy_url and not settings.OPENCODE_API_KEY:
-            return self._fallback_response("opencode")
-        
-        # Reintentos para el proxy
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                context = self.current_session.get_context()
-                messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
-                
-                # Si hay imagenes, agregar al ultimo mensaje del usuario
-                if hasattr(self, '_pending_images') and self._pending_images:
-                    last_msg = messages[-1] if messages else {"role": "user", "content": ""}
-                    content_parts = [{"type": "text", "text": last_msg.get("content", "")}]
-                    for img_b64 in self._pending_images:
-                        content_parts.append({
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/png;base64,{img_b64}"}
-                        })
-                    messages[-1] = {"role": "user", "content": content_parts}
-                    self._pending_images = []
-                
-                # Si hay proxy, usarlo (key oculta en servidor)
-                if proxy_url:
-                    url = f"{proxy_url}/v1/chat/completions"
-                    headers = {"Content-Type": "application/json"}
-                    payload = {
-                        "model": "mimo-v2.5-free",
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 8192,
-                        "top_p": 0.9
-                    }
-                else:
-                    # Fallback: llamada directa (key visible)
-                    url = "https://opencode.ai/zen/v1/chat/completions"
-                    headers = {
-                        "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://iam-ai.local",
-                        "X-Title": "IAM AI Assistant"
-                    }
-                    payload = {
-                        "model": "mimo-v2.5-free",
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 8192,
-                        "top_p": 0.9
-                    }
-                
-                response = requests.post(url, headers=headers, json=payload, timeout=60)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    if "choices" in data and data["choices"]:
-                        msg = data["choices"][0]["message"]
-                        content = msg.get("content")
-                        if not content:
-                            content = msg.get("reasoning", "")
-                        return content or ""
-                    elif "error" in data:
-                        return f"[ERROR] OpenCode: {data['error']}"
-                    else:
-                        return "[ERROR] OpenCode: respuesta inesperada"
-                elif response.status_code == 503:
-                    # Servidor en mantenimiento - Render despertando
-                    if attempt < max_retries - 1:
-                        wait_time = 2 * (attempt + 1)  # 2s, 4s
-                        time.sleep(wait_time)
-                        continue
-                    return "Fernando esta viendo en donde esta el error espere un rato 🫠"
-                elif response.status_code == 502:
-                    # Bad Gateway - servidor no responde correctamente
-                    if attempt < max_retries - 1:
-                        wait_time = 2 * (attempt + 1)  # 2s, 4s
-                        time.sleep(wait_time)
-                        continue
-                    return "Fernando esta viendo en donde esta el error espere un rato 🫠"
-                else:
-                    # Log del error para debugging
-                    error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
-                    if attempt < max_retries - 1:
-                        time.sleep(1 * (attempt + 1))  # 1s, 2s
-                        continue
-                    return f"Fernando esta viendo en donde esta el error espere un rato 🫠"
-                    
-            except requests.exceptions.Timeout:
-                if attempt < max_retries - 1:
-                    time.sleep(1 * (attempt + 1))
-                    continue
-                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
-            except requests.exceptions.ConnectionError:
-                if attempt < max_retries - 1:
-                    time.sleep(1 * (attempt + 1))
-                    continue
-                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
-            except Exception as e:
-                return f"Fernando esta viendo en donde esta el error espere un rato 🫠"
-        
-        return "[ERROR] OpenCode: max reintentos alcanzados"
+
+        context = self.current_session.get_context()
+        messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
+
+        # Si hay imagenes, agregar al ultimo mensaje del usuario
+        if hasattr(self, '_pending_images') and self._pending_images:
+            last_msg = messages[-1] if messages else {"role": "user", "content": ""}
+            content_parts = [{"type": "text", "text": last_msg.get("content", "")}]
+            for img_b64 in self._pending_images:
+                content_parts.append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{img_b64}"}
+                })
+            messages[-1] = {"role": "user", "content": content_parts}
+            self._pending_images = []
+
+        payload = {
+            "model": "mimo-v2.5-free",
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": max_tokens or 2048,
+            "top_p": 0.9
+        }
+
+        def _try_direct():
+            if not settings.OPENCODE_API_KEY:
+                return None
+            resp = requests.post(
+                "https://opencode.ai/zen/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://iam-ai.local",
+                    "X-Title": "IAM AI Assistant"
+                },
+                json=payload, timeout=90
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if "choices" in data and data["choices"]:
+                    msg = data["choices"][0]["message"]
+                    return msg.get("content") or msg.get("reasoning") or ""
+            return None
+
+        def _try_proxy():
+            proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
+            if not proxy_url:
+                return None
+            resp = requests.post(
+                f"{proxy_url}/v1/chat/completions",
+                headers={"Content-Type": "application/json"},
+                json=payload, timeout=15
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if "choices" in data and data["choices"]:
+                    msg = data["choices"][0]["message"]
+                    return msg.get("content") or msg.get("reasoning") or ""
+            return None
+
+        # Intento 1: Directo (mas rapido)
+        try:
+            result = _try_direct()
+            if result is not None:
+                return result
+        except Exception:
+            pass
+
+        # Verificar ESC
+        try:
+            from .enhanced_cli import interrupt
+            if interrupt.is_interrupted:
+                return "[Interrumpido por ESC]"
+        except Exception:
+            pass
+
+        # Intento 2: Proxy (fallback rapido)
+        try:
+            result = _try_proxy()
+            if result is not None:
+                return result
+        except Exception:
+            pass
+
+        # Verificar ESC
+        try:
+            from .enhanced_cli import interrupt
+            if interrupt.is_interrupted:
+                return "[Interrumpido por ESC]"
+        except Exception:
+            pass
+
+        # Intento 3: Directo final
+        try:
+            result = _try_direct()
+            if result is not None:
+                return result
+        except Exception:
+            pass
+
+        return "[ERROR] No se pudo conectar con OpenCode API. Verifica tu conexion e intenta de nuevo."
     
     def _call_freetheai(self, enriched_prompt: str = None) -> str:
         """Llamar a FreeTheAi API"""
@@ -1977,14 +2536,8 @@ class Agent:
         def call_opencode():
             context = self.current_session.get_context()
             messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
-            
-            # Usar proxy
-            proxy_url = "https://iam-proxy.onrender.com"
-            
-            if proxy_url:
-                url = f"{proxy_url}/v1/chat/completions"
-                headers = {"Content-Type": "application/json"}
-            else:
+
+            if settings.OPENCODE_API_KEY:
                 url = "https://opencode.ai/zen/v1/chat/completions"
                 headers = {
                     "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
@@ -1992,6 +2545,10 @@ class Agent:
                     "HTTP-Referer": "https://iam-ai.local",
                     "X-Title": "IAM AI Assistant"
                 }
+            else:
+                proxy_url = os.environ.get("OPENCODE_PROXY_URL", "https://iam-proxy.onrender.com")
+                url = f"{proxy_url}/v1/chat/completions"
+                headers = {"Content-Type": "application/json"}
             
             response = requests.post(
                 url,
@@ -2061,108 +2618,28 @@ class Agent:
     
     def _call_opencode(self, enriched_prompt: str = None) -> str:
         """Llamar a OpenCode API con MiMo v2.5 Free"""
-        import time
-        
-        # Usar proxy (no necesita API key local)
-        proxy_url = "https://iam-proxy.onrender.com"
-        
-        # Sin proxy, verificar API key local
-        if not proxy_url and not settings.OPENCODE_API_KEY:
-            return self._fallback_response("opencode")
-        
-        max_retries = 5
-        retry_delay = 3
-        
-        for attempt in range(max_retries):
-            try:
-                context = self.current_session.get_context()
-                messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
-                
-                if proxy_url:
-                    url = f"{proxy_url}/v1/chat/completions"
-                    headers = {"Content-Type": "application/json"}
-                else:
-                    url = "https://opencode.ai/zen/v1/chat/completions"
-                    headers = {
-                        "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://iam-ai.local",
-                        "X-Title": "IAM AI Assistant"
-                    }
-                
-                response = requests.post(
-                    url,
-                    headers=headers,
-                    json={
-                        "model": "mimo-v2.5-free",
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 8192,
-                        "top_p": 0.9
-                    },
-                    timeout=60
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    if "choices" in data and data["choices"]:
-                        msg = data["choices"][0]["message"]
-                        content = msg.get("content")
-                        if not content:
-                            content = msg.get("reasoning", "")
-                        return content or ""
-                    elif "error" in data:
-                        return f"[ERROR] OpenCode: {data['error']}"
-                    else:
-                        return "[ERROR] OpenCode: respuesta inesperada"
-                elif response.status_code == 429:
-                    if attempt < max_retries - 1:
-                        wait_time = retry_delay * (2 ** attempt)
-                        time.sleep(wait_time)
-                        continue
-                    return "Limite de rate alcanzado. Intenta de nuevo en unos minutos."
-                elif response.status_code == 401:
-                    return "API Key de OpenCode invalida."
-                elif response.status_code == 402:
-                    return "Saldo insuficiente en OpenCode."
-                else:
-                    return f"Fernando está chambeando, esperen a que arregle el error 🫠"
-            except requests.exceptions.Timeout:
-                if attempt < max_retries - 1:
-                    time.sleep(2)
-                    continue
-                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
-            except requests.exceptions.ConnectionError:
-                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
-            except Exception as e:
-                return f"Error: {str(e)}"
-        
-        return "Fernando esta viendo en donde esta el error espere un rato 🫠"
+        return self._call_opencode_fast(enriched_prompt)
     
     def _call_opencode_streaming(self, enriched_prompt: str, loader: LoadingIndicator) -> str:
         """Llamar a OpenCode API con streaming - muestra Pensando... y luego respuesta limpia"""
         import time
-        import select
-        
+
         if not settings.OPENCODE_API_KEY:
             return self._fallback_response("opencode")
-        
-        max_retries = 5
-        retry_delay = 3
-        
-        for attempt in range(max_retries):
+
+        context = self.current_session.get_context()
+        messages = [{"role": "system", "content": enriched_prompt}] + context
+
+        loader.stop()
+
+        try:
+            print(f"\n  {COLORS.TEAL}{self._get_mode_message()}...{COLORS.RESET}", end='', flush=True)
+        except:
+            pass
+
+        # Intento 1: Directo
+        for attempt in range(2):
             try:
-                context = self.current_session.get_context()
-                messages = [{"role": "system", "content": enriched_prompt}] + context
-                
-                loader.stop()
-                
-                process_start = time.time()
-                try:
-                    print(f"\n  {COLORS.TEAL}{self._get_mode_message()}...{COLORS.RESET}", end='', flush=True)
-                except:
-                    pass
-                
                 response = requests.post(
                     "https://opencode.ai/zen/v1/chat/completions",
                     headers={
@@ -2175,24 +2652,21 @@ class Agent:
                         "model": "mimo-v2.5-free",
                         "messages": messages,
                         "temperature": 0.7,
-                        "max_tokens": 8192,
+                        "max_tokens": 2048,
                         "top_p": 0.9,
                         "stream": True
                     },
-                    timeout=60,
+                    timeout=90,
                     stream=True
                 )
-                
-                process_time = time.time() - process_start
-                
+
                 if response.status_code == 200:
                     content_tokens = []
                     reasoning_tokens = []
-                    line_timeout = 90
                     last_data_time = time.time()
-                    
+
                     for line in response.iter_lines():
-                        if time.time() - last_data_time > line_timeout:
+                        if time.time() - last_data_time > 90:
                             break
                         if line:
                             last_data_time = time.time()
@@ -2211,40 +2685,33 @@ class Agent:
                                             reasoning_tokens.append(delta['reasoning'])
                                 except json.JSONDecodeError:
                                     continue
-                    
+
                     try:
                         print(f"\r{' ' * 40}\r", end='')
                     except:
                         pass
-                    
+
                     if content_tokens:
                         return ''.join(content_tokens)
                     elif reasoning_tokens:
                         return ''.join(reasoning_tokens)
                     return ""
-                elif response.status_code == 429:
-                    if attempt < max_retries - 1:
-                        wait_time = retry_delay * (2 ** attempt)
-                        time.sleep(wait_time)
-                        continue
-                    return "Limite de rate alcanzado. Intenta de nuevo en unos minutos."
-                elif response.status_code == 401:
-                    return "API Key de OpenCode invalida."
-                elif response.status_code == 402:
-                    return "Saldo insuficiente en OpenCode."
-                else:
-                    return f"Fernando está chambeando, esperen a que arregle el error 🫠"
+
+                if attempt == 0:
+                    time.sleep(2)
+
             except requests.exceptions.Timeout:
-                if attempt < max_retries - 1:
+                if attempt == 0:
                     time.sleep(2)
                     continue
-                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
             except requests.exceptions.ConnectionError:
-                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
+                if attempt == 0:
+                    time.sleep(2)
+                    continue
             except Exception as e:
                 return f"Error: {str(e)}"
-        
-        return "Fernando esta viendo en donde esta el error espere un rato 🫠"
+
+        return "[ERROR] No se pudo conectar con OpenCode API. Verifica tu conexion e intenta de nuevo."
     
     def _call_huggingface(self, enriched_prompt: str = None) -> str:
         """Llamar a Hugging Face API"""

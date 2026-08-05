@@ -95,19 +95,6 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
         cli.print_stats()
         return True
 
-    if cmd == "/context":
-        cli.show_context_usage()
-        return True
-
-    if cmd == "/cost":
-        cli.show_cost()
-        return True
-
-    if cmd == "/compact":
-        mode = cli.toggle_compact()
-        cli.print_success(f"Modo compacto: {'ON' if mode else 'OFF'}")
-        return True
-
     if cmd == "/think":
         mode = cli.toggle_think()
         cli.print_success(f"Modo pensamiento: {'ON' if mode else 'OFF'}")
@@ -135,12 +122,12 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
             root.attributes('-topmost', True)
             folder = filedialog.askdirectory(title="Seleccionar carpeta destino para vincular proyecto")
             root.destroy()
-            
+
             if folder:
                 project_path = os.getcwd()
                 project_name = os.path.basename(project_path)
                 link_path = os.path.join(folder, project_name)
-                
+
                 try:
                     if os.path.exists(link_path):
                         cli.print_warning(f"Ya existe un enlace o carpeta en: {link_path}")
@@ -158,10 +145,7 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
             cli.print_error("tkinter no disponible. Usa: pip install tk")
         return True
 
-    # ==================== NUEVOS COMANDOS (inspirados en OpenCode) ====================
-    
     if cmd == "/history":
-        # Mostrar historial de archivos del proyecto
         from iam.core.file_history import file_history
         if router.agent.active_project:
             file_history.project_path = router.agent.active_project
@@ -175,7 +159,7 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
         else:
             print("  No hay historial de archivos todavia")
         return True
-    
+
     if cmd.startswith("/rollback"):
         parts = user_input.split()
         if len(parts) >= 2:
@@ -195,7 +179,7 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
         else:
             print("  Uso: /rollback <archivo> [version]")
         return True
-    
+
     if cmd.startswith("/history-show"):
         parts = user_input.split()
         if len(parts) >= 2:
@@ -207,16 +191,14 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
         else:
             print("  Uso: /history-show <archivo>")
         return True
-    
+
     if cmd == "/cost":
-        # Mostrar costos y uso de tokens
         from iam.core.cost_tracking import cost_tracker
         session_id = router.agent.current_session.id if router.agent.current_session else None
         print(cost_tracker.format_cost_display(session_id))
         return True
-    
+
     if cmd == "/compact":
-        # Mostrar estadisticas de compactacion o ejecutar compactacion manual
         from iam.core.auto_compact import auto_compactor
         parts = user_input.split()
         if len(parts) > 1 and parts[1] == "stats":
@@ -237,9 +219,8 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
             else:
                 print(auto_compactor.format_stats())
         return True
-    
+
     if cmd == "/context":
-        # Mostrar contexto del proyecto (archivos de instrucciones)
         from iam.core.context_loader import context_loader
         if router.agent.active_project:
             context_loader.project_path = router.agent.active_project
@@ -248,15 +229,13 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
         else:
             print("  Selecciona un proyecto primero con /project")
         return True
-    
+
     if cmd == "/security":
-        # Mostrar reporte de seguridad
         from iam.core.permissions import permission_system
         print(permission_system.get_security_report())
         return True
-    
+
     if cmd.startswith("/subagent"):
-        # Lanzar sub-agente de solo lectura
         parts = user_input.split(maxsplit=1)
         if len(parts) >= 2:
             from iam.core.sub_agent import sub_agent, SubAgentType
@@ -275,7 +254,187 @@ def handle_special_commands(cli: EnhancedCLI, user_input: str, router: AgentRout
         else:
             print("  Uso: /subagent <descripcion de la tarea>")
         return True
-    
+
+    # ==================== NUEVOS COMANDOS v4.2 ====================
+
+    if cmd == "/tree":
+        project = router.agent.active_project or os.getcwd()
+        print(f"\n  ESTRUCTURA: {project}")
+        print("  " + "=" * 50)
+        for root, dirs, files in os.walk(project):
+            level = root.replace(project, '').count(os.sep)
+            indent = '  ' * level
+            dirname = os.path.basename(root) or root
+            if level <= 3:
+                print(f"  {indent}{dirname}/")
+                subindent = '  ' * (level + 1)
+                for f in files[:15]:
+                    if not f.startswith('.'):
+                        print(f"  {subindent}{f}")
+                if len(files) > 15:
+                    print(f"  {subindent}... +{len(files)-15} mas")
+        print()
+        return True
+
+    if cmd == "/env":
+        print("\n  VARIABLES DE ENTorno:")
+        print("  " + "=" * 50)
+        for k, v in sorted(os.environ.items()):
+            if any(x in k.upper() for x in ['PATH', 'HOME', 'USER', 'PYTHON', 'NODE', 'API', 'KEY', 'TOKEN']):
+                display = v[:60] + '...' if len(v) > 60 else v
+                print(f"  {k}={display}")
+        print()
+        return True
+
+    if cmd == "/deps":
+        project = router.agent.active_project or os.getcwd()
+        print(f"\n  DEPENDENCIAS: {project}")
+        print("  " + "=" * 50)
+        # Python
+        req = os.path.join(project, 'requirements.txt')
+        if os.path.exists(req):
+            print("  [Python] requirements.txt:")
+            with open(req, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        print(f"    - {line}")
+        # Node
+        pkg = os.path.join(project, 'package.json')
+        if os.path.exists(pkg):
+            import json
+            try:
+                with open(pkg, 'r') as f:
+                    data = json.load(f)
+                deps = data.get('dependencies', {})
+                devdeps = data.get('devDependencies', {})
+                if deps:
+                    print("  [Node] dependencies:")
+                    for k, v in deps.items():
+                        print(f"    - {k}: {v}")
+                if devdeps:
+                    print("  [Node] devDependencies:")
+                    for k, v in devdeps.items():
+                        print(f"    - {k}: {v}")
+            except Exception:
+                pass
+        # Cargo
+        cargo = os.path.join(project, 'Cargo.toml')
+        if os.path.exists(cargo):
+            print("  [Rust] Cargo.toml detectado")
+        if not os.path.exists(req) and not os.path.exists(pkg) and not os.path.exists(cargo):
+            print("  No se encontraron dependencias")
+        print()
+        return True
+
+    if cmd.startswith("/run"):
+        parts = user_input.split(maxsplit=1)
+        if len(parts) >= 2:
+            script = parts[1].strip()
+            cli.print_info(f"Ejecutando: {script}")
+            from iam.core.persistent_shell import get_shell
+            shell = get_shell()
+            result = shell.exec(script, timeout=60, cwd=router.agent.active_project)
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print(f"STDERR: {result.stderr}")
+            if result.exit_code != 0:
+                cli.print_error(f"Fallo con codigo {result.exit_code}")
+        else:
+            print("  Uso: /run <comando>")
+        return True
+
+    if cmd.startswith("/search"):
+        parts = user_input.split(maxsplit=1)
+        if len(parts) >= 2:
+            query = parts[1].strip()
+            project = router.agent.active_project or os.getcwd()
+            cli.print_info(f"Buscando '{query}' en {project}...")
+            import subprocess
+            try:
+                result = subprocess.run(
+                    ['findstr', '/S', '/I', '/N', query, '*.py', '*.js', '*.html', '*.css', '*.json', '*.md'],
+                    cwd=project, capture_output=True, text=True, timeout=10
+                )
+                if result.stdout:
+                    lines = result.stdout.strip().split('\n')[:30]
+                    for line in lines:
+                        print(f"  {line}")
+                    if len(lines) >= 30:
+                        print(f"  ... resultados truncados")
+                else:
+                    print("  Sin resultados")
+            except Exception as e:
+                print(f"  Error: {e}")
+        else:
+            print("  Uso: /search <texto>")
+        return True
+
+    if cmd.startswith("/grep"):
+        parts = user_input.split(maxsplit=1)
+        if len(parts) >= 2:
+            pattern = parts[1].strip()
+            project = router.agent.active_project or os.getcwd()
+            import re
+            try:
+                regex = re.compile(pattern, re.IGNORECASE)
+            except re.error:
+                regex = re.compile(re.escape(pattern), re.IGNORECASE)
+            print(f"\n  GREP: '{pattern}'")
+            print("  " + "=" * 50)
+            count = 0
+            for root, dirs, files in os.walk(project):
+                dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['node_modules', '__pycache__', '.git']]
+                for f in files:
+                    if f.endswith(('.py', '.js', '.html', '.css', '.json', '.md', '.toml', '.yaml', '.yml', '.txt')):
+                        fpath = os.path.join(root, f)
+                        try:
+                            with open(fpath, 'r', encoding='utf-8', errors='ignore') as fh:
+                                for i, line in enumerate(fh, 1):
+                                    if regex.search(line):
+                                        rel = os.path.relpath(fpath, project)
+                                        print(f"  {rel}:{i}: {line.strip()[:80]}")
+                                        count += 1
+                                        if count >= 30:
+                                            print("  ... truncado (max 30)")
+                                            break
+                        except Exception:
+                            pass
+                        if count >= 30:
+                            break
+                if count >= 30:
+                    break
+            if count == 0:
+                print("  Sin coincidencias")
+            print(f"\n  Total: {count} coincidencias")
+        else:
+            print("  Uso: /grep <patron>")
+        return True
+
+    if cmd == "/clear":
+        if router.agent.current_session:
+            router.agent.current_session.clear()
+            cli.print_success("Sesion limpiada")
+        else:
+            print("  No hay sesion activa")
+        return True
+
+    if cmd.startswith("/kill"):
+        parts = user_input.split()
+        if len(parts) >= 2:
+            target = parts[1]
+            cli.print_info(f"Terminando proceso: {target}")
+            import subprocess
+            try:
+                subprocess.run(['taskkill', '/F', '/IM', target], capture_output=True, timeout=5)
+                cli.print_success(f"Proceso {target} terminado")
+            except Exception as e:
+                cli.print_error(f"Error: {e}")
+        else:
+            print("  Uso: /kill <nombre_proceso>")
+        return True
+
     return False
 
 
@@ -480,6 +639,12 @@ def main():
             )
 
             loader = LoadingIndicator()
+            
+            # Iniciar listener de ESC y limpiar interrupciones previas
+            from iam.core.enhanced_cli import interrupt
+            interrupt.clear()
+            interrupt.start_listening()
+            
             loader.start("🧠 procesando", "brain")
 
             start_time = time.time()
@@ -487,6 +652,13 @@ def main():
                 response = router.process_input(user_input)
             finally:
                 loader.stop()
+                interrupt.stop_listening()
+
+            # Verificar si fue interrumpido por ESC
+            if interrupt.is_interrupted:
+                interrupt.clear()
+                cli.print_warning("Interrumpido por ESC")
+                continue
 
             response_time = time.time() - start_time
 

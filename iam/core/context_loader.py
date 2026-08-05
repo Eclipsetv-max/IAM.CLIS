@@ -217,7 +217,7 @@ class ContextLoader:
             return "go"
         elif (project_path / "pom.xml").exists():
             return "java"
-        elif any((project_path / f).exists() for f in ["*.csproj", "*.sln"]):
+        elif any(list(project_path.glob("*.csproj")) + list(project_path.glob("*.sln"))):
             return "csharp"
         elif (project_path / "Gemfile").exists():
             return "ruby"

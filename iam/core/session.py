@@ -122,7 +122,7 @@ class Session:
                 summary_parts.append(f"{role}: {m.content[:100]}")
             self.metadata['summary'] = "\n".join(summary_parts)
             self.metadata['summary_at'] = str(len(self.messages))
-        except:
+        except Exception:
             pass
     
     def to_dict(self) -> Dict[str, Any]:

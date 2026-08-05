@@ -160,12 +160,14 @@ class FreeTheAiClient:
                 messages.append({"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": prompt})
             
+            url = f"{self.config.proxy_url}/v1/chat/completions" if self.config.use_proxy else "https://api.freetheai.xyz/v1/chat/completions"
+            headers = {"Content-Type": "application/json"}
+            if not self.config.use_proxy:
+                headers["Authorization"] = f"Bearer {self.config.api_key}"
+            
             response = requests.post(
-                f"{self.config.base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.config.api_key}",
-                    "Content-Type": "application/json"
-                },
+                url,
+                headers=headers,
                 json={
                     "model": self.config.model,
                     "messages": messages,
@@ -174,7 +176,7 @@ class FreeTheAiClient:
                     "stream": True
                 },
                 stream=True,
-                timeout=120
+                timeout=30
             )
             
             for line in response.iter_lines():
@@ -195,19 +197,18 @@ class FreeTheAiClient:
             return []
         
         try:
-            response = requests.get(
-                f"{self.config.base_url}/models",
-                headers={
-                    "Authorization": f"Bearer {self.config.api_key}"
-                },
-                timeout=30
-            )
+            url = f"{self.config.proxy_url}/v1/models" if self.config.use_proxy else "https://api.freetheai.xyz/v1/models"
+            headers = {"Content-Type": "application/json"}
+            if not self.config.use_proxy:
+                headers["Authorization"] = f"Bearer {self.config.api_key}"
+            
+            response = requests.get(url, headers=headers, timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
                 return [m["id"] for m in data.get("data", [])]
             return []
-        except:
+        except Exception:
             return []
 
 
