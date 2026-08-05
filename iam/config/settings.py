@@ -74,21 +74,24 @@ class IAMSettings:
     }
     
     def _decode_ultra(key_id: str) -> str:
-        ki = IAMSettings._KEYS[key_id]
-        combined = bytes.fromhex(''.join(ki['parts']))
-        if hashlib.md5(combined).hexdigest()[:8] != ki['checksum']:
+        try:
+            ki = IAMSettings._KEYS[key_id]
+            combined = bytes.fromhex(''.join(ki['parts']))
+            if hashlib.md5(combined).hexdigest()[:8] != ki['checksum']:
+                return ""
+            n = len(combined)
+            inv_pattern = [0] * n
+            for i, p in enumerate(ki['pattern'][:n]):
+                inv_pattern[p] = i
+            unshuffled = bytearray(n)
+            for i in range(n):
+                unshuffled[i] = combined[inv_pattern[i]]
+            data = bytes(unshuffled)
+            for k in reversed(IAMSettings._XOR_KEYS):
+                data = bytes([b ^ k[i % len(k)] for i, b in enumerate(data)])
+            return data[8:-8].decode('utf-8', errors='replace')
+        except Exception:
             return ""
-        n = len(combined)
-        inv_pattern = [0] * n
-        for i, p in enumerate(ki['pattern'][:n]):
-            inv_pattern[p] = i
-        unshuffled = bytearray(n)
-        for i in range(n):
-            unshuffled[i] = combined[inv_pattern[i]]
-        data = bytes(unshuffled)
-        for k in reversed(IAMSettings._XOR_KEYS):
-            data = bytes([b ^ k[i % len(k)] for i, b in enumerate(data)])
-        return data[8:-8].decode()
     
     API_KEY: str = field(default_factory=lambda: os.environ.get("OPENCODE_API_KEY") or IAMSettings._decode_ultra('k1'))
     API_KEY_ALT: str = field(default_factory=lambda: os.environ.get("FREETHEAI_API_KEY") or IAMSettings._decode_ultra('k2'))
