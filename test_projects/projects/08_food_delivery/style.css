@@ -1,0 +1,282 @@
+/* FoodExpress - Estilos */
+:root {
+    --primary: #ff6b35;
+    --primary-dark: #e55a2b;
+    --bg: #fafafa;
+    --bg-card: #fff;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 5%;
+    background: var(--bg-card);
+    box-shadow: var(--shadow);
+    z-index: 100;
+}
+.logo {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+.search-box {
+    display: flex;
+    align-items: center;
+    background: var(--bg);
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    gap: 0.5rem;
+    flex: 1;
+    max-width: 400px;
+    margin: 0 2rem;
+}
+.search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    width: 100%;
+}
+.nav-icons { display: flex; gap: 1rem; align-items: center; }
+.nav-icons button {
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.cart-btn {
+    position: relative;
+    background: var(--primary) !important;
+    color: white !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 50px !important;
+}
+#cartCount {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--text);
+    color: white;
+    font-size: 0.7rem;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.main { padding: 80px 5% 2rem; }
+section { margin-bottom: 3rem; }
+section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.categories-scroll {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+.category-item {
+    text-align: center;
+    min-width: 80px;
+    cursor: pointer;
+}
+.cat-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--bg-card);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s;
+}
+.category-item:hover .cat-icon { transform: scale(1.1); }
+.restaurants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+.restaurant-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+.restaurant-card:hover { transform: translateY(-5px); }
+.restaurant-image {
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+}
+.restaurant-info {
+    padding: 1rem;
+}
+.restaurant-info h3 { margin-bottom: 0.3rem; }
+.restaurant-info p { color: var(--text-muted); font-size: 0.85rem; }
+.restaurant-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+}
+.rating { color: #f59e0b; }
+.dishes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+.dish-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 1rem;
+}
+.dish-image {
+    width: 80px;
+    height: 80px;
+    background: #f0f0f0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+}
+.dish-info { flex: 1; }
+.dish-info h4 { margin-bottom: 0.3rem; }
+.dish-info p { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.5rem; }
+.dish-price {
+    font-weight: bold;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+.add-to-cart {
+    margin-top: 0.5rem;
+    padding: 0.4rem 1rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+.cart-panel {
+    position: fixed;
+    right: -400px;
+    top: 0;
+    width: 380px;
+    height: 100vh;
+    background: var(--bg-card);
+    box-shadow: -5px 0 20px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s;
+    z-index: 200;
+}
+.cart-panel.open { right: 0; }
+.cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+.cart-header button {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+.cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+.empty-cart {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+.cart-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+}
+.cart-item-image {
+    width: 60px;
+    height: 60px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+.cart-item-info { flex: 1; }
+.cart-item-info h4 { font-size: 0.95rem; }
+.cart-item-info p { color: var(--text-muted); font-size: 0.85rem; }
+.cart-item-qty {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+}
+.cart-item-qty button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #ddd;
+    background: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.cart-item-price { font-weight: bold; color: var(--primary); }
+.cart-summary {
+    padding: 1.5rem;
+    border-top: 2px solid #eee;
+}
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+}
+.summary-row.total {
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding-top: 0.8rem;
+    border-top: 1px solid #eee;
+}
+.cart-summary .btn-primary {
+    width: 100%;
+    padding: 1rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+}
+@media (max-width: 768px) {
+    .search-box { display: none; }
+    .cart-panel { width: 100%; right: -100%; }
+}

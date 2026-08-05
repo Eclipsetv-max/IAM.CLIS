@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio | Desarrollador</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <a href="#" class="logo">Dev<span>.</span></a>
+    <nav class="nav">
+      <a href="#about" class="nav-link">Sobre mí</a>
+      <a href="#projects" class="nav-link">Proyectos</a>
+      <a href="#skills" class="nav-link">Skills</a>
+      <a href="#contact" class="nav-link">Contacto</a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+      <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+      <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+    <button class="menu-toggle" id="menuToggle" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="hero-content fade-up">
+      <p class="hero-greeting">Hola, soy</p>
+      <h1 class="hero-name">Tu Nombre</h1>
+      <h2 class="hero-title">Desarrollador Full Stack</h2>
+      <p class="hero-description">
+        Creo experiencias digitales elegantes y funcionales. 
+        Apasionado por el código limpio y el diseño minimalista.
+      </p>
+      <div class="hero-buttons">
+        <a href="#projects" class="btn btn-primary">Ver Proyectos</a>
+        <a href="#contact" class="btn btn-outline">Contactar</a>
+      </div>
+    </div>
+    <div class="hero-visual fade-up">
+      <div class="code-block">
+        <div class="code-header">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <pre><code><span class="keyword">const</span> <span class="variable">developer</span> = {
+  <span class="property">name</span>: <span class="string">"Tu Nombre"</span>,
+  <span class="property">skills</span>: [<span class="string">"HTML"</span>, <span class="string">"CSS"</span>, <span class="string">"JS"</span>],
+  <span class="property">passion</span>: <span class="string">"Crear"</span>,
+  <span class="method">code</span>: () =&gt; <span class="string">"✨"</span>
+};</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="section" id="about">
+    <div class="container">
+      <h2 class="section-title fade-up">Sobre Mí</h2>
+      <div class="about-grid fade-up">
+        <div class="about-text">
+          <p>
+            Soy un desarrollador apasionado por crear soluciones web modernas 
+            y eficientes. Con experiencia en las últimas tecnologías, me enfoco 
+            en construir aplicaciones limpias, escalables y con excelentes 
+            experiencias de usuario.
+          </p>
+          <p>
+            Mi enfoque es el código limpio, la arquitectura sólida y el 
+            diseño intuitivo. Siempre busco aprender nuevas tecnologías 
+            y mejorar mis habilidades.
+          </p>
+        </div>
+        <div class="about-stats">
+          <div class="stat">
+            <span class="stat-number" data-target="3">0</span>
+            <span class="stat-label">Años de Experiencia</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number" data-target="20">0</span>
+            <span class="stat-label">Proyectos Completados</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number" data-target="15">0</span>
+            <span class="stat-label">Clientes Satisfechos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section class="section section-alt" id="projects">
+    <div class="container">
+      <h2 class="section-title fade-up">Proyectos</h2>
+      <div class="projects-grid">
+
+        <article class="project-card fade-up">
+          <div class="project-image">
+            <div class="project-placeholder">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+          </div>
+          <div class="project-info">
+            <h3>E-Commerce Platform</h3>
+            <p>Plataforma de ventas online con panel de administración.</p>
+            <div class="project-tags">
+              <span>React</span>
+              <span>Node.js</span>
+              <span>MongoDB</span>
+            </div>
+            <div class="project-links">
+              <a href="#" class="project-link">Demo →</a>
+              <a href="#" class="project-link">GitHub →</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card fade-up">
+          <div class="project-image">
+            <div class="project-placeholder">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5

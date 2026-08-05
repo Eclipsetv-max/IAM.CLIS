@@ -1,0 +1,240 @@
+/* FitPro - Estilos */
+:root {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+.navbar {
+    position: fixed;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 5%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+}
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+.nav-links { display: flex; gap: 2rem; }
+.nav-links a {
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+.nav-links a:hover { color: var(--primary); }
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+.main { padding: 80px 5% 2rem; }
+.welcome { margin-bottom: 2rem; }
+.welcome h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+.welcome p { color: var(--text-muted); }
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.stat-card {
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(16, 185, 129, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: var(--primary);
+}
+.stat-info h3 { font-size: 1.5rem; }
+.stat-info p { color: var(--text-muted); font-size: 0.85rem; }
+.today-workout { margin-bottom: 2rem; }
+.today-workout h2 { margin-bottom: 1rem; }
+.workout-card {
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 16px;
+}
+.workout-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.workout-icon { font-size: 3rem; }
+.exercise-list {
+    margin-bottom: 1.5rem;
+}
+.exercise-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.exercise-item:last-child { border-bottom: none; }
+.exercise-name { display: flex; align-items: center; gap: 0.8rem; }
+.exercise-sets { color: var(--text-muted); }
+.btn-primary {
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+.btn-primary:hover { background: var(--primary-dark); }
+.routines h2 { margin-bottom: 1rem; }
+.routines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+.routine-card {
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+.routine-card:hover { transform: translateY(-3px); }
+.routine-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+.routine-card h3 { margin-bottom: 0.3rem; }
+.routine-card p { color: var(--text-muted); font-size: 0.85rem; }
+.progress h2 { margin-bottom: 1.5rem; }
+.progress-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 200px;
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 16px;
+}
+.chart-bar {
+    width: 12%;
+    background: var(--primary);
+    border-radius: 8px 8px 0 0;
+    position: relative;
+    transition: height 0.3s;
+}
+.chart-bar.active { background: var(--warning); }
+.chart-bar span {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.community h2 { margin-bottom: 1rem; }
+.community-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+.leaderboard, .achievements {
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 16px;
+}
+.leaderboard h3, .achievements h3 { margin-bottom: 1rem; }
+.leader-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.leader-item:last-child { border-bottom: none; }
+.leader-avatar {
+    width: 35px;
+    height: 35px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.leader-item p { flex: 1; }
+.achievement {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    opacity: 0.5;
+}
+.achievement.unlocked { opacity: 1; background: rgba(16,185,129,0.2); }
+.achievement i { color: var(--warning); font-size: 1.3rem; }
+.timer-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.timer-modal.active { display: flex; }
+.timer-content { text-align: center; }
+.timer {
+    font-size: 5rem;
+    font-weight: bold;
+    color: var(--primary);
+    margin: 2rem 0;
+}
+.timer-controls { display: flex; gap: 1rem; justify-content: center; }
+.timer-controls button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+#pauseBtn { background: var(--warning); color: var(--bg); }
+#stopBtn { background: var(--danger); color: white; }
+@media (max-width: 768px) {
+    .nav-links { display: none; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .community-grid { grid-template-columns: 1fr; }
+}

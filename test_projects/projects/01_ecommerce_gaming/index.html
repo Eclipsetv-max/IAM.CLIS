@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechZone Gaming - Tu Tienda de Videojuegos</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-gamepad"></i> TechZone</div>
+        <div class="nav-links">
+            <a href="#inicio">Inicio</a>
+            <a href="#productos">Productos</a>
+            <a href="#ofertas">Ofertas</a>
+            <a href="#contacto">Contacto</a>
+        </div>
+        <div class="cart-icon" id="cartIcon">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cartCount">0</span>
+        </div>
+    </nav>
+    
+    <header class="hero" id="inicio">
+        <div class="hero-content">
+            <h1>Los Mejores Videojuegos</h1>
+            <p>Encuentra los ultimos lanzamientos a los mejores precios</p>
+            <a href="#productos" class="btn-primary">Ver Catalogo</a>
+        </div>
+    </header>
+    
+    <section class="featured" id="productos">
+        <h2>Productos Destacados</h2>
+        <div class="filters">
+            <button class="filter-btn active" data-category="all">Todos</button>
+            <button class="filter-btn" data-category="pc">PC</button>
+            <button class="filter-btn" data-category="ps5">PS5</button>
+            <button class="filter-btn" data-category="xbox">Xbox</button>
+            <button class="filter-btn" data-category="switch">Switch</button>
+        </div>
+        <div class="products-grid" id="productsGrid">
+            <!-- Productos generados por JS -->
+        </div>
+    </section>
+    
+    <section class="deals" id="ofertas">
+        <h2>Ofertas Especiales</h2>
+        <div class="countdown" id="countdown">
+            <div class="time-box"><span id="hours">23</span><p>Horas</p></div>
+            <div class="time-box"><span id="minutes">59</span><p>Minutos</p></div>
+            <div class="time-box"><span id="seconds">59</span><p>Segundos</p></div>
+        </div>
+        <div class="deals-grid" id="dealsGrid"></div>
+    </section>
+    
+    <section class="newsletter">
+        <h2>Suscribete para Ofertas Exclusivas</h2>
+        <form id="newsletterForm">
+            <input type="email" placeholder="Tu email" required>
+            <button type="submit" class="btn-primary">Suscribirse</button>
+        </form>
+    </section>
+    
+    <footer id="contacto">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h3><i class="fas fa-gamepad"></i> TechZone</h3>
+                <p>Tu tienda de videojuegos de confianza desde 2020.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h3>Enlaces</h3>
+                <a href="#">Inicio</a>
+                <a href="#">Productos</a>
+                <a href="#">Ofertas</a>
+                <a href="#">Contacto</a>
+            </div>
+            <div class="footer-col">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-map-marker-alt"></i> Madrid, España</p>
+                <p><i class="fas fa-phone"></i> +34 600 123 456</p>
+                <p><i class="fas fa-envelope"></i> info@techzone.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 TechZone Gaming. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+    
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Mi Carrito</h3>
+            <button id="closeCart"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-total">
+            <p>Total: <span id="cartTotal">$0</span></p>
+            <button class="btn-primary" id="checkoutBtn">Comprar</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

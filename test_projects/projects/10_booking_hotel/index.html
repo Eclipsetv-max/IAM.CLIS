@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxeStay - Hoteles de Lujo</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-hotel"></i> LuxeStay</div>
+        <div class="nav-links">
+            <a href="#habitaciones">Habitaciones</a>
+            <a href="#servicios">Servicios</a>
+            <a href="#galeria">Galeria</a>
+            <a href="#contacto">Contacto</a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-outline">Iniciar Sesion</button>
+            <button class="btn-primary">Reservar Ahora</button>
+        </div>
+    </nav>
+    
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Experiencias Inolvidables</h1>
+            <p>Descubre hoteles de lujo en los mejores destinos del mundo</p>
+            <div class="booking-form">
+                <div class="form-group">
+                    <label>Destino</label>
+                    <input type="text" placeholder="¿A donde vas?">
+                </div>
+                <div class="form-group">
+                    <label>Check-in</label>
+                    <input type="date">
+                </div>
+                <div class="form-group">
+                    <label>Check-out</label>
+                    <input type="date">
+                </div>
+                <div class="form-group">
+                    <label>Huespedes</label>
+                    <select>
+                        <option>1 Huesped</option>
+                        <option>2 Huespedes</option>
+                        <option>3 Huespedes</option>
+                        <option>4+ Huespedes</option>
+                    </select>
+                </div>
+                <button class="btn-primary">Buscar</button>
+            </div>
+        </div>
+    </header>
+    
+    <section class="rooms" id="habitaciones">
+        <h2>Nuestras Habitaciones</h2>
+        <div class="rooms-grid" id="roomsGrid"></div>
+    </section>
+    
+    <section class="amenities" id="servicios">
+        <h2>Servicios Premium</h2>
+        <div class="amenities-grid">
+            <div class="amenity-card">
+                <i class="fas fa-spa"></i>
+                <h3>Spa & Wellness</h3>
+                <p>Relajate con nuestros tratamientos exclusivos</p>
+            </div>
+            <div class="amenity-card">
+                <i class="fas fa-utensils"></i>
+                <h3>Restaurante Gourmet</h3>
+                <p>Cocina de autor con vistas panoramicas</p>
+            </div>
+            <div class="amenity-card">
+                <i class="fas fa-swimming-pool"></i>
+                <h3>Piscina Infinity</h3>
+                <p>Piscina de borde infinito con vista al mar</p>
+            </div>
+            <div class="amenity-card">
+                <i class="fas fa-dumbbell"></i>
+                <h3>Gimnasio 24/7</h3>
+                <p>Equipamiento de ultima generacion</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="gallery-section" id="galeria">
+        <h2>Galeria</h2>
+        <div class="gallery-grid">
+            <div class="gallery-item" style="background: linear-gradient(135deg, #667eea, #764ba2)"></div>
+            <div class="gallery-item" style="background: linear-gradient(135deg, #f093fb, #f5576c)"></div>
+            <div class="gallery-item" style="background: linear-gradient(135deg, #4facfe, #00f2fe)"></div>
+            <div class="gallery-item" style="background: linear-gradient(135deg, #43e97b, #38f9d7)"></div>
+            <div class="gallery-item" style="background: linear-gradient(135deg, #fa709a, #fee140)"></div>
+            <div class="gallery-item" style="background: linear-gradient(135deg, #a8edea, #fed6e3)"></div>
+        </div>
+    </section>
+    
+    <section class="testimonials">
+        <h2>Lo que dicen nuestros huespedes</h2>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p>"Una experiencia increible. El servicio es excepcional y las instalaciones son de primer nivel."</p>
+                <div class="author">
+                    <div class="author-avatar">M</div>
+                    <div>
+                        <h4>Maria Garcia</h4>
+                        <span>Madrid, Espana</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p>"El mejor hotel en el que me he alojado. Volvere sin duda."</p>
+                <div class="author">
+                    <div class="author-avatar">C</div>
+                    <div>
+                        <h4>Carlos Lopez</h4>
+                        <span>Barcelona, Espana</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer id="contacto">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h3><i class="fas fa-hotel"></i> LuxeStay</h3>
+                <p>Hoteles de lujo en los mejores destinos del mundo.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-map-marker-alt"></i> Madrid, Espana</p>
+                <p><i class="fas fa-phone"></i> +34 900 123 456</p>
+                <p><i class="fas fa-envelope"></i> info@luxestay.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 LuxeStay. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>

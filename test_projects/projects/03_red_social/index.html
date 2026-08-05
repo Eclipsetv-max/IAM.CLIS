@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SocialHub - Red Social</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-globe"></i> SocialHub</div>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Buscar personas, hashtags...">
+        </div>
+        <div class="nav-icons">
+            <button><i class="fas fa-home"></i></button>
+            <button><i class="fas fa-paper-plane"></i></button>
+            <button><i class="fas fa-compass"></i></button>
+            <button><i class="fas fa-heart"></i></button>
+            <div class="user-avatar" id="userAvatar">F</div>
+        </div>
+    </nav>
+    
+    <main class="feed">
+        <div class="stories">
+            <div class="story"><div class="story-ring"><div class="story-avatar">+</div></div><p>Tu historia</p></div>
+            <div class="story"><div class="story-ring"><div class="story-avatar">A</div></div><p>Ana</p></div>
+            <div class="story"><div class="story-ring"><div class="story-avatar">C</div></div><p>Carlos</p></div>
+            <div class="story"><div class="story-ring"><div class="story-avatar">M</div></div><p>Maria</p></div>
+            <div class="story"><div class="story-ring"><div class="story-avatar">P</div></div><p>Pedro</p></div>
+        </div>
+        
+        <div class="post" id="post1">
+            <div class="post-header">
+                <div class="post-avatar">A</div>
+                <div class="post-info">
+                    <h4>Ana Garcia</h4>
+                    <span>Madrid, Espana</span>
+                </div>
+                <button class="more-btn"><i class="fas fa-ellipsis-h"></i></button>
+            </div>
+            <div class="post-image" style="background: linear-gradient(135deg, #667eea, #764ba2)">
+                <i class="fas fa-image" style="font-size:4rem;opacity:0.3"></i>
+            </div>
+            <div class="post-actions">
+                <button class="like-btn" onclick="toggleLike(this)"><i class="far fa-heart"></i></button>
+                <button><i class="far fa-comment"></i></button>
+                <button><i class="far fa-paper-plane"></i></button>
+                <button class="save-btn" onclick="toggleSave(this)"><i class="far fa-bookmark"></i></button>
+            </div>
+            <div class="post-likes">
+                <span id="likes1">1,234</span> me gusta
+            </div>
+            <div class="post-caption">
+                <h4>Ana Garcia</h4>
+                <p>Disfrutando de un hermoso dia en Madrid! #viaje #aventura</p>
+            </div>
+            <div class="post-comments">
+                <a href="#">Ver los 45 comentarios</a>
+                <p><b>Carlos</b> Que bonito!</p>
+            </div>
+            <div class="add-comment">
+                <input type="text" placeholder="Anade un comentario...">
+                <button>Publicar</button>
+            </div>
+        </div>
+        
+        <div class="post" id="post2">
+            <div class="post-header">
+                <div class="post-avatar">C</div>
+                <div class="post-info">
+                    <h4>Carlos Lopez</h4>
+                    <span>Barcelona, Espana</span>
+                </div>
+                <button class="more-btn"><i class="fas fa-ellipsis-h"></i></button>
+            </div>
+            <div class="post-image" style="background: linear-gradient(135deg, #f093fb, #f5576c)">
+                <i class="fas fa-image" style="font-size:4rem;opacity:0.3"></i>
+            </div>
+            <div class="post-actions">
+                <button class="like-btn" onclick="toggleLike(this)"><i class="far fa-heart"></i></button>
+                <button><i class="far fa-comment"></i></button>
+                <button><i class="far fa-paper-plane"></i></button>
+                <button class="save-btn" onclick="toggleSave(this)"><i class="far fa-bookmark"></i></button>
+            </div>
+            <div class="post-likes"><span>856</span> me gusta</div>
+            <div class="post-caption">
+                <h4>Carlos Lopez</h4>
+                <p>Mi setup de gaming nuevo! #gaming #tech</p>
+            </div>
+            <div class="add-comment">
+                <input type="text" placeholder="Anade un comentario...">
+                <button>Publicar</button>
+            </div>
+        </div>
+        
+        <div class="suggestions">
+            <div class="suggestion-header">
+                <h4>Sugerencias para ti</h4>
+                <a href="#">Ver todo</a>
+            </div>
+            <div class="suggestion-item">
+                <div class="suggestion-avatar">M</div>
+                <div class="suggestion-info">
+                    <h4>Maria Rodriguez</h4>
+                    <p>Te sugiere follow</p>
+                </div>
+                <button class="follow-btn">Seguir</button>
+            </div>
+            <div class="suggestion-item">
+                <div class="suggestion-avatar">L</div>
+                <div class="suggestion-info">
+                    <h4>Laura Sanchez</h4>
+                    <p>Sigues a Ana</p>
+                </div>
+                <button class="follow-btn">Seguir</button>
+            </div>
+        </div>
+    </main>
+    
+    <div class="create-modal" id="createModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Crear nueva publicacion</h3>
+                <button id="closeModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Arrastra tu foto aqui</p>
+                    <button class="btn-primary">Seleccionar del ordenador</button>
+                </div>
+                <textarea placeholder="Escribe un pie de foto..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary">Compartir</button>
+            </div>
+        </div>
+    </div>
+    
+    <button class="fab" id="createBtn"><i class="fas fa-plus"></i></button>
+    
+    <script src="script.js"></script>
+</body>
+</html>

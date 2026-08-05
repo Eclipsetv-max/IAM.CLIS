@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduMaster - Plataforma de Cursos</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-graduation-cap"></i> EduMaster</div>
+        <div class="nav-links">
+            <a href="#cursos">Cursos</a>
+            <a href="#categorias">Categorias</a>
+            <a href="#instructores">Instructores</a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-outline" id="loginBtn">Iniciar Sesion</button>
+            <button class="btn-primary">Registrarse</button>
+        </div>
+    </nav>
+    
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Aprende lo que quieras, cuando quieras</h1>
+            <p>Miles de cursos en linea para impulsar tu carrera profesional</p>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar cursos...">
+                <button class="btn-primary">Buscar</button>
+            </div>
+            <div class="stats-row">
+                <div class="stat"><h3>500+</h3><p>Cursos</p></div>
+                <div class="stat"><h3>50k+</h3><p>Estudiantes</p></div>
+                <div class="stat"><h3>200+</h3><p>Instructores</p></div>
+            </div>
+        </div>
+    </header>
+    
+    <section class="categories" id="categorias">
+        <h2>Explora por Categorias</h2>
+        <div class="categories-grid">
+            <div class="category-card" style="background: linear-gradient(135deg, #667eea, #764ba2)">
+                <i class="fas fa-code"></i>
+                <h3>Programacion</h3>
+                <p>120 cursos</p>
+            </div>
+            <div class="category-card" style="background: linear-gradient(135deg, #f093fb, #f5576c)">
+                <i class="fas fa-palette"></i>
+                <h3>Diseno</h3>
+                <p>85 cursos</p>
+            </div>
+            <div class="category-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe)">
+                <i class="fas fa-chart-line"></i>
+                <h3>Negocios</h3>
+                <p>95 cursos</p>
+            </div>
+            <div class="category-card" style="background: linear-gradient(135deg, #43e97b, #38f9d7)">
+                <i class="fas fa-bullhorn"></i>
+                <h3>Marketing</h3>
+                <p>65 cursos</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="featured-courses" id="cursos">
+        <h2>Cursos Populares</h2>
+        <div class="courses-grid" id="coursesGrid"></div>
+    </section>
+    
+    <section class="instructors" id="instructores">
+        <h2>Mejores Instructores</h2>
+        <div class="instructors-grid" id="instructorsGrid"></div>
+    </section>
+    
+    <section class="testimonials">
+        <h2>Lo que dicen nuestros estudiantes</h2>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p>"Excelente plataforma! Aprendi React en 2 meses y consegui empleo como desarrollador."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">M</div>
+                    <div>
+                        <h4>Maria Garcia</h4>
+                        <span>Desarrolladora Frontend</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p>"Los cursos son muy completos y los instructores explican de maravilla."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">C</div>
+                    <div>
+                        <h4>Carlos Lopez</h4>
+                        <span>Disenador UX</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta">
+        <h2>Empieza a aprender hoy</h2>
+        <p>Unete a miles de estudiantes que ya estan transformando su carrera</p>
+        <button class="btn-primary btn-large">Comenzar Ahora - Es Gratis</button>
+    </section>
+    
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h3><i class="fas fa-graduation-cap"></i> EduMaster</h3>
+                <p>La plataforma de aprendizaje en linea #1 en Latinoamerica.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Cursos</h3>
+                <a href="#">Programacion</a>
+                <a href="#">Diseno</a>
+                <a href="#">Negocios</a>
+                <a href="#">Marketing</a>
+            </div>
+            <div class="footer-col">
+                <h3>Empresa</h3>
+                <a href="#">Sobre Nosotros</a>
+                <a href="#">Carreras</a>
+                <a href="#">Blog</a>
+                <a href="#">Prensa</a>
+            </div>
+            <div class="footer-col">
+                <h3>Soporte</a>
+                <a href="#">Centro de Ayuda</a>
+                <a href="#">Contacto</a>
+                <a href="#">Terminos</a>
+                <a href="#">Privacidad</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 EduMaster. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>

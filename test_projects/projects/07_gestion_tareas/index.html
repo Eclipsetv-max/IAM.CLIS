@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Gestor de Tareas</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-tasks"></i>
+                <span>TaskFlow</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="#" class="nav-item"><i class="fas fa-calendar"></i> Calendario</a>
+                <a href="#" class="nav-item"><i class="fas fa-project-diagram"></i> Proyectos</a>
+                <a href="#" class="nav-item"><i class="fas fa-users"></i> Equipo</a>
+                <a href="#" class="nav-item"><i class="fas fa-chart-pie"></i> Estadisticas</a>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">F</div>
+                <span>Fernando</span>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <header class="header">
+                <div>
+                    <h1>Mi Dashboard</h1>
+                    <p>Tienes 5 tareas pendientes hoy</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-primary" id="addTaskBtn">
+                        <i class="fas fa-plus"></i> Nueva Tarea
+                    </button>
+                </div>
+            </header>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(59,130,246,0.2); color: #3b82f6">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>12</h3>
+                        <p>Tareas Totales</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(16,185,129,0.2); color: #10b981">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>7</h3>
+                        <p>Completadas</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(245,158,11,0.2); color: #f59e0b">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>5</h3>
+                        <p>Pendientes</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(239,68,68,0.2); color: #ef4444">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>2</h3>
+                        <p>Urgentes</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="board">
+                <div class="column" id="todo">
+                    <div class="column-header">
+                        <h3><span class="dot" style="background:#3b82f6"></span> Por Hacer</h3>
+                        <span class="count">4</span>
+                    </div>
+                    <div class="tasks" id="todoTasks">
+                        <div class="task-card" draggable="true">
+                            <div class="task-priority high">Urgente</div>
+                            <h4>Disenar landing page</h4>
+                            <p>Crear mockup en Figma</p>
+                            <div class="task-footer">
+                                <span><i class="far fa-clock"></i> 2h</span>
+                                <div class="task-avatar">A</div>
+                            </div>
+                        </div>
+                        <div class="task-card" draggable="true">
+                            <div class="task-priority medium">Media</div>
+                            <h4>Revisar codigo</h4>
+                            <p>PR del modulo de pagos</p>
+                            <div class="task-footer">
+                                <span><i class="far fa-clock"></i> 1h</span>
+                                <div class="task-avatar">C</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="column" id="doing">
+                    <div class="column-header">
+                        <h3><span class="dot" style="background:#f59e0b"></span> En Progreso</h3>
+                        <span class="count">3</span>
+                    </div>
+                    <div class="tasks" id="doingTasks">
+                        <div class="task-card" draggable="true">
+                            <div class="task-priority high">Urgente</div>
+                            <h4>API de usuarios</h4>
+                            <p>Endpoints REST completos</p>
+                            <div class="task-footer">
+                                <span><i class="far fa-clock"></i> 4h</span>
+                                <div class="task-avatar">F</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="column" id="done">
+                    <div class="column-header">
+                        <h3><span class="dot" style="background:#10b981"></span> Completado</h3>
+                        <span class="count">5</span>
+                    </div>
+                    <div class="tasks" id="doneTasks">
+                        <div class="task-card completed" draggable="true">
+                            <h4>Configurar base de datos</h4>
+                            <p>PostgreSQL + Redis</p>
+                            <div class="task-footer">
+                                <span><i class="fas fa-check-circle"></i> Completado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nueva Tarea</h3>
+                <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="taskForm">
+                <input type="text" placeholder="Titulo de la tarea" required>
+                <textarea placeholder="Descripcion" rows="3"></textarea>
+                <select>
+                    <option value="low">Baja Prioridad</option>
+                    <option value="medium">Media Prioridad</option>
+                    <option value="high">Alta Prioridad</option>
+                </select>
+                <input type="date">
+                <button type="submit" class="btn-primary">Crear Tarea</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

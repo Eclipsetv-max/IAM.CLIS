@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPro - Tu Entrenador Personal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-dumbbell"></i> FitPro</div>
+        <div class="nav-links">
+            <a href="#dashboard">Dashboard</a>
+            <a href="#rutinas">Rutinas</a>
+            <a href="#progreso">Progreso</a>
+            <a href="#comunidad">Comunidad</a>
+        </div>
+        <div class="user-menu">
+            <div class="avatar">F</div>
+        </div>
+    </nav>
+    
+    <main class="main">
+        <section class="dashboard" id="dashboard">
+            <div class="welcome">
+                <h1>Hola, Fernando!</h1>
+                <p>Continua con tu entrenamiento de hoy</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                    <div class="stat-info">
+                        <h3>450</h3>
+                        <p>Calorias quemadas</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-shoe-prints"></i></div>
+                    <div class="stat-info">
+                        <h3>8,542</h3>
+                        <p>Pasos hoy</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-heartbeat"></i></div>
+                    <div class="stat-info">
+                        <h3>72</h3>
+                        <p>BPM promedio</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <h3>45</h3>
+                        <p>Minutos activo</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="today-workout">
+                <h2>Entrenamiento de Hoy</h2>
+                <div class="workout-card">
+                    <div class="workout-header">
+                        <div class="workout-icon">💪</div>
+                        <div>
+                            <h3>Full Body Workout</h3>
+                            <p>45 minutos | 12 ejercicios</p>
+                        </div>
+                    </div>
+                    <div class="exercise-list" id="exerciseList"></div>
+                    <button class="btn-primary" id="startWorkout">Iniciar Entrenamiento</button>
+                </div>
+            </div>
+        </section>
+        
+        <section class="routines" id="rutinas">
+            <h2>Rutinas Disponibles</h2>
+            <div class="routines-grid" id="routinesGrid"></div>
+        </section>
+        
+        <section class="progress" id="progreso">
+            <h2>Mi Progreso Semanal</h2>
+            <div class="progress-chart">
+                <div class="chart-bar" style="height: 60%"><span>Lun</span></div>
+                <div class="chart-bar" style="height: 80%"><span>Mar</span></div>
+                <div class="chart-bar active" style="height: 45%"><span>Mie</span></div>
+                <div class="chart-bar" style="height: 90%"><span>Jue</span></div>
+                <div class="chart-bar" style="height: 70%"><span>Vie</span></div>
+                <div class="chart-bar" style="height: 30%"><span>Sab</span></div>
+                <div class="chart-bar" style="height: 0%"><span>Dom</span></div>
+            </div>
+        </section>
+        
+        <section class="community" id="comunidad">
+            <h2>Comunidad</h2>
+            <div class="community-grid">
+                <div class="leaderboard">
+                    <h3>Leaderboard</h3>
+                    <div class="leader-item"><span>1</span><div class="leader-avatar">A</div><p>Ana Garcia</p><span>12,500 pts</span></div>
+                    <div class="leader-item"><span>2</span><div class="leader-avatar">F</div><p>Fernando</p><span>11,200 pts</span></div>
+                    <div class="leader-item"><span>3</span><div class="leader-avatar">C</div><p>Carlos Lopez</p><span>10,800 pts</span></div>
+                </div>
+                <div class="achievements">
+                    <h3>Logros</h3>
+                    <div class="achievement unlocked"><i class="fas fa-trophy"></i><span>Primera Semana</span></div>
+                    <div class="achievement unlocked"><i class="fas fa-fire"></i><span>7 Dias Seguidos</span></div>
+                    <div class="achievement"><i class="fas fa-medal"></i><span>100 Entrenamientos</span></div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <div class="timer-modal" id="timerModal">
+        <div class="timer-content">
+            <h2>Entrenamiento en Curso</h2>
+            <div class="timer" id="timer">00:00</div>
+            <p id="currentExercise">Burpees</p>
+            <div class="timer-controls">
+                <button id="pauseBtn"><i class="fas fa-pause"></i></button>
+                <button id="stopBtn"><i class="fas fa-stop"></i></button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

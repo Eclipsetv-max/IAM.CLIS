@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodExpress - Delivery de Comida</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-utensils"></i> FoodExpress</div>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Buscar restaurantes o platos...">
+        </div>
+        <div class="nav-icons">
+            <button><i class="fas fa-map-marker-alt"></i> Madrid</button>
+            <button class="cart-btn" id="cartBtn">
+                <i class="fas fa-shopping-bag"></i>
+                <span id="cartCount">0</span>
+            </button>
+        </div>
+    </nav>
+    
+    <main class="main">
+        <section class="categories-section">
+            <h2>Categorias</h2>
+            <div class="categories-scroll">
+                <div class="category-item"><div class="cat-icon">🍕</div><p>Pizza</p></div>
+                <div class="category-item"><div class="cat-icon">🍔</div><p>Hamburguesa</p></div>
+                <div class="category-item"><div class="cat-icon">🍣</div><p>Sushi</p></div>
+                <div class="category-item"><div class="cat-icon">🌮</div><p>Tacos</p></div>
+                <div class="category-item"><div class="cat-icon">🥗</div><p>Ensaladas</p></div>
+                <div class="category-item"><div class="cat-icon">🍜</div><p>Ramen</p></div>
+                <div class="category-item"><div class="cat-icon">🍦</div><p>Postres</p></div>
+                <div class="category-item"><div class="cat-icon">☕</div><p>Cafe</p></div>
+            </div>
+        </section>
+        
+        <section class="restaurants-section">
+            <h2>Restaurantes Populares</h2>
+            <div class="restaurants-grid" id="restaurantsGrid"></div>
+        </section>
+        
+        <section class="featured-section">
+            <h2>Platos Destacados</h2>
+            <div class="dishes-grid" id="dishesGrid"></div>
+        </section>
+    </main>
+    
+    <div class="cart-panel" id="cartPanel">
+        <div class="cart-header">
+            <h3>Mi Pedido</h3>
+            <button id="closeCart"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <p class="empty-cart">Tu carrito esta vacio</p>
+        </div>
+        <div class="cart-summary">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="subtotal">$0</span>
+            </div>
+            <div class="summary-row">
+                <span>Delivery</span>
+                <span>$3.99</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span id="total">$3.99</span>
+            </div>
+            <button class="btn-primary" id="checkoutBtn">Realizar Pedido</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
