@@ -3618,9 +3618,24 @@ footer, .footer, .site-footer {
     
     def _chat_streaming(self, enriched_prompt: str) -> str:
         """Chat con streaming - respuesta rapida"""
-        import time
+        import time, sys
         
         start_time = time.time()
+        
+        # Para IAM con streaming, no usar loader (el streaming ya muestra progreso)
+        if self.engine == "iam":
+            try:
+                sys.stdout.write(f"\r\033[2m{self._get_mode_message()}...\033[0m ")
+                sys.stdout.flush()
+            except:
+                pass
+            response = self._call_iam_fast(enriched_prompt)
+            try:
+                sys.stdout.write("\r" + " " * 40 + "\r")
+                sys.stdout.flush()
+            except:
+                pass
+            return response
         
         loader = LoadingIndicator()
         msg = self._get_mode_message()
@@ -3635,8 +3650,6 @@ footer, .footer, .site-footer {
                 response = self._call_tertiary(enriched_prompt)
             elif self.engine == "freetheai":
                 response = self._call_secondary(enriched_prompt)
-            elif self.engine == "iam":
-                response = self._call_iam_fast(enriched_prompt)
             else:
                 response = self._call_multi_engine(enriched_prompt)
             
@@ -3702,7 +3715,7 @@ footer, .footer, .site-footer {
             content_tokens = []
             reasoning_tokens = []
             last_data_time = time.time()
-            showed_reasoning = False
+            content_started = False
 
             for line in resp.iter_lines():
                 if time.time() - last_data_time > 120:
@@ -3720,30 +3733,29 @@ footer, .footer, .site-footer {
                                 delta = chunk['choices'][0].get('delta', {})
                                 # Content directo
                                 if delta.get('content'):
+                                    if not content_started:
+                                        # Limpiar la linea de "procesando..."
+                                        sys.stdout.write("\r" + " " * 50 + "\r")
+                                        sys.stdout.flush()
+                                        content_started = True
                                     content_tokens.append(delta['content'])
                                     sys.stdout.write(delta['content'])
                                     sys.stdout.flush()
-                                # Reasoning (pensamiento)
+                                # Reasoning - acumular pero no mostrar (es interno)
                                 elif delta.get('reasoning'):
                                     reasoning_tokens.append(delta['reasoning'])
-                                    if not showed_reasoning:
-                                        sys.stdout.write("\r\033[2m")
-                                        sys.stdout.flush()
-                                        showed_reasoning = True
-                                    sys.stdout.write(delta['reasoning'])
-                                    sys.stdout.flush()
                         except json.JSONDecodeError:
                             continue
-
-            if showed_reasoning:
-                sys.stdout.write("\033[0m")
-                sys.stdout.flush()
 
             content = ''.join(content_tokens)
             reasoning = ''.join(reasoning_tokens)
 
             # Si no hay content pero hay reasoning, usar reasoning
             if not content and reasoning:
+                # Mostrar al menos algo
+                if not content_started:
+                    sys.stdout.write("\r" + " " * 50 + "\r")
+                    sys.stdout.flush()
                 content = reasoning
 
             return content
