@@ -1629,7 +1629,7 @@ footer, .footer, .site-footer {
                                 f.write(fallback_css)
                             tool_result += f"\n[OK] Archivo creado (fallback): style.css ({len(fallback_css)} bytes)"
                         if needs_js:
-                            placeholder = '''// ================================================================
+                            fallback_js = '''// ================================================================
    IAM PREMIUM JAVASCRIPT v5.0 - Interacciones completas
    Features: Nav, Scroll, Animations, Tabs, Accordion, Modal, 
    Dark Mode, Form Validation, Back to Top, Counters, Typing
@@ -2097,8 +2097,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });'''
                             path = os.path.join(self.active_project, 'script.js')
                             with open(path, 'w', encoding='utf-8') as f:
-                                f.write(placeholder)
-                            tool_result += f"\n[OK] Archivo creado (fallback): script.js ({len(placeholder)} bytes)"
+                                f.write(fallback_js)
+                            tool_result += f"\n[OK] Archivo creado (fallback): script.js ({len(fallback_js)} bytes)"
             
             # PASO FINAL: Asegurar que HTML tenga <script src> y <link href> correctos, y CSS suficiente
             if self.active_project and os.path.isfile(os.path.join(self.active_project, 'index.html')):
