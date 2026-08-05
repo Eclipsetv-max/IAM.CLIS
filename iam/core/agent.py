@@ -3694,40 +3694,68 @@ footer, .footer, .site-footer {
             "top_p": 0.9
         }
 
+        _debug_log = []
+
         def _try_direct():
             if not settings.API_KEY:
+                _debug_log.append("[DEBUG] Directo: no hay API_KEY")
                 return None
-            resp = requests.post(
-                "https://opencode.ai/zen/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {settings.API_KEY}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://iam-ai.local",
-                    "X-Title": "IAM AI Assistant"
-                },
-                json=payload, timeout=90
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                if "choices" in data and data["choices"]:
-                    msg = data["choices"][0]["message"]
-                    return msg.get("content") or msg.get("reasoning") or ""
+            _debug_log.append(f"[DEBUG] Directo: POST https://opencode.ai/zen/v1/chat/completions (key={settings.API_KEY[:8]}...)")
+            try:
+                resp = requests.post(
+                    "https://opencode.ai/zen/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {settings.API_KEY}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://iam-ai.local",
+                        "X-Title": "IAM AI Assistant"
+                    },
+                    json=payload, timeout=90
+                )
+                _debug_log.append(f"[DEBUG] Directo: status={resp.status_code}")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if "choices" in data and data["choices"]:
+                        msg = data["choices"][0]["message"]
+                        return msg.get("content") or msg.get("reasoning") or ""
+                    _debug_log.append(f"[DEBUG] Directo: respuesta sin choices: {str(data)[:200]}")
+                else:
+                    _debug_log.append(f"[DEBUG] Directo: error body: {resp.text[:200]}")
+            except requests.exceptions.Timeout:
+                _debug_log.append("[DEBUG] Directo: TIMEOUT (90s)")
+            except requests.exceptions.ConnectionError as e:
+                _debug_log.append(f"[DEBUG] Directo: CONNECTION ERROR: {str(e)[:100]}")
+            except Exception as e:
+                _debug_log.append(f"[DEBUG] Directo: EXCEPTION: {str(e)[:100]}")
             return None
 
         def _try_proxy():
             proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
             if not proxy_url:
+                _debug_log.append("[DEBUG] Proxy: no hay OPENCODE_PROXY_URL")
                 return None
-            resp = requests.post(
-                f"{proxy_url}/v1/chat/completions",
-                headers={"Content-Type": "application/json"},
-                json=payload, timeout=15
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                if "choices" in data and data["choices"]:
-                    msg = data["choices"][0]["message"]
-                    return msg.get("content") or msg.get("reasoning") or ""
+            _debug_log.append(f"[DEBUG] Proxy: POST {proxy_url}/v1/chat/completions")
+            try:
+                resp = requests.post(
+                    f"{proxy_url}/v1/chat/completions",
+                    headers={"Content-Type": "application/json"},
+                    json=payload, timeout=15
+                )
+                _debug_log.append(f"[DEBUG] Proxy: status={resp.status_code}")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if "choices" in data and data["choices"]:
+                        msg = data["choices"][0]["message"]
+                        return msg.get("content") or msg.get("reasoning") or ""
+                    _debug_log.append(f"[DEBUG] Proxy: respuesta sin choices: {str(data)[:200]}")
+                else:
+                    _debug_log.append(f"[DEBUG] Proxy: error body: {resp.text[:200]}")
+            except requests.exceptions.Timeout:
+                _debug_log.append("[DEBUG] Proxy: TIMEOUT (15s)")
+            except requests.exceptions.ConnectionError as e:
+                _debug_log.append(f"[DEBUG] Proxy: CONNECTION ERROR: {str(e)[:100]}")
+            except Exception as e:
+                _debug_log.append(f"[DEBUG] Proxy: EXCEPTION: {str(e)[:100]}")
             return None
 
         # Intento 1: Directo (mas rapido)
@@ -3770,7 +3798,8 @@ footer, .footer, .site-footer {
         except Exception:
             pass
 
-        return "[ERROR] No se pudo conectar con la API de IA. Verifica tu conexion e intenta de nuevo."
+        debug_output = "\n".join(_debug_log)
+        return f"[ERROR] No se pudo conectar con la API de IA.\n{debug_output}"
     
     def _call_secondary(self, enriched_prompt: str = None) -> str:
         """Llamar a IA Secundaria"""
