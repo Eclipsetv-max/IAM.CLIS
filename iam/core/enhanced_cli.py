@@ -1185,7 +1185,7 @@ class EnhancedCLI:
 
     def print_help_table(self):
         table = Table(
-            title=f"IAM v4.1 | Tema: {self.theme_name}",
+            title=f"IAM v4.5 | Tema: {self.theme_name}",
             box=box.ROUNDED,
             show_header=True,
             header_style="bold cyan",
@@ -1291,7 +1291,7 @@ class EnhancedCLI:
 
 ---
 
-*IAM v4.1*
+*IAM v4.5*
 """
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)

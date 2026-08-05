@@ -1,4 +1,4 @@
-# IAM v4.1 - Multi-AI Assistant
+# IAM v4.5 - Multi-AI Assistant
 # PowerShell Start Script
 
 $env:PYTHONIOENCODING = "utf-8"

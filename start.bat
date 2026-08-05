@@ -1,5 +1,5 @@
 @echo off
-title IAM v4.1 - Multi-AI Assistant
+title IAM v4.5 - Multi-AI Assistant
 color 0B
 
 set PYTHONIOENCODING=utf-8

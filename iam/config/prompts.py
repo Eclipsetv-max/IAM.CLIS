@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IAM Prompts v4.2 - System prompts mejorados para respuestas mas rapidas y precisas
+IAM Prompts v4.5 - System prompts con CSS/JS premium y multi-language
 """
 
 from typing import Dict, Any

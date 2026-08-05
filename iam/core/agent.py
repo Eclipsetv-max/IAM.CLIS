@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Agent - Agente de IA avanzado con razonamiento profundo
-Version 4.0 - Mejora completa de creacion de codigo
+Version 4.5 - CSS/JS premium, multi-language quality rules
 """
 
 import json
