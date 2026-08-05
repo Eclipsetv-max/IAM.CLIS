@@ -9,10 +9,9 @@ import re
 import sys
 import json
 import time
-import hashlib
 import threading
 from pathlib import Path
-from typing import List, Optional, Dict, Tuple, Callable, Generator
+from typing import List, Optional, Dict, Tuple, Callable
 from difflib import get_close_matches, unified_diff
 from datetime import datetime
 from dataclasses import dataclass, field

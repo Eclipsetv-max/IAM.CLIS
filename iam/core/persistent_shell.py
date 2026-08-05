@@ -11,7 +11,6 @@ import tempfile
 import time
 from typing import Optional, Tuple, Dict, Any
 from dataclasses import dataclass, field
-from pathlib import Path
 import queue
 
 
@@ -180,23 +179,6 @@ class PersistentShell:
         """Obtener directorio de trabajo actual"""
         return self.working_dir
     
-    def get_history(self, limit: int = 50) -> list:
-        """Obtener historial de comandos"""
-        return self._command_history[-limit:]
-    
-    def get_stats(self) -> Dict[str, Any]:
-        """Obtener estadisticas del shell"""
-        return {
-            "working_dir": self.working_dir,
-            "command_count": self._command_count,
-            "history_size": len(self._command_history),
-            "last_command": self._command_history[-1] if self._command_history else None
-        }
-    
-    def clear_history(self):
-        """Limpiar historial"""
-        self._command_history.clear()
-    
     def reset(self):
         """Resetear shell a estado inicial"""
         self.working_dir = os.getcwd()
@@ -305,18 +287,3 @@ class WindowsPersistentShell(PersistentShell):
                 stderr=str(e),
                 exit_code=-1
             )
-
-
-# Instancia global
-_shell: Optional[PersistentShell] = None
-
-
-def get_global_shell() -> PersistentShell:
-    """Obtener shell global"""
-    global _shell
-    if _shell is None:
-        if os.name == 'nt':
-            _shell = WindowsPersistentShell()
-        else:
-            _shell = PersistentShell()
-    return _shell

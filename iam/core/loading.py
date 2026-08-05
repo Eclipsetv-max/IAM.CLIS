@@ -8,7 +8,7 @@ import sys
 import os
 import time
 import threading
-from typing import Optional, List, Callable
+from typing import Optional, List
 
 
 class LoadingIndicator:

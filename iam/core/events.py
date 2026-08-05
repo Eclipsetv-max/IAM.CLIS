@@ -5,7 +5,7 @@ IAM: event-driven architecture con non-blocking publish
 """
 
 import threading
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Generic
+from typing import Any, Callable, Dict, List, Optional
 from enum import Enum
 from dataclasses import dataclass, field
 from datetime import datetime

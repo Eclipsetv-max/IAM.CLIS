@@ -192,39 +192,7 @@ class CodeValidator:
         if '</html>' not in content.lower():
             content += '\n</html>'
             
-        return content
-
-    def fix_css(self, content: str) -> str:
-        """Corregir errores comunes en CSS"""
-        if not content:
             return content
-        
-        content = self._strip_markdown_fences(content)
-        content = re.sub(r'\[/?TOOL_CALL\][^\n]*', '', content).strip()
-        
-        # Balancear llaves si se cortaron al final
-        open_braces = content.count('{')
-        close_braces = content.count('}')
-        if open_braces > close_braces:
-            content += '\n}' * (open_braces - close_braces)
-            
-        return content
-
-    def fix_js(self, content: str) -> str:
-        """Corregir errores comunes en JavaScript"""
-        if not content:
-            return content
-        
-        content = self._strip_markdown_fences(content)
-        content = re.sub(r'\[/?TOOL_CALL\][^\n]*', '', content).strip()
-        
-        # Cierre automático si faltan paréntesis o llaves
-        open_b = content.count('{')
-        close_b = content.count('}')
-        if open_b > close_b:
-            content += '\n}' * (open_b - close_b)
-            
-        return content
     
     def fix_css(self, content: str) -> str:
         """Corregir errores comunes en CSS"""

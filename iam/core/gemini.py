@@ -4,7 +4,7 @@ Motor IA Terciario - Integracion via proxy
 import os
 import requests
 from pathlib import Path
-from typing import Optional, Generator
+from typing import Optional
 from dataclasses import dataclass
 
 
@@ -135,36 +135,6 @@ class TertiaryClient:
             
         except Exception as e:
             return f"[ERROR] Motor IA: {str(e)}"
-    
-    def chat_stream(self, prompt: str, system_prompt: str = "") -> Generator[str, None, None]:
-        if not self.is_available():
-            yield "[ERROR] Motor IA no disponible"
-            return
-        
-        try:
-            model = self._get_model()
-            
-            if system_prompt:
-                full_prompt = f"[System]: {system_prompt}\n\n[User]: {prompt}"
-            else:
-                full_prompt = prompt
-            
-            response = model.generate_content(
-                full_prompt,
-                generation_config={
-                    "temperature": self.config.temperature,
-                    "max_output_tokens": self.config.max_tokens,
-                    "top_p": self.config.top_p,
-                },
-                stream=True
-            )
-            
-            for chunk in response:
-                if chunk.text:
-                    yield chunk.text
-                    
-        except Exception as e:
-            yield f"[ERROR] Motor IA: {str(e)}"
 
 
 # Instancia global

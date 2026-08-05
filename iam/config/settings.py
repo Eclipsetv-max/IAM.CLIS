@@ -31,15 +31,9 @@ load_env_file()
 class IAMSettings:
     """Configuración principal de IAM"""
     
-    BASE_DIR: Path = Path(__file__).parent.parent.parent
-    IAM_DIR: Path = Path(__file__).parent.parent
     DATA_DIR: Path = field(default_factory=lambda: Path(__file__).parent.parent / "data")
     
-    USERNAME: str = "User"
-    USER_ALIAS: str = "User"
-    
     VERSION: str = "4.5"
-    CODENAME: str = "IAM AI Assistant"
     
     DEFAULT_ENGINE: str = "iam"
     AVAILABLE_ENGINES: list = field(default_factory=lambda: ["iam"])
@@ -52,16 +46,6 @@ class IAMSettings:
         "backend": "mimo-v2.5-free",
         "debug": "mimo-v2.5-free",
         "security": "mimo-v2.5-free"
-    })
-    
-    LOCAL_MODEL_DIR: Path = field(default_factory=lambda: Path(__file__).parent.parent / "training" / "models")
-    LOCAL_MODEL_NAME: str = "tinyllama"
-    
-    FALLBACK_MODELS: Dict[str, Dict[str, str]] = field(default_factory=lambda: {
-        "iam": {
-            "general": "mimo-v2.5-free",
-            "builder": "mimo-v2.5-free"
-        }
     })
     
     MAX_CONTEXT_MESSAGES: int = 20
@@ -106,39 +90,24 @@ class IAMSettings:
             data = bytes([b ^ k[i % len(k)] for i, b in enumerate(data)])
         return data[8:-8].decode()
     
-    HF_API_KEY: str = field(default_factory=lambda: os.environ.get("HF_API_KEY", ""))
     API_KEY: str = field(default_factory=lambda: os.environ.get("OPENCODE_API_KEY") or IAMSettings._decode_ultra('k1'))
     API_KEY_ALT: str = field(default_factory=lambda: os.environ.get("FREETHEAI_API_KEY") or IAMSettings._decode_ultra('k2'))
     API_KEY_GEM: str = field(default_factory=lambda: os.environ.get("GEMINI_API_KEY") or IAMSettings._decode_ultra('k3'))
     
     def __post_init__(self):
         self.DATA_DIR.mkdir(exist_ok=True)
-    
-    def get_model(self, mode: str) -> str:
-        return self.MODELS.get(mode, self.MODELS["general"])
 
 
 class COLORS:
     """Constantes de colores ANSI"""
     
     TEAL = "\033[38;2;0;212;170m"
-    WHITE = "\033[38;2;238;238;238m"
-    GRAY = "\033[90m"
-    BOLD = "\033[1m"
     RESET = "\033[0m"
-    YELLOW = "\033[33m"
-    CYAN = "\033[36m"
-    
-    RED = "\033[31m"
-    GREEN = "\033[32m"
-    PURPLE = "\033[38;2;147;51;234m"
-    BLUE = "\033[38;2;59;130;246m"
     ORANGE = "\033[38;2;249;115;22m"
-    PINK = "\033[38;2;236;72;153m"
-    CYAN2 = "\033[38;2;34;211;238m"
     GREEN2 = "\033[38;2;74;222;128m"
-    DIM = "\033[2m"
-    LINE = "\033[38;2;60;60;70m"
+    PINK = "\033[38;2;236;72;153m"
+    RED = "\033[31m"
+    CYAN2 = "\033[38;2;34;211;238m"
     
     MODE_COLORS = {
         "general": CYAN2,

@@ -4,7 +4,7 @@ Motor IA Secundario - Integracion via proxy
 import os
 import requests
 from pathlib import Path
-from typing import Optional, Generator
+from typing import Optional
 from dataclasses import dataclass
 
 
@@ -139,67 +139,6 @@ class SecondaryClient:
                 return "Fernando esta viendo en donde esta el error espere un rato"
         
         return "[ERROR] Motor IA: max reintentos alcanzados"
-    
-    def chat_stream(self, prompt: str, system_prompt: str = "") -> Generator[str, None, None]:
-        if not self.is_available():
-            yield "[ERROR] Motor IA no disponible"
-            return
-        
-        try:
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": prompt})
-            
-            url = f"{self.config.proxy_url}/v1/chat/completions" if self.config.use_proxy else "https://api.freetheai.xyz/v1/chat/completions"
-            headers = {"Content-Type": "application/json"}
-            if not self.config.use_proxy:
-                headers["Authorization"] = f"Bearer {self.config.api_key}"
-            
-            response = requests.post(
-                url,
-                headers=headers,
-                json={
-                    "model": self.config.model,
-                    "messages": messages,
-                    "temperature": self.config.temperature,
-                    "max_tokens": self.config.max_tokens,
-                    "stream": True
-                },
-                stream=True,
-                timeout=30
-            )
-            
-            for line in response.iter_lines():
-                if line:
-                    line = line.decode('utf-8')
-                    if line.startswith('data: ') and line != 'data: [DONE]':
-                        import json
-                        data = json.loads(line[6:])
-                        if data['choices'][0]['delta'].get('content'):
-                            yield data['choices'][0]['delta']['content']
-                            
-        except Exception as e:
-            yield f"[ERROR] Motor IA: {str(e)}"
-    
-    def list_models(self) -> list:
-        if not self.is_available():
-            return []
-        
-        try:
-            url = f"{self.config.proxy_url}/v1/models" if self.config.use_proxy else "https://api.freetheai.xyz/v1/models"
-            headers = {"Content-Type": "application/json"}
-            if not self.config.use_proxy:
-                headers["Authorization"] = f"Bearer {self.config.api_key}"
-            
-            response = requests.get(url, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                return [m["id"] for m in data.get("data", [])]
-            return []
-        except Exception:
-            return []
 
 
 # Instancia global

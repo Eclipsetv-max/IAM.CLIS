@@ -489,36 +489,3 @@ def get_agent_prompt(mode: str) -> str:
         _prompt_cache[mode] = prompt
         return prompt
     return AGENT_PROMPTS["general"]["system"]
-
-
-MODE_CONFIGS: Dict[str, Dict[str, Any]] = {
-    "general": {
-        "aliases": ["general", "gen", "g", "ia", "chat"],
-        "commands": ["/general", "/gen", "/g", "/ia", "/chat"]
-    },
-    "builder": {
-        "aliases": ["builder", "build", "b", "crear", "code"],
-        "commands": ["/builder", "/build", "/b", "/crear", "/code"]
-    },
-    "debug": {
-        "aliases": ["debug", "db", "d", "error", "bug", "fix"],
-        "commands": ["/debug", "/db", "/d", "/error", "/bug", "/fix"]
-    },
-    "security": {
-        "aliases": ["security", "sec", "s", "seguridad", "hack"],
-        "commands": ["/security", "/sec", "/s", "/seguridad", "/hack"]
-    },
-    "reader": {
-        "aliases": ["reader", "read", "r", "leer", "ver", "archivo"],
-        "commands": ["/reader", "/read", "/r", "/leer", "/ver", "/archivo"]
-    }
-}
-
-
-def get_agent_by_command(command: str) -> str:
-    """Obtener modo/agente por comando"""
-    command = command.lower().strip()
-    for mode, config in MODE_CONFIGS.items():
-        if command in config["commands"]:
-            return mode
-    return "general"

@@ -6,7 +6,6 @@ Version 4.5 - CSS/JS premium, multi-language quality rules
 
 import json
 import os
-import subprocess
 import requests
 from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
@@ -35,14 +34,13 @@ from ..tools.web import web
 from ..tools.monitor import monitor
 from ..tools.packages import packages
 from ..tools.screen import ScreenMonitor
-from .loading import LoadingIndicator, ToolCallProgress, ThinkingAnimation, PhaseAnimation
+from .loading import LoadingIndicator, ToolCallProgress
 from .permissions import (
     PermissionSystem, PermissionAction, PermissionLevel,
     permission_system, request_permission, require_permission
 )
 
 # Nuevos modulos v4.1
-from ..tools.code_validator import code_validator, quality_checker, validate_file, get_quality_report
 from ..tools.smart_templates import smart_templates
 
 # Modulos IAM
@@ -51,9 +49,8 @@ from .cost_tracking import CostTracker, cost_tracker
 from .auto_compact import AutoCompactor, auto_compactor
 from .context_loader import ContextLoader, context_loader
 from .sub_agent import SubAgent, SubAgentType, sub_agent
-from .events import events, Event, EventType, on_event
-from .persistent_shell import get_shell, run_command, CommandResult
-from .patch import PatchApplier, DiffGenerator, apply_patch_to_files
+from .events import events, EventType
+from .persistent_shell import get_shell
 
 
 class Agent:
@@ -724,10 +721,6 @@ class Agent:
         """
         if not self.current_session:
             self.session_manager.create_session(mode=self.current_mode)
-        
-        # Generar titulo automatico de sesion (IAM)
-        if self.current_session and len(self.current_session.messages) == 0:
-            self._auto_generate_title(user_message)
         
         # Detectar imagenes pegadas [IMAGE:path]
         import re
@@ -3674,19 +3667,6 @@ footer, .footer, .site-footer {
         finally:
             loader.stop()
     
-    def _auto_generate_title(self, first_message: str):
-        """Generar titulo automatico de sesion basado en el primer mensaje"""
-        try:
-            # Generar titulo corto (max 40 chars)
-            title = first_message[:40].strip()
-            if len(first_message) > 40:
-                title += "..."
-            # Guardar en sesion
-            if hasattr(self.current_session, 'title'):
-                self.current_session.title = title
-        except:
-            pass
-    
     def _call_iam_fast(self, enriched_prompt: str = None, max_tokens: int = None) -> str:
         """Llamar a la API de IA - ultra rapido con fallback directo"""
         import time
@@ -4025,45 +4005,6 @@ footer, .footer, .site-footer {
 
         return "[ERROR] No se pudo conectar con la API de IA. Verifica tu conexion e intenta de nuevo."
     
-    def _call_huggingface(self, enriched_prompt: str = None) -> str:
-        """Llamar a Hugging Face API"""
-        if not settings.HF_API_KEY:
-            return self._fallback_response("huggingface")
-        
-        try:
-            context = self.current_session.get_context()
-            prompt = (enriched_prompt or self.system_prompt) + "\n\n"
-            
-            for msg in context:
-                role = "Humano" if msg["role"] == "user" else "Asistente"
-                prompt += f"{role}: {msg['content']}\n"
-            
-            prompt += "Asistente:"
-            
-            response = requests.post(
-                "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct",
-                headers={"Authorization": f"Bearer {settings.HF_API_KEY}"},
-                json={
-                    "inputs": prompt,
-                    "parameters": {
-                        "max_new_tokens": 2048,
-                        "temperature": 0.7,
-                        "do_sample": True
-                    }
-                },
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                return data[0]["generated_text"].split("Asistente:")[-1].strip()
-            elif response.status_code == 503:
-                return "Modelo cargandose. Intenta en unos segundos."
-            else:
-                return f"Error HF ({response.status_code})"
-        except Exception as e:
-            return f"Error HF: {str(e)}"
-    
     def _cleanup_response(self, text: str) -> str:
         """Limpiar artefactos de markdown de la respuesta de la IA.
         Convierte *texto* y **texto** a texto plano, sin tocar bloques de codigo."""
@@ -4102,12 +4043,6 @@ footer, .footer, .site-footer {
 La API ya viene configurada. Si no funciona:
 1. Verifica tu conexion a internet
 2. Reinicia IAM con: python main.py"""
-        
-        elif engine == "groq":
-            return "Motor Groq eliminado. Usa /engine iam para MiMo v2.5 Free."
-        
-        elif engine == "huggingface":
-            return "Motor HuggingFace eliminado. Usa /engine iam para MiMo v2.5 Free."
         
         return "Motor no configurado. Usa /engine para cambiar."
     
