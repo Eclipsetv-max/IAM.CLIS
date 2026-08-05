@@ -97,6 +97,16 @@ class IAMSettings:
     API_KEY_ALT: str = field(default_factory=lambda: os.environ.get("FREETHEAI_API_KEY") or IAMSettings._decode_ultra('k2'))
     API_KEY_GEM: str = field(default_factory=lambda: os.environ.get("GEMINI_API_KEY") or IAMSettings._decode_ultra('k3'))
     
+    # Keys adicionales para fallback automatico
+    API_KEYS_FALLBACK: list = field(default_factory=lambda: [
+        k for k in [
+            os.environ.get("OPENCODE_API_KEY_2"),
+            os.environ.get("OPENCODE_API_KEY_3"),
+            os.environ.get("OPENCODE_API_KEY_4"),
+            os.environ.get("OPENCODE_API_KEY_5"),
+        ] if k
+    ])
+    
     def __post_init__(self):
         self.DATA_DIR.mkdir(exist_ok=True)
 

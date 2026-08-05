@@ -3681,7 +3681,7 @@ footer, .footer, .site-footer {
             loader.stop()
     
     def _call_iam_fast(self, enriched_prompt: str = None, max_tokens: int = None) -> str:
-        """Llamar a la API de IA con streaming - respuesta en tiempo real"""
+        """Llamar a la API de IA con streaming - fallback automatico entre keys"""
         import time, sys
 
         context = self.current_session.get_context()
@@ -3708,8 +3708,6 @@ footer, .footer, .site-footer {
             "stream": True
         }
 
-        _debug_log = []
-
         def _stream_response(resp):
             """Leer streaming y mostrar en tiempo real"""
             content_tokens = []
@@ -3731,17 +3729,14 @@ footer, .footer, .site-footer {
                             chunk = json.loads(data_str)
                             if 'choices' in chunk and chunk['choices']:
                                 delta = chunk['choices'][0].get('delta', {})
-                                # Content directo
                                 if delta.get('content'):
                                     if not content_started:
-                                        # Limpiar la linea de "procesando..."
                                         sys.stdout.write("\r" + " " * 50 + "\r")
                                         sys.stdout.flush()
                                         content_started = True
                                     content_tokens.append(delta['content'])
                                     sys.stdout.write(delta['content'])
                                     sys.stdout.flush()
-                                # Reasoning - acumular pero no mostrar (es interno)
                                 elif delta.get('reasoning'):
                                     reasoning_tokens.append(delta['reasoning'])
                         except json.JSONDecodeError:
@@ -3749,113 +3744,79 @@ footer, .footer, .site-footer {
 
             content = ''.join(content_tokens)
             reasoning = ''.join(reasoning_tokens)
-
-            # Si no hay content pero hay reasoning, usar reasoning
             if not content and reasoning:
-                # Mostrar al menos algo
                 if not content_started:
                     sys.stdout.write("\r" + " " * 50 + "\r")
                     sys.stdout.flush()
                 content = reasoning
-
             return content
 
-        def _try_direct_stream():
-            if not settings.API_KEY:
-                _debug_log.append("[DEBUG] Directo: no hay API_KEY")
-                return None
-            _debug_log.append(f"[DEBUG] Directo: STREAM https://opencode.ai/zen/v1/chat/completions")
+        def _try_key_stream(api_key, label):
+            """Intentar con una key especifica"""
             try:
+                sys.stdout.write(f"\r\033[2m{label}...\033[0m ")
+                sys.stdout.flush()
                 resp = requests.post(
                     "https://opencode.ai/zen/v1/chat/completions",
                     headers={
-                        "Authorization": f"Bearer {settings.API_KEY}",
+                        "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json",
                         "HTTP-Referer": "https://iam-ai.local",
                         "X-Title": "IAM AI Assistant"
                     },
                     json=payload, timeout=120, stream=True
                 )
-                _debug_log.append(f"[DEBUG] Directo: status={resp.status_code}")
                 if resp.status_code == 200:
                     return _stream_response(resp)
+                elif resp.status_code == 429:
+                    return None  # Rate limit, intentar siguiente
                 else:
-                    _debug_log.append(f"[DEBUG] Directo: error: {resp.text[:200]}")
+                    return None
             except requests.exceptions.Timeout:
-                _debug_log.append("[DEBUG] Directo: TIMEOUT (120s)")
-            except requests.exceptions.ConnectionError as e:
-                _debug_log.append(f"[DEBUG] Directo: CONNECTION ERROR: {str(e)[:100]}")
-            except Exception as e:
-                _debug_log.append(f"[DEBUG] Directo: EXCEPTION: {str(e)[:100]}")
+                return None
+            except requests.exceptions.ConnectionError:
+                return None
+            except Exception:
+                return None
             return None
 
-        def _try_proxy_stream():
-            proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
-            if not proxy_url:
-                _debug_log.append("[DEBUG] Proxy: no hay OPENCODE_PROXY_URL")
-                return None
-            _debug_log.append(f"[DEBUG] Proxy: STREAM {proxy_url}/v1/chat/completions")
+        # Recolectar todas las keys disponibles
+        all_keys = []
+        if settings.API_KEY:
+            all_keys.append((settings.API_KEY, "Key principal"))
+        for i, key in enumerate(settings.API_KEYS_FALLBACK, 1):
+            all_keys.append((key, f"Key fallback {i}"))
+
+        # Intentar cada key hasta que una funcione
+        for api_key, label in all_keys:
+            result = _try_key_stream(api_key, label)
+            if result is not None:
+                return result
+            # Verificar ESC
             try:
+                from .enhanced_cli import interrupt
+                if interrupt.is_interrupted:
+                    return "[Interrumpido por ESC]"
+            except Exception:
+                pass
+
+        # Si todas fallaron, intentar proxy
+        proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
+        if proxy_url:
+            try:
+                sys.stdout.write(f"\r\033[2mProxy...\033[0m ")
+                sys.stdout.flush()
                 resp = requests.post(
                     f"{proxy_url}/v1/chat/completions",
                     headers={"Content-Type": "application/json"},
                     json=payload, timeout=30, stream=True
                 )
-                _debug_log.append(f"[DEBUG] Proxy: status={resp.status_code}")
                 if resp.status_code == 200:
                     return _stream_response(resp)
-                else:
-                    _debug_log.append(f"[DEBUG] Proxy: error: {resp.text[:200]}")
-            except requests.exceptions.Timeout:
-                _debug_log.append("[DEBUG] Proxy: TIMEOUT (30s)")
-            except requests.exceptions.ConnectionError as e:
-                _debug_log.append(f"[DEBUG] Proxy: CONNECTION ERROR: {str(e)[:100]}")
-            except Exception as e:
-                _debug_log.append(f"[DEBUG] Proxy: EXCEPTION: {str(e)[:100]}")
-            return None
+            except Exception:
+                pass
 
-        # Intento 1: Directo con streaming
-        try:
-            result = _try_direct_stream()
-            if result is not None:
-                return result
-        except Exception:
-            pass
-
-        # Verificar ESC
-        try:
-            from .enhanced_cli import interrupt
-            if interrupt.is_interrupted:
-                return "[Interrumpido por ESC]"
-        except Exception:
-            pass
-
-        # Intento 2: Proxy con streaming
-        try:
-            result = _try_proxy_stream()
-            if result is not None:
-                return result
-        except Exception:
-            pass
-
-        # Verificar ESC
-        try:
-            from .enhanced_cli import interrupt
-            if interrupt.is_interrupted:
-                return "[Interrumpido por ESC]"
-        except Exception:
-            pass
-
-        # Intento 3: Directo final
-        try:
-            result = _try_direct_stream()
-            if result is not None:
-                return result
-        except Exception:
-            pass
-
-        debug_output = "\n".join(_debug_log)
-        return f"[ERROR] No se pudo conectar con la API de IA.\n{debug_output}"
+        return "[ERROR] Todas las API keys fallaron. Verifica tu conexion."
     
     def _call_secondary(self, enriched_prompt: str = None) -> str:
         """Llamar a IA Secundaria"""
