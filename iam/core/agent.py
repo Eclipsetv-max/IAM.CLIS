@@ -3668,8 +3668,8 @@ footer, .footer, .site-footer {
             loader.stop()
     
     def _call_iam_fast(self, enriched_prompt: str = None, max_tokens: int = None) -> str:
-        """Llamar a la API de IA - ultra rapido con fallback directo"""
-        import time
+        """Llamar a la API de IA con streaming - respuesta en tiempo real"""
+        import time, sys
 
         context = self.current_session.get_context()
         messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
@@ -3691,16 +3691,68 @@ footer, .footer, .site-footer {
             "messages": messages,
             "temperature": 0.7,
             "max_tokens": max_tokens or 2048,
-            "top_p": 0.9
+            "top_p": 0.9,
+            "stream": True
         }
 
         _debug_log = []
 
-        def _try_direct():
+        def _stream_response(resp):
+            """Leer streaming y mostrar en tiempo real"""
+            content_tokens = []
+            reasoning_tokens = []
+            last_data_time = time.time()
+            showed_reasoning = False
+
+            for line in resp.iter_lines():
+                if time.time() - last_data_time > 120:
+                    break
+                if line:
+                    last_data_time = time.time()
+                    line_str = line.decode('utf-8', errors='replace')
+                    if line_str.startswith('data: '):
+                        data_str = line_str[6:]
+                        if data_str.strip() == '[DONE]':
+                            break
+                        try:
+                            chunk = json.loads(data_str)
+                            if 'choices' in chunk and chunk['choices']:
+                                delta = chunk['choices'][0].get('delta', {})
+                                # Content directo
+                                if delta.get('content'):
+                                    content_tokens.append(delta['content'])
+                                    sys.stdout.write(delta['content'])
+                                    sys.stdout.flush()
+                                # Reasoning (pensamiento)
+                                elif delta.get('reasoning'):
+                                    reasoning_tokens.append(delta['reasoning'])
+                                    if not showed_reasoning:
+                                        sys.stdout.write("\r\033[2m")
+                                        sys.stdout.flush()
+                                        showed_reasoning = True
+                                    sys.stdout.write(delta['reasoning'])
+                                    sys.stdout.flush()
+                        except json.JSONDecodeError:
+                            continue
+
+            if showed_reasoning:
+                sys.stdout.write("\033[0m")
+                sys.stdout.flush()
+
+            content = ''.join(content_tokens)
+            reasoning = ''.join(reasoning_tokens)
+
+            # Si no hay content pero hay reasoning, usar reasoning
+            if not content and reasoning:
+                content = reasoning
+
+            return content
+
+        def _try_direct_stream():
             if not settings.API_KEY:
                 _debug_log.append("[DEBUG] Directo: no hay API_KEY")
                 return None
-            _debug_log.append(f"[DEBUG] Directo: POST https://opencode.ai/zen/v1/chat/completions (key={settings.API_KEY[:8]}...)")
+            _debug_log.append(f"[DEBUG] Directo: STREAM https://opencode.ai/zen/v1/chat/completions")
             try:
                 resp = requests.post(
                     "https://opencode.ai/zen/v1/chat/completions",
@@ -3710,57 +3762,49 @@ footer, .footer, .site-footer {
                         "HTTP-Referer": "https://iam-ai.local",
                         "X-Title": "IAM AI Assistant"
                     },
-                    json=payload, timeout=90
+                    json=payload, timeout=120, stream=True
                 )
                 _debug_log.append(f"[DEBUG] Directo: status={resp.status_code}")
                 if resp.status_code == 200:
-                    data = resp.json()
-                    if "choices" in data and data["choices"]:
-                        msg = data["choices"][0]["message"]
-                        return msg.get("content") or msg.get("reasoning") or ""
-                    _debug_log.append(f"[DEBUG] Directo: respuesta sin choices: {str(data)[:200]}")
+                    return _stream_response(resp)
                 else:
-                    _debug_log.append(f"[DEBUG] Directo: error body: {resp.text[:200]}")
+                    _debug_log.append(f"[DEBUG] Directo: error: {resp.text[:200]}")
             except requests.exceptions.Timeout:
-                _debug_log.append("[DEBUG] Directo: TIMEOUT (90s)")
+                _debug_log.append("[DEBUG] Directo: TIMEOUT (120s)")
             except requests.exceptions.ConnectionError as e:
                 _debug_log.append(f"[DEBUG] Directo: CONNECTION ERROR: {str(e)[:100]}")
             except Exception as e:
                 _debug_log.append(f"[DEBUG] Directo: EXCEPTION: {str(e)[:100]}")
             return None
 
-        def _try_proxy():
+        def _try_proxy_stream():
             proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
             if not proxy_url:
                 _debug_log.append("[DEBUG] Proxy: no hay OPENCODE_PROXY_URL")
                 return None
-            _debug_log.append(f"[DEBUG] Proxy: POST {proxy_url}/v1/chat/completions")
+            _debug_log.append(f"[DEBUG] Proxy: STREAM {proxy_url}/v1/chat/completions")
             try:
                 resp = requests.post(
                     f"{proxy_url}/v1/chat/completions",
                     headers={"Content-Type": "application/json"},
-                    json=payload, timeout=15
+                    json=payload, timeout=30, stream=True
                 )
                 _debug_log.append(f"[DEBUG] Proxy: status={resp.status_code}")
                 if resp.status_code == 200:
-                    data = resp.json()
-                    if "choices" in data and data["choices"]:
-                        msg = data["choices"][0]["message"]
-                        return msg.get("content") or msg.get("reasoning") or ""
-                    _debug_log.append(f"[DEBUG] Proxy: respuesta sin choices: {str(data)[:200]}")
+                    return _stream_response(resp)
                 else:
-                    _debug_log.append(f"[DEBUG] Proxy: error body: {resp.text[:200]}")
+                    _debug_log.append(f"[DEBUG] Proxy: error: {resp.text[:200]}")
             except requests.exceptions.Timeout:
-                _debug_log.append("[DEBUG] Proxy: TIMEOUT (15s)")
+                _debug_log.append("[DEBUG] Proxy: TIMEOUT (30s)")
             except requests.exceptions.ConnectionError as e:
                 _debug_log.append(f"[DEBUG] Proxy: CONNECTION ERROR: {str(e)[:100]}")
             except Exception as e:
                 _debug_log.append(f"[DEBUG] Proxy: EXCEPTION: {str(e)[:100]}")
             return None
 
-        # Intento 1: Directo (mas rapido)
+        # Intento 1: Directo con streaming
         try:
-            result = _try_direct()
+            result = _try_direct_stream()
             if result is not None:
                 return result
         except Exception:
@@ -3774,9 +3818,9 @@ footer, .footer, .site-footer {
         except Exception:
             pass
 
-        # Intento 2: Proxy (fallback rapido)
+        # Intento 2: Proxy con streaming
         try:
-            result = _try_proxy()
+            result = _try_proxy_stream()
             if result is not None:
                 return result
         except Exception:
@@ -3792,7 +3836,7 @@ footer, .footer, .site-footer {
 
         # Intento 3: Directo final
         try:
-            result = _try_direct()
+            result = _try_direct_stream()
             if result is not None:
                 return result
         except Exception:
