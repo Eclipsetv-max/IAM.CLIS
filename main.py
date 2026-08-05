@@ -11,6 +11,12 @@ import sys
 import io
 import time
 import argparse
+from dotenv import load_dotenv
+
+# Cargar .env ANTES de todo
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(env_path):
+    load_dotenv(env_path)
 
 os.environ['PYTHONIOENCODING'] = 'utf-8'
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
