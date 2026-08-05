@@ -3780,15 +3780,15 @@ footer, .footer, .site-footer {
                 return None
             return None
 
-        # Recolectar todas las keys disponibles
-        all_keys = []
-        if settings.API_KEY:
-            all_keys.append((settings.API_KEY, "Key principal"))
-        for i, key in enumerate(settings.API_KEYS_FALLBACK, 1):
-            all_keys.append((key, f"Key fallback {i}"))
+        # Recolectar todas las keys (principal + 6 fallback)
+        all_keys = [(settings.API_KEY, "Key 1")]
+        for i, key in enumerate(settings.API_KEYS_FALLBACK, 2):
+            all_keys.append((key, f"Key {i}"))
 
         # Intentar cada key hasta que una funcione
         for api_key, label in all_keys:
+            if not api_key:
+                continue
             result = _try_key_stream(api_key, label)
             if result is not None:
                 return result
@@ -3797,22 +3797,6 @@ footer, .footer, .site-footer {
                 from .enhanced_cli import interrupt
                 if interrupt.is_interrupted:
                     return "[Interrumpido por ESC]"
-            except Exception:
-                pass
-
-        # Si todas fallaron, intentar proxy
-        proxy_url = os.environ.get("OPENCODE_PROXY_URL", "")
-        if proxy_url:
-            try:
-                sys.stdout.write(f"\r\033[2mProxy...\033[0m ")
-                sys.stdout.flush()
-                resp = requests.post(
-                    f"{proxy_url}/v1/chat/completions",
-                    headers={"Content-Type": "application/json"},
-                    json=payload, timeout=30, stream=True
-                )
-                if resp.status_code == 200:
-                    return _stream_response(resp)
             except Exception:
                 pass
 
