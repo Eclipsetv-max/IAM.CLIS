@@ -113,11 +113,11 @@ class IAMSettings:
             return ""
     
     API_KEY: str = field(default_factory=lambda: IAMSettings._decode_ultra('k1'))
+    API_KEY_ALT: str = field(default_factory=lambda: IAMSettings._decode_ultra('k2'))
+    API_KEY_GEM: str = field(default_factory=lambda: IAMSettings._decode_ultra('k3'))
     
-    # Todas las keys para fallback automatico (k1 es la principal)
+    # Keys para fallback automatico (k1=principal, k2=alt, k3=gemini)
     API_KEYS_FALLBACK: list = field(default_factory=lambda: [
-        IAMSettings._decode_ultra('k2'),
-        IAMSettings._decode_ultra('k3'),
         IAMSettings._decode_ultra('k4'),
         IAMSettings._decode_ultra('k5'),
         IAMSettings._decode_ultra('k6'),
