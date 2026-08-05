@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Context Loader - Carga automatica de archivos de contexto
-Inspirado en opencode: auto-carga CLAUDE.md, opencode.md, etc.
+IAM: auto-carga archivos de configuracion
 """
 
 import os
@@ -14,13 +14,11 @@ from dataclasses import dataclass, field
 
 # Archivos de contexto buscados (en orden de prioridad)
 CONTEXT_FILE_PATTERNS = [
-    # OpenCode
-    "opencode.md",
-    "opencode.local.md",
-    "OpenCode.md",
-    "OpenCode.local.md",
-    "OPENCODE.md",
-    "OPENCODE.local.md",
+    # IAM
+    "iam.md",
+    "iam.local.md",
+    "IAM.md",
+    "IAM.local.md",
     
     # Claude
     "CLAUDE.md",
@@ -102,7 +100,7 @@ class ProjectContext:
 class ContextLoader:
     """
     Sistema de carga de contexto de proyecto
-    Inspirado en opencode: auto-carga archivos de instrucciones
+    IAM: auto-carga archivos
     """
     
     MAX_CONTEXT_SIZE = 50000  # Maximo 50KB de contexto combinado

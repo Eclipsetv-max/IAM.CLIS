@@ -193,17 +193,17 @@ DASHBOARD_HTML = """
                 <h3>APIs Configuradas</h3>
                 <div class="api-status">
                     <div class="api-dot {{ 'active' if freetheai else 'inactive' }}"></div>
-                    <span>FreeTheAi</span>
+                    <span>Motor IA</span>
                     <span style="margin-left: auto; color: #888;">{{ 'Configurada' if freetheai else 'No configurada' }}</span>
                 </div>
                 <div class="api-status">
                     <div class="api-dot {{ 'active' if gemini else 'inactive' }}"></div>
-                    <span>Gemini</span>
+                    <span>Motor IA</span>
                     <span style="margin-left: auto; color: #888;">{{ 'Configurada' if gemini else 'No configurada' }}</span>
                 </div>
                 <div class="api-status">
                     <div class="api-dot {{ 'active' if opencode else 'inactive' }}"></div>
-                    <span>OpenCode/Mimo</span>
+                    <span>Motor IA</span>
                     <span style="margin-left: auto; color: #888;">{{ 'Configurada' if opencode else 'No configurada' }}</span>
                 </div>
             </div>
@@ -409,7 +409,7 @@ def list_models():
     """Listar modelos"""
     api_key = API_KEYS.get('FREETHEAI_API_KEY', '')
     if not api_key:
-        return jsonify({"error": "FreeTheAi API key not configured"}), 500
+        return jsonify({"error": "Motor IA no configurado"}), 500
     
     try:
         response = requests.get(
@@ -512,7 +512,7 @@ def gemini_chat():
     
     api_key = API_KEYS.get('GEMINI_API_KEY', '')
     if not api_key:
-        return jsonify({"error": "Gemini API key not configured"}), 500
+        return jsonify({"error": "Motor IA no configurado"}), 500
     
     try:
         import google.generativeai as genai

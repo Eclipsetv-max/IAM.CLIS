@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Code Manager - Gestion de codigo y archivos
-Con mensajes de progreso estilo OpenCode
+    Con mensajes de progreso IAM
 """
 
 import os
@@ -15,7 +15,7 @@ from typing import Tuple, Optional, Dict, Any, List
 class CodeManager:
     """
     Gestion de codigo y archivos
-    Con mensajes de progreso estilo OpenCode
+Con mensajes de progreso IAM
     """
     
     def count_lines(self, filepath: str) -> Tuple[bool, Dict[str, int]]:

@@ -1,6 +1,5 @@
 """
-Integracion con Google Gemini API
-Usa proxy server para ocultar API keys
+Motor IA Terciario - Integracion via proxy
 """
 import os
 import requests
@@ -10,11 +9,11 @@ from dataclasses import dataclass
 
 
 @dataclass
-class GeminiConfig:
-    """Configuracion de Gemini"""
+class TertiaryConfig:
+    """Configuracion del motor IA terciario"""
     api_key: str = ""
-    proxy_url: str = "http://localhost:5000"  # Local proxy
-    online_url: str = ""  # URL del servidor online
+    proxy_url: str = "http://localhost:5000"
+    online_url: str = ""
     model: str = "gemini-2.0-flash"
     temperature: float = 0.7
     max_tokens: int = 2048
@@ -22,15 +21,14 @@ class GeminiConfig:
     use_proxy: bool = True
 
 
-class GeminiClient:
-    """Cliente para Google Gemini API (via proxy)"""
+class TertiaryClient:
+    """Cliente para motor IA terciario (via proxy)"""
     
-    def __init__(self, config: GeminiConfig = None):
+    def __init__(self, config: TertiaryConfig = None):
         self.config = config or self._load_config()
         self._model = None
     
-    def _load_config(self) -> GeminiConfig:
-        """Cargar configuracion"""
+    def _load_config(self) -> TertiaryConfig:
         api_key = ""
         online_url = ""
         env_paths = [
@@ -50,19 +48,16 @@ class GeminiClient:
         if not api_key:
             api_key = os.getenv("GEMINI_API_KEY", "")
         if not api_key:
-            # Fallback: usar key embebida de settings
             from iam.config.settings import settings
-            api_key = settings.GEMINI_API_KEY
+            api_key = settings.API_KEY_GEM
         if not online_url:
             online_url = os.getenv("GEMINI_PROXY_URL", "")
         
-        # Determinar URL del proxy
         if online_url:
             proxy_url = online_url
         else:
-            proxy_url = "https://iam-proxy.onrender.com"  # Render
+            proxy_url = "https://iam-proxy.onrender.com"
         
-        # Verificar si el proxy esta disponible
         use_proxy = True
         try:
             response = requests.get(f"{proxy_url}/health", timeout=2)
@@ -71,7 +66,7 @@ class GeminiClient:
         except:
             use_proxy = False
         
-        return GeminiConfig(
+        return TertiaryConfig(
             api_key=api_key,
             proxy_url=proxy_url,
             online_url=online_url,
@@ -79,19 +74,16 @@ class GeminiClient:
         )
     
     def is_available(self) -> bool:
-        """Verificar si Gemini esta disponible"""
         if self.config.use_proxy:
             return True
         return bool(self.config.api_key)
     
     def chat(self, prompt: str, system_prompt: str = "") -> str:
-        """Enviar mensaje y recibir respuesta"""
         if not self.is_available():
-            return "[ERROR] Gemini no disponible"
+            return "[ERROR] Motor IA no disponible"
         
         try:
             if self.config.use_proxy:
-                # Usar proxy (local o online)
                 url = f"{self.config.proxy_url}/v1/gemini"
                 response = requests.post(
                     url,
@@ -111,16 +103,14 @@ class GeminiClient:
                 elif response.status_code == 503:
                     return "[MANTENIMIENTO] Servidor temporalmente desactivado"
                 else:
-                    return f"[ERROR] Gemini proxy: {response.status_code}"
+                    return f"[ERROR] Motor IA: {response.status_code}"
             else:
-                # Modo directo
                 return self._call_direct(prompt, system_prompt)
                 
         except Exception as e:
-            return f"[ERROR] Gemini: {str(e)}"
+            return f"[ERROR] Motor IA: {str(e)}"
     
     def _call_direct(self, prompt: str, system_prompt: str = "") -> str:
-        """Llamada directa a Gemini (sin proxy)"""
         try:
             import google.generativeai as genai
             genai.configure(api_key=self.config.api_key)
@@ -144,12 +134,11 @@ class GeminiClient:
             return response.text or ""
             
         except Exception as e:
-            return f"[ERROR] Gemini: {str(e)}"
+            return f"[ERROR] Motor IA: {str(e)}"
     
     def chat_stream(self, prompt: str, system_prompt: str = "") -> Generator[str, None, None]:
-        """Enviar mensaje y recibir respuesta con streaming"""
         if not self.is_available():
-            yield "[ERROR] Gemini API key no configurada"
+            yield "[ERROR] Motor IA no disponible"
             return
         
         try:
@@ -175,8 +164,8 @@ class GeminiClient:
                     yield chunk.text
                     
         except Exception as e:
-            yield f"[ERROR] Gemini: {str(e)}"
+            yield f"[ERROR] Motor IA: {str(e)}"
 
 
 # Instancia global
-gemini_client = GeminiClient()
+gemini_client = TertiaryClient()

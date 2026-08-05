@@ -3,7 +3,6 @@ import sys
 import os
 
 sys.path.insert(0, '.')
-os.environ.setdefault('OPENCODE_API_KEY', 'sk-ZaU6sJMfuYEh3xSsdWOU0dKMOTIbVbGOurrAMWmGNGNYbECxf7JLaVsFzyNJP8Bs')
 os.environ.setdefault('TEST_OUTPUT_DIR', r'C:\Users\casa\Desktop\iam_real_tests')
 
 from iam.core.agent import Agent

@@ -1,7 +1,5 @@
 """
-Integracion con FreeTheAi - API gratuita OpenAI-compatible
-80+ modelos gratis sin tarjeta de credito
-Usa proxy server para ocultar API keys
+Motor IA Secundario - Integracion via proxy
 """
 import os
 import requests
@@ -11,26 +9,24 @@ from dataclasses import dataclass
 
 
 @dataclass
-class FreeTheAiConfig:
-    """Configuracion de FreeTheAi"""
+class SecondaryConfig:
+    """Configuracion del motor IA secundario"""
     api_key: str = ""
-    proxy_url: str = "http://localhost:5000"  # Local proxy
-    online_url: str = ""  # URL del servidor online (se configura despues)
+    proxy_url: str = "http://localhost:5000"
+    online_url: str = ""
     model: str = "opc/deepseek-v4-flash-free"
     temperature: float = 0.7
     max_tokens: int = 2048
     use_proxy: bool = True
 
 
-class FreeTheAiClient:
-    """Cliente para FreeTheAi API (via proxy)"""
+class SecondaryClient:
+    """Cliente para motor IA secundario (via proxy)"""
     
-    def __init__(self, config: FreeTheAiConfig = None):
+    def __init__(self, config: SecondaryConfig = None):
         self.config = config or self._load_config()
     
-    def _load_config(self) -> FreeTheAiConfig:
-        """Cargar configuracion"""
-        # Intentar cargar desde .env (para modo directo)
+    def _load_config(self) -> SecondaryConfig:
         api_key = ""
         online_url = ""
         env_paths = [
@@ -50,19 +46,16 @@ class FreeTheAiClient:
         if not api_key:
             api_key = os.getenv("FREETHEAI_API_KEY", "")
         if not api_key:
-            # Fallback: usar key embebida de settings
             from iam.config.settings import settings
-            api_key = settings.FREETHEAI_API_KEY
+            api_key = settings.API_KEY_ALT
         if not online_url:
             online_url = os.getenv("FREETHEAI_PROXY_URL", "")
         
-        # Determinar URL del proxy
         if online_url:
             proxy_url = online_url
         else:
-            proxy_url = "https://iam-proxy.onrender.com"  # Render
+            proxy_url = "https://iam-proxy.onrender.com"
         
-        # Verificar si el proxy esta disponible
         use_proxy = True
         try:
             response = requests.get(f"{proxy_url}/health", timeout=2)
@@ -71,7 +64,7 @@ class FreeTheAiClient:
         except:
             use_proxy = False
         
-        return FreeTheAiConfig(
+        return SecondaryConfig(
             api_key=api_key,
             proxy_url=proxy_url,
             online_url=online_url,
@@ -79,17 +72,15 @@ class FreeTheAiClient:
         )
     
     def is_available(self) -> bool:
-        """Verificar si FreeTheAi esta disponible"""
         if self.config.use_proxy:
-            return True  # Proxy siempre disponible
+            return True
         return bool(self.config.api_key)
     
     def chat(self, prompt: str, system_prompt: str = "") -> str:
-        """Enviar mensaje y recibir respuesta"""
         import time
         
         if not self.is_available():
-            return "[ERROR] FreeTheAi no disponible"
+            return "[ERROR] Motor IA no disponible"
         
         max_retries = 3
         
@@ -101,7 +92,6 @@ class FreeTheAiClient:
                 messages.append({"role": "user", "content": prompt})
                 
                 if self.config.use_proxy:
-                    # Usar proxy (local o online)
                     url = f"{self.config.proxy_url}/v1/chat/completions"
                     headers = {"Content-Type": "application/json"}
                     payload = {
@@ -111,7 +101,6 @@ class FreeTheAiClient:
                         "max_tokens": self.config.max_tokens
                     }
                 else:
-                    # Modo directo (fallback)
                     url = "https://api.freetheai.xyz/v1/chat/completions"
                     headers = {
                         "Authorization": f"Bearer {self.config.api_key}",
@@ -131,31 +120,29 @@ class FreeTheAiClient:
                     if "choices" in data and data["choices"]:
                         return data["choices"][0]["message"]["content"]
                     elif "error" in data:
-                        return f"[ERROR] FreeTheAi: {data['error']}"
+                        return f"[ERROR] Motor IA: {data['error']}"
                     else:
-                        return f"[ERROR] FreeTheAi: respuesta inesperada"
+                        return f"[ERROR] Motor IA: respuesta inesperada"
                 elif response.status_code == 503:
-                    # Servidor en mantenimiento - reintentar
                     if attempt < max_retries - 1:
                         wait_time = 2 * (attempt + 1)
                         time.sleep(wait_time)
                         continue
-                    return "Fernando esta viendo en donde esta el error espere un rato 🫠"
+                    return "Fernando esta viendo en donde esta el error espere un rato"
                 else:
-                    return f"Fernando esta viendo en donde esta el error espere un rato 🫠"
+                    return "Fernando esta viendo en donde esta el error espere un rato"
                     
             except Exception as e:
                 if attempt < max_retries - 1:
                     time.sleep(2)
                     continue
-                return "Fernando esta viendo en donde esta el error espere un rato 🫠"
+                return "Fernando esta viendo en donde esta el error espere un rato"
         
-        return "[ERROR] FreeTheAi: max reintentos alcanzados"
+        return "[ERROR] Motor IA: max reintentos alcanzados"
     
     def chat_stream(self, prompt: str, system_prompt: str = "") -> Generator[str, None, None]:
-        """Enviar mensaje y recibir respuesta con streaming"""
         if not self.is_available():
-            yield "[ERROR] FreeTheAi API key no configurada"
+            yield "[ERROR] Motor IA no disponible"
             return
         
         try:
@@ -193,10 +180,9 @@ class FreeTheAiClient:
                             yield data['choices'][0]['delta']['content']
                             
         except Exception as e:
-            yield f"[ERROR] FreeTheAi: {str(e)}"
+            yield f"[ERROR] Motor IA: {str(e)}"
     
     def list_models(self) -> list:
-        """Listar modelos disponibles"""
         if not self.is_available():
             return []
         
@@ -217,4 +203,4 @@ class FreeTheAiClient:
 
 
 # Instancia global
-freetheai_client = FreeTheAiClient()
+freetheai_client = SecondaryClient()

@@ -45,7 +45,7 @@ from .permissions import (
 from ..tools.code_validator import code_validator, quality_checker, validate_file, get_quality_report
 from ..tools.smart_templates import smart_templates
 
-# Modulos inspirados en OpenCode
+# Modulos IAM
 from .file_history import FileHistory, file_history
 from .cost_tracking import CostTracker, cost_tracker
 from .auto_compact import AutoCompactor, auto_compactor
@@ -102,7 +102,7 @@ class Agent:
         self.active_project: str = None  # Carpeta activa del proyecto
         self._local_model = None  # Modelo local fine-tuned
         
-        # Modulos inspirados en OpenCode
+        # Modulos IAM
         self.file_history = file_history
         self.cost_tracker = cost_tracker
         self.auto_compactor = auto_compactor
@@ -114,7 +114,7 @@ class Agent:
         # Tracking de archivos leidos (para read-before-edit)
         self._files_read_this_session: set = set()
         
-        # File records para read-before-edit (inspirado en OpenCode)
+        # File records para read-before-edit (IAM)
         self._file_records: Dict[str, Dict] = {}
     
     @property
@@ -163,7 +163,7 @@ class Agent:
         # Memoria relevante
         memory_context = self._get_memory_context()
         
-        # Contexto del proyecto (inspirado en opencode: CLAUDE.md, opencode.md, etc.)
+        # Contexto del proyecto (IAM)
         project_context = ""
         if self.active_project:
             self.context_loader.project_path = self.active_project
@@ -285,9 +285,9 @@ class Agent:
             if self.current_session:
                 self.current_session.mode = mode
                 self.current_session.model = settings.MODELS.get(mode, settings.MODELS["general"])
-            # Usar MiMo v2.5 Free en builder para mejor calidad de codigo
+            # Usar motor IAM en builder para mejor calidad de codigo
             if mode == "builder":
-                self.engine = "mimo"
+                self.engine = "iam"
             return True
         return False
     
@@ -725,7 +725,7 @@ class Agent:
         if not self.current_session:
             self.session_manager.create_session(mode=self.current_mode)
         
-        # Generar titulo automatico de sesion (como OpenCode)
+        # Generar titulo automatico de sesion (IAM)
         if self.current_session and len(self.current_session.messages) == 0:
             self._auto_generate_title(user_message)
         
@@ -3286,7 +3286,7 @@ footer, .footer, .site-footer {
     def _run_tool_call(self, action, path, content, command, old_text, new_text) -> str:
         """Ejecutar una accion de tool call con validacion y correccion automatica
         Incluye animacion contextual breve para cada accion.
-        Inspirado en opencode: file history, security checks, read-before-edit."""
+        IAM: file history, security checks, read-before-edit."""
         
         # Verificar si el comando esta prohibido
         if action == 'execute' and command:
@@ -3354,7 +3354,7 @@ footer, .footer, .site-footer {
                 else:
                     self.file_history.record_create(path, content or "")
                 
-                # Registrar escritura para trackeo (inspirado en OpenCode)
+                # Registrar escritura para trackeo (IAM)
                 import hashlib
                 checksum = hashlib.md5((content or "").encode()).hexdigest()[:12]
                 self._file_records[path] = {
@@ -3462,7 +3462,7 @@ footer, .footer, .site-footer {
                     self._file_cache = {}
                 self._file_cache[path] = c
                 
-                # Registrar lectura para read-before-edit (inspirado en OpenCode)
+                # Registrar lectura para read-before-edit (IAM)
                 import hashlib
                 checksum = hashlib.md5(c.encode()).hexdigest()[:12]
                 self._file_records[path] = {
@@ -3490,7 +3490,7 @@ footer, .footer, .site-footer {
                 return f"[OK] Carpeta creada: {path}"
             
             elif action == 'execute' and command:
-                # Usar shell persistente (inspirado en OpenCode)
+                # Usar shell persistente (IAM)
                 result = self.shell.exec(command, timeout=60, cwd=self.active_project)
                 output_parts = []
                 if result.stdout:
@@ -3639,11 +3639,11 @@ footer, .footer, .site-footer {
             elif self.engine == "local":
                 response = self._call_local_model(enriched_prompt)
             elif self.engine == "gemini":
-                response = self._call_gemini(enriched_prompt)
+                response = self._call_tertiary(enriched_prompt)
             elif self.engine == "freetheai":
-                response = self._call_freetheai(enriched_prompt)
-            elif self.engine == "opencode" or self.engine == "mimo":
-                response = self._call_opencode_fast(enriched_prompt)
+                response = self._call_secondary(enriched_prompt)
+            elif self.engine == "iam":
+                response = self._call_iam_fast(enriched_prompt)
             else:
                 response = self._call_multi_engine(enriched_prompt)
             
@@ -3664,11 +3664,11 @@ footer, .footer, .site-footer {
             elif self.engine == "local":
                 return self._call_local_model(enriched_prompt)
             elif self.engine == "gemini":
-                return self._call_gemini(enriched_prompt)
+                return self._call_tertiary(enriched_prompt)
             elif self.engine == "freetheai":
-                return self._call_freetheai(enriched_prompt)
-            elif self.engine == "opencode" or self.engine == "mimo":
-                return self._call_opencode_fast(enriched_prompt, max_tokens=max_tokens)
+                return self._call_secondary(enriched_prompt)
+            elif self.engine == "iam":
+                return self._call_iam_fast(enriched_prompt, max_tokens=max_tokens)
             else:
                 return self._call_multi_engine(enriched_prompt, max_tokens=max_tokens)
         finally:
@@ -3687,8 +3687,8 @@ footer, .footer, .site-footer {
         except:
             pass
     
-    def _call_opencode_fast(self, enriched_prompt: str = None, max_tokens: int = None) -> str:
-        """Llamar a OpenCode API - ultra rapido con fallback directo"""
+    def _call_iam_fast(self, enriched_prompt: str = None, max_tokens: int = None) -> str:
+        """Llamar a la API de IA - ultra rapido con fallback directo"""
         import time
 
         context = self.current_session.get_context()
@@ -3715,12 +3715,12 @@ footer, .footer, .site-footer {
         }
 
         def _try_direct():
-            if not settings.OPENCODE_API_KEY:
+            if not settings.API_KEY:
                 return None
             resp = requests.post(
                 "https://opencode.ai/zen/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                    "Authorization": f"Bearer {settings.API_KEY}",
                     "Content-Type": "application/json",
                     "HTTP-Referer": "https://iam-ai.local",
                     "X-Title": "IAM AI Assistant"
@@ -3790,22 +3790,22 @@ footer, .footer, .site-footer {
         except Exception:
             pass
 
-        return "[ERROR] No se pudo conectar con OpenCode API. Verifica tu conexion e intenta de nuevo."
+        return "[ERROR] No se pudo conectar con la API de IA. Verifica tu conexion e intenta de nuevo."
     
-    def _call_freetheai(self, enriched_prompt: str = None) -> str:
-        """Llamar a FreeTheAi API"""
+    def _call_secondary(self, enriched_prompt: str = None) -> str:
+        """Llamar a IA Secundaria"""
         if not freetheai_client.is_available():
-            return "[ERROR] FreeTheAi API key no configurada"
+            return "[ERROR] Servidor IA no disponible"
         
         return freetheai_client.chat(
             prompt=enriched_prompt or "",
             system_prompt=self.system_prompt
         )
     
-    def _call_gemini(self, enriched_prompt: str = None) -> str:
-        """Llamar a Google Gemini API"""
+    def _call_tertiary(self, enriched_prompt: str = None) -> str:
+        """Llamar a IA Terciaria"""
         if not gemini_client.is_available():
-            return "[ERROR] Gemini API key no configurada. Usa: set GEMINI_API_KEY=tu_key"
+            return "[ERROR] Motor IA no disponible"
         
         return gemini_client.chat(
             prompt=enriched_prompt or "",
@@ -3830,29 +3830,29 @@ footer, .footer, .site-footer {
         
         engines = []
         
-        # FreeTheAi
+        # Motor IA Secundario
         if freetheai_client.is_available():
-            engines.append(("FreeTheAi", lambda: freetheai_client.chat(
+            engines.append(("Secundario", lambda: freetheai_client.chat(
                 prompt=enriched_prompt or "",
                 system_prompt=self.system_prompt
             )))
         
-        # Gemini
+        # Motor IA Terciario
         if gemini_client.is_available():
-            engines.append(("Gemini", lambda: gemini_client.chat(
+            engines.append(("Terciario", lambda: gemini_client.chat(
                 prompt=enriched_prompt or "",
                 system_prompt=self.system_prompt
             )))
         
-        # OpenCode/MiMo (siempre disponible via proxy)
-        def call_opencode():
+        # IAM (siempre disponible via proxy)
+        def call_iam():
             context = self.current_session.get_context()
             messages = [{"role": "system", "content": enriched_prompt or self.system_prompt}] + context
 
-            if settings.OPENCODE_API_KEY:
+            if settings.API_KEY:
                 url = "https://opencode.ai/zen/v1/chat/completions"
                 headers = {
-                    "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                    "Authorization": f"Bearer {settings.API_KEY}",
                     "Content-Type": "application/json",
                     "HTTP-Referer": "https://iam-ai.local",
                     "X-Title": "IAM AI Assistant"
@@ -3889,7 +3889,7 @@ footer, .footer, .site-footer {
             else:
                 raise Exception(f"Error {response.status_code}")
         
-        engines.append(("OpenCode", call_opencode))
+        engines.append(("IAM", call_iam))
         
         # Ejecutar en paralelo
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
@@ -3928,16 +3928,16 @@ footer, .footer, .site-footer {
         
         return "\n".join(output_parts)
     
-    def _call_opencode(self, enriched_prompt: str = None) -> str:
-        """Llamar a OpenCode API con MiMo v2.5 Free"""
-        return self._call_opencode_fast(enriched_prompt)
+    def _call_iam(self, enriched_prompt: str = None) -> str:
+        """Llamar a la API de IA con MiMo v2.5 Free"""
+        return self._call_iam_fast(enriched_prompt)
     
-    def _call_opencode_streaming(self, enriched_prompt: str, loader: LoadingIndicator) -> str:
-        """Llamar a OpenCode API con streaming - muestra Pensando... y luego respuesta limpia"""
+    def _call_iam_streaming(self, enriched_prompt: str, loader: LoadingIndicator) -> str:
+        """Llamar a la API de IA con streaming - muestra Pensando... y luego respuesta limpia"""
         import time
 
-        if not settings.OPENCODE_API_KEY:
-            return self._fallback_response("opencode")
+        if not settings.API_KEY:
+            return self._fallback_response("iam")
 
         context = self.current_session.get_context()
         messages = [{"role": "system", "content": enriched_prompt}] + context
@@ -3955,7 +3955,7 @@ footer, .footer, .site-footer {
                 response = requests.post(
                     "https://opencode.ai/zen/v1/chat/completions",
                     headers={
-                        "Authorization": f"Bearer {settings.OPENCODE_API_KEY}",
+                        "Authorization": f"Bearer {settings.API_KEY}",
                         "Content-Type": "application/json",
                         "HTTP-Referer": "https://iam-ai.local",
                         "X-Title": "IAM AI Assistant"
@@ -4023,7 +4023,7 @@ footer, .footer, .site-footer {
             except Exception as e:
                 return f"Error: {str(e)}"
 
-        return "[ERROR] No se pudo conectar con OpenCode API. Verifica tu conexion e intenta de nuevo."
+        return "[ERROR] No se pudo conectar con la API de IA. Verifica tu conexion e intenta de nuevo."
     
     def _call_huggingface(self, enriched_prompt: str = None) -> str:
         """Llamar a Hugging Face API"""
@@ -4096,22 +4096,18 @@ footer, .footer, .site-footer {
     
     def _fallback_response(self, engine: str) -> str:
         """Respuesta cuando no hay API key"""
-        if engine == "opencode":
-            return """API Key de OpenCode no configurada
+        if engine == "iam":
+            return """API Key de IAM no configurada
 
-Para configurar:
-1. Ve a https://opencode.ai
-2. Inicia sesion con tu cuenta
-3. Ve a Settings > API Keys
-4. Genera una API Key
-5. Configura: $env:OPENCODE_API_KEY="sk-tu_api_key"
-6. Reinicia IAM"""
+La API ya viene configurada. Si no funciona:
+1. Verifica tu conexion a internet
+2. Reinicia IAM con: python main.py"""
         
         elif engine == "groq":
-            return "Motor Groq eliminado. Usa /engine mimo para MiMo v2.5 Free."
+            return "Motor Groq eliminado. Usa /engine iam para MiMo v2.5 Free."
         
         elif engine == "huggingface":
-            return "Motor HuggingFace eliminado. Usa /engine mimo para MiMo v2.5 Free."
+            return "Motor HuggingFace eliminado. Usa /engine iam para MiMo v2.5 Free."
         
         return "Motor no configurado. Usa /engine para cambiar."
     
@@ -5649,7 +5645,7 @@ El codigo debe ser funcional y completo."""
   /help           Mostrar ayuda
   /status         Estado del sistema
   /mode [modo]    Cambiar modo
-  /engine [e]     Cambiar motor (opencode/mimo)
+  /engine [e]     Cambiar motor (iam)
   /model [name]   Cambiar modelo
   /think          Activar/desactivar pensamiento
   /level [nivel]  Nivel (basico/analitico/profundo/experto)
@@ -5734,7 +5730,7 @@ El codigo debe ser funcional y completo."""
   Nivel:       {status['thinking_level'].upper()}
 
   APIs:
-    OpenCode:   {'[OK]' if settings.OPENCODE_API_KEY else '[X]'}
+    IAM:        {'[OK]' if settings.API_KEY else '[X]'}
 """
     
     def _cmd_mode(self, args: List[str]) -> str:

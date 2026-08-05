@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Patch System - Sistema de patches y diffs
-Inspirado en OpenCode: formato de patch custom con fuzzy matching
+IAM: formato de patch custom con fuzzy matching
 """
 
 import os
@@ -66,7 +66,7 @@ class Patch:
 class PatchParser:
     """
     Parser de formato de patch
-    Inspirado en OpenCode: formato custom con fuzzy matching
+    IAM: formato custom con fuzzy matching
     """
     
     def __init__(self, current_files: Dict[str, str] = None):
@@ -213,7 +213,7 @@ class PatchParser:
 class PatchApplier:
     """
     Aplicador de patches con fuzzy matching
-    Inspirado en OpenCode: 3-pass fuzzy matching
+    IAM: 3-pass fuzzy matching
     """
     
     def __init__(self, files: Dict[str, str] = None):
@@ -367,7 +367,7 @@ class PatchApplier:
 class DiffGenerator:
     """
     Generador de diffs
-    Inspirado en OpenCode: unified diff con syntax highlighting
+    IAM: unified diff con syntax highlighting
     """
     
     @staticmethod

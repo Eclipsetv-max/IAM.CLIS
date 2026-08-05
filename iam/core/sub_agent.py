@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Sub-Agent - Sistema de sub-agentes de solo lectura
-Inspirado en opencode: lanza agentes para tareas paralelas
+IAM: lanza agentes para tareas paralelas
 """
 
 import json
@@ -88,7 +88,7 @@ class SubAgentResult:
 class SubAgent:
     """
     Sub-agente de solo lectura
-    Inspirado en opencode: ejecuta tareas paralelas sin modificar archivos
+    IAM: ejecuta tareas paralelas sin modificar archivos
     """
     
     def __init__(self, project_path: str = None):

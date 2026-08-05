@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 IAM Cost Tracking - Sistema de seguimiento de costos por tokens
-Inspirado en opencode: trackea uso de tokens y costos por sesion
 """
 
 import json
@@ -15,9 +14,9 @@ from enum import Enum
 
 class ModelProvider(Enum):
     """Proveedores de modelos"""
-    OPENCODE = "opencode"
-    FREETHEAI = "freetheai"
-    GEMINI = "gemini"
+    PRIMARY = "primary"
+    SECONDARY = "secondary"
+    TERTIARY = "tertiary"
     LOCAL = "local"
     MULTI = "multi"
 
@@ -27,8 +26,8 @@ MODEL_PRICES = {
     "mimo-v2.5-free": {"input": 0.0, "output": 0.0},
     "mimo-v2.5": {"input": 0.5, "output": 1.5},
     "mimo-v2.5-pro": {"input": 1.0, "output": 3.0},
-    "gemini-2.0-flash": {"input": 0.075, "output": 0.3},
-    "gemini-2.5-flash": {"input": 0.075, "output": 0.3},
+    "ia-terciaria": {"input": 0.075, "output": 0.3},
+    "ia-terciaria-v2": {"input": 0.075, "output": 0.3},
     "llama3-8b-8192": {"input": 0.0, "output": 0.0},
     "default": {"input": 0.0, "output": 0.0},
 }
@@ -38,8 +37,8 @@ MODEL_CONTEXT_LIMITS = {
     "mimo-v2.5-free": 128000,
     "mimo-v2.5": 128000,
     "mimo-v2.5-pro": 128000,
-    "gemini-2.0-flash": 1000000,
-    "gemini-2.5-flash": 1000000,
+    "ia-terciaria": 1000000,
+    "ia-terciaria-v2": 1000000,
     "llama3-8b-8192": 8192,
     "default": 128000,
 }
@@ -108,7 +107,7 @@ class SessionStats:
 class CostTracker:
     """
     Sistema de seguimiento de costos
-    Inspirado en opencode: trackea tokens y costos por sesion
+    IAM: trackea tokens y costos por sesion
     """
     
     def __init__(self, project_path: str = None):

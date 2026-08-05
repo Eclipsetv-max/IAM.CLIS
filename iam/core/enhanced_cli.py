@@ -698,7 +698,7 @@ COMMAND_DESCRIPTIONS = {
     "/sqlite-export": "Exportar SQLite a JSON",
     "/compact": "Ver estadisticas de compactacion o compactar",
     "/think": "Modo pensamiento profundo",
-    "/context": "Ver contexto del proyecto (CLAUDE.md, opencode.md, etc)",
+    "/context": "Ver contexto del proyecto (iam.md)",
     "/cost": "Ver costo y uso de tokens",
     "/folder": "Vincular proyecto a carpeta",
     "/project": "Seleccionar carpeta del proyecto (abre navegador)",

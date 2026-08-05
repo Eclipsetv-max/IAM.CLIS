@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Events - Sistema de eventos Pub/Sub
-Inspirado en OpenCode: event-driven architecture con non-blocking publish
+IAM: event-driven architecture con non-blocking publish
 """
 
 import threading
@@ -32,7 +32,7 @@ class Event:
 class Broker:
     """
     Broker de eventos Pub/Sub
-    Inspirado en OpenCode: non-blocking publish, auto-unsubscribe
+    IAM: non-blocking publish, auto-unsubscribe
     """
     
     def __init__(self, max_events: int = 1000, buffer_size: int = 64):

@@ -32,7 +32,7 @@ class FileSystem:
         self._history_dir.mkdir(parents=True, exist_ok=True)
     
     def _backup_file(self, file_path: Path):
-        """Backup de archivo antes de editar (como OpenCode)"""
+        """Backup de archivo antes de editar (IAM)"""
         try:
             if not file_path.exists():
                 return
@@ -47,7 +47,7 @@ class FileSystem:
             pass
     
     def undo_last_edit(self, file_path: str) -> Tuple[bool, str]:
-        """Deshacer ultima edicion (como OpenCode)"""
+        """Deshacer ultima edicion (IAM)"""
         try:
             path = Path(file_path)
             # Buscar backup mas reciente
@@ -131,7 +131,7 @@ class FileSystem:
         try:
             file_path = Path(path)
             file_path.parent.mkdir(parents=True, exist_ok=True)
-            # Backup si existe (como OpenCode)
+            # Backup si existe (IAM)
             if file_path.exists():
                 self._backup_file(file_path)
             file_path.write_text(content, encoding='utf-8')
@@ -377,7 +377,7 @@ class FileSystem:
             if old_text not in content:
                 return False, "TEXTO NO ENCONTRADO"
             
-            # Backup antes de editar (como OpenCode)
+            # Backup antes de editar (IAM)
             self._backup_file(Path(path))
             
             count = content.count(old_text)

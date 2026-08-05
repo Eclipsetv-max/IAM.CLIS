@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Auto-Compact - Sistema de compactacion automatica de contexto
-Inspirado en opencode: cuando el contexto se llena, resume y crea nueva sesion
+IAM: cuando el contexto se llena, resume y crea nueva sesion
 """
 
 import json
@@ -40,7 +40,7 @@ class CompactResult:
 class AutoCompactor:
     """
     Sistema de compactacion automatica de contexto
-    Inspirado en opencode: cuando el contexto alcanza 95% del limite,
+    IAM: cuando el contexto alcanza 95% del limite,
     automaticamente resume la conversacion
     """
     

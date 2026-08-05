@@ -65,7 +65,7 @@ class Session:
             # Preservar primer mensaje (system) y últimos N
             self.messages = [self.messages[0]] + self.messages[-(settings.MAX_SESSION_MESSAGES - 1):]
         
-        # Auto-generar resumen cuando hay muchos mensajes (como OpenCode)
+        # Auto-generar resumen cuando hay muchos mensajes (IAM)
         if len(self.messages) > 30 and not self.metadata.get('summary'):
             self._auto_summarize()
         
@@ -78,7 +78,7 @@ class Session:
         
         context = []
         
-        # Incluir resumen si existe (como OpenCode)
+        # Incluir resumen si existe (IAM)
         if self.metadata.get('summary'):
             context.append({
                 "role": "system",

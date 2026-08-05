@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM Persistent Shell - Shell que mantiene estado entre comandos
-Inspirado en OpenCode: shell persistente con command queue
+IAM: shell persistente con command queue
 """
 
 import os
@@ -37,7 +37,7 @@ class CommandResult:
 class PersistentShell:
     """
     Shell persistente que mantiene estado entre comandos
-    Inspirado en OpenCode: mantiene directorio de trabajo y variables de entorno
+    IAM: mantiene directorio de trabajo y variables de entorno
     """
     
     _instances: Dict[str, 'PersistentShell'] = {}

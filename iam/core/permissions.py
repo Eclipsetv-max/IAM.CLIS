@@ -61,7 +61,7 @@ class PermissionSystem:
     """
     Sistema de permisos para IAM
     Controla el acceso a acciones sensibles
-    Inspirado en opencode: banned commands, safe commands, read-before-edit
+    IAM: banned commands, safe commands, read-before-edit
     """
     
     def __init__(self):
@@ -73,7 +73,7 @@ class PermissionSystem:
         self.read_files: Dict[str, str] = {}  # path -> checksum
         self.file_checksums: Dict[str, str] = {}  # path -> last checksum
         
-        # Comandos prohibidos (inspirado en opencode) - NUNCA se ejecutan
+        # Comandos prohibidos (IAM) - NUNCA se ejecutan
         self.banned_commands = [
             "curl", "wget", "nc", "netcat", "telnet", "ssh", "scp", "rsync",
             "firefox", "chrome", "edge", "iexplore", "opera",
@@ -304,7 +304,7 @@ class PermissionSystem:
         
         return "\n".join(output)
     
-    # ==================== NUEVOS METODOS (inspirados en opencode) ====================
+    # ==================== NUEVOS METODOS (IAM) ====================
     
     def is_banned_command(self, command: str) -> bool:
         """Verificar si un comando esta prohibido (NUNCA se ejecuta)"""

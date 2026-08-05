@@ -21,11 +21,9 @@ def load_env_file():
                     key, value = line.split('=', 1)
                     key = key.strip()
                     value = value.strip()
-                    # No sobreescribir si ya existe
                     if key not in os.environ:
                         os.environ[key] = value
 
-# Cargar .env al importar
 load_env_file()
 
 
@@ -33,24 +31,19 @@ load_env_file()
 class IAMSettings:
     """Configuración principal de IAM"""
     
-    # Paths
     BASE_DIR: Path = Path(__file__).parent.parent.parent
     IAM_DIR: Path = Path(__file__).parent.parent
     DATA_DIR: Path = field(default_factory=lambda: Path(__file__).parent.parent / "data")
     
-    # Info del usuario
     USERNAME: str = "User"
     USER_ALIAS: str = "User"
     
-    # Versión
-    VERSION: str = "4.1"
-    CODENAME: str = "Multi-AI Assistant"
+    VERSION: str = "4.5"
+    CODENAME: str = "IAM AI Assistant"
     
-    # Configuración de IA - OpenCode/MiMo
-    DEFAULT_ENGINE: str = "opencode"
-    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["opencode"])
+    DEFAULT_ENGINE: str = "iam"
+    AVAILABLE_ENGINES: list = field(default_factory=lambda: ["iam"])
     
-    # Modelos por defecto (OpenCode - MiMo v2.5 Free)
     MODELS: Dict[str, str] = field(default_factory=lambda: {
         "general": "mimo-v2.5-free",
         "builder": "mimo-v2.5-free",
@@ -61,38 +54,35 @@ class IAMSettings:
         "security": "mimo-v2.5-free"
     })
     
-    # Modelo local fine-tuned
     LOCAL_MODEL_DIR: Path = field(default_factory=lambda: Path(__file__).parent.parent / "training" / "models")
-    LOCAL_MODEL_NAME: str = "tinyllama"  # Nombre del modelo local por defecto
+    LOCAL_MODEL_NAME: str = "tinyllama"
     
-    # Modelos alternativos por motor
     FALLBACK_MODELS: Dict[str, Dict[str, str]] = field(default_factory=lambda: {
-        "opencode": {
+        "iam": {
             "general": "mimo-v2.5-free",
             "builder": "mimo-v2.5-free"
         }
     })
     
-    # Límites
     MAX_CONTEXT_MESSAGES: int = 20
     MAX_SESSION_MESSAGES: int = 50
     SCREENSHOT_INTERVAL: int = 5
     
-    # API Keys - Ultra ofuscación (4 capas: salt + triple XOR + shuffle + split)
+    # API Keys - Ultra ofuscación
     _XOR_KEYS = [b'IAM_v45_2026', b'SECRET_KEY_XOR', b'ULTRA_SECURE_123', b'NEVER_COPY_THIS']
     _SHUFFLE_SEED = hashlib.sha256(b'IAM_PATTERN_SEED').digest()
     _KEYS = {
-        'oc': {
+        'k1': {
             'parts': ["4d453f2d6f32905f517a4a6d6274902a0d", "7a4114254d2b4d2a3e7514e947070c042a594907b733f71a10823b15a6", "317e2673de4041774b220f", "7003170e44293a20632612796439032b6f495a335c6060076427"],
             'checksum': "0ba9f405",
             'pattern': [39,11,28,9,37,45,1,32,59,60,23,20,57,25,17,19,0,46,36,47,33,55,58,35,13,51,53,30,24,50,7,54,41,66,48,2,40,18,49,21,29,64,38,65,56,4,52,10,8,44,61,34,14,3,62,26,31,22,67,27,15,6,63,5,12,16,43,42]
         },
-        'ft': {
+        'k2': {
             'parts': ["14561653792c4d6f679b3fa9b56d", "414221463d52207e5a0105597413534665474140711c006e", "4f4d3b4c56d9727245", "395e272b703760495349260d17113441645e235a53"],
             'checksum': "8deb25a3",
             'pattern': [39,11,28,9,37,45,1,32,59,60,23,20,57,25,17,19,0,46,36,47,33,55,58,35,13,51,53,30,24,50,7,54,41,66,48,2,40,18,49,21,29,64,38,65,56,4,52,10,8,44,61,34,14,3,62,26,31,22,67,27,15,6,63,5,12,16,43,42]
         },
-        'gm': {
+        'k3': {
             'parts': ["138e20506a03a84749447ea6db76", "426a202d5e293e482d4e6c535f3e36135502d74a5f1658cf", "259c3d33b147f10137", "335a567e78374e21213873082534694282047c180d7a"],
             'checksum': "2f9188a6",
             'pattern': [39,11,28,9,37,45,1,32,59,60,23,20,57,25,17,19,0,46,36,47,33,55,58,35,13,51,53,30,24,50,7,54,41,66,48,2,40,18,49,21,29,64,38,65,56,4,52,10,8,68,61,34,14,3,62,26,31,22,67,27,15,6,63,5,12,16,43,42,44]
@@ -101,12 +91,9 @@ class IAMSettings:
     
     def _decode_ultra(key_id: str) -> str:
         ki = IAMSettings._KEYS[key_id]
-        # 1. Rejoin parts
         combined = bytes.fromhex(''.join(ki['parts']))
-        # 2. Verify checksum
         if hashlib.md5(combined).hexdigest()[:8] != ki['checksum']:
             return ""
-        # 3. Reverse shuffle
         n = len(combined)
         inv_pattern = [0] * n
         for i, p in enumerate(ki['pattern'][:n]):
@@ -115,30 +102,25 @@ class IAMSettings:
         for i in range(n):
             unshuffled[i] = combined[inv_pattern[i]]
         data = bytes(unshuffled)
-        # 4. Reverse triple XOR
         for k in reversed(IAMSettings._XOR_KEYS):
             data = bytes([b ^ k[i % len(k)] for i, b in enumerate(data)])
-        # 5. Remove salt (8 start + 8 end reversed)
         return data[8:-8].decode()
     
     HF_API_KEY: str = field(default_factory=lambda: os.environ.get("HF_API_KEY", ""))
-    OPENCODE_API_KEY: str = field(default_factory=lambda: os.environ.get("OPENCODE_API_KEY") or IAMSettings._decode_ultra('oc'))
-    FREETHEAI_API_KEY: str = field(default_factory=lambda: os.environ.get("FREETHEAI_API_KEY") or IAMSettings._decode_ultra('ft'))
-    GEMINI_API_KEY: str = field(default_factory=lambda: os.environ.get("GEMINI_API_KEY") or IAMSettings._decode_ultra('gm'))
+    API_KEY: str = field(default_factory=lambda: os.environ.get("OPENCODE_API_KEY") or IAMSettings._decode_ultra('k1'))
+    API_KEY_ALT: str = field(default_factory=lambda: os.environ.get("FREETHEAI_API_KEY") or IAMSettings._decode_ultra('k2'))
+    API_KEY_GEM: str = field(default_factory=lambda: os.environ.get("GEMINI_API_KEY") or IAMSettings._decode_ultra('k3'))
     
     def __post_init__(self):
-        """Crear directorios necesarios"""
         self.DATA_DIR.mkdir(exist_ok=True)
     
     def get_model(self, mode: str) -> str:
-        """Obtener modelo para un modo específico"""
         return self.MODELS.get(mode, self.MODELS["general"])
 
 
 class COLORS:
-    """Constantes de colores ANSI - Estilo OpenCode"""
+    """Constantes de colores ANSI"""
     
-    # Colores principales (estilo OpenCode)
     TEAL = "\033[38;2;0;212;170m"
     WHITE = "\033[38;2;238;238;238m"
     GRAY = "\033[90m"
@@ -147,7 +129,6 @@ class COLORS:
     YELLOW = "\033[33m"
     CYAN = "\033[36m"
     
-    # Colores extendidos (estilo OpenCode)
     RED = "\033[31m"
     GREEN = "\033[32m"
     PURPLE = "\033[38;2;147;51;234m"
@@ -159,7 +140,6 @@ class COLORS:
     DIM = "\033[2m"
     LINE = "\033[38;2;60;60;70m"
     
-    # Colores por modo (estilo OpenCode)
     MODE_COLORS = {
         "general": CYAN2,
         "builder": ORANGE,
@@ -170,5 +150,4 @@ class COLORS:
     }
 
 
-# Instancia global de configuración
 settings = IAMSettings()

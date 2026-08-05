@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 IAM File History - Sistema de Versionado de Archivos con Rollback
-Inspirado en opencode: trackea cambios de archivos y permite deshacer
+IAM: trackea cambios de archivos y permite deshacer
 """
 
 import json
@@ -82,7 +82,7 @@ class FileTracker:
 class FileHistory:
     """
     Sistema de historial de archivos con rollback
-    Inspirado en opencode: versionado automatico de cambios
+    IAM: versionado automatico de cambios
     """
     
     def __init__(self, project_path: str = None):

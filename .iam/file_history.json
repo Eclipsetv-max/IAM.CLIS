@@ -384,11 +384,23 @@
           "checksum": "775d9072782d",
           "created_at": "2026-08-04T18:30:57.620464",
           "metadata": {}
+        },
+        {
+          "id": "..\\CafeWebTest3\\index.html_20260804221501",
+          "session_id": "20260804_210531",
+          "path": "..\\CafeWebTest3\\index.html",
+          "content": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Reloj</title>\n    <link rel=\"stylesheet\" href=\"styles.css\">\n</head>\n<body>\n    <div class=\"clock-container\">\n        <div class=\"clock\">\n            <div class=\"hand hour-hand\"></div>\n            <div class=\"hand minute-hand\"></div>\n            <div class=\"hand second-hand\"></div>\n            <div class=\"center-dot\"></div>\n            <div class=\"numbers\">\n                <span style=\"--i:1\"><b>1</b></span>\n                <span style=\"--i:2\"><b>2</b></span>\n                <span style=\"--i:3\"><b>3</b></span>\n                <span style=\"--i:4\"><b>4</b></span>\n                <span style=\"--i:5\"><b>5</b></span>\n                <span style=\"--i:6\"><b>6</b></span>\n                <span style=\"--i:7\"><b>7</b></span>\n                <span style=\"--i:8\"><b>8</b></span>\n                <span style=\"--i:9\"><b>9</b></span>\n                <span style=\"--i:10\"><b>10</b></span>\n                <span style=\"--i:11\"><b>11</b></span>\n                <span style=\"--i:12\"><b>12</b></span>\n            </div>\n        </div>\n        <div class=\"digital\">\n            <span id=\"time\">00:00:00</span>\n        </div>\n    </div>\n    <script src=\"script.js\"></script>\n</body>\n</html>",
+          "version_type": "edit",
+          "version": "v4",
+          "size": 1329,
+          "checksum": "2c94cc90b544",
+          "created_at": "2026-08-04T22:15:01.961731",
+          "metadata": {}
         }
       ],
-      "current_version": "v3",
+      "current_version": "v4",
       "created_at": "2026-08-03T18:11:42.027084",
-      "updated_at": "2026-08-04T18:30:57.620464"
+      "updated_at": "2026-08-04T22:15:01.961731"
     },
     "..\\CafeWebTest3\\style.css": {
       "path": "..\\CafeWebTest3\\style.css",
@@ -424,11 +436,23 @@
           "checksum": "4b90bf81568f",
           "created_at": "2026-08-03T18:11:42.036630",
           "metadata": {}
+        },
+        {
+          "id": "..\\CafeWebTest3\\script.js_20260804221501",
+          "session_id": "20260804_210531",
+          "path": "..\\CafeWebTest3\\script.js",
+          "content": "function updateClock() {\n    const now = new Date();\n    \n    const seconds = now.getSeconds();\n    const minutes = now.getMinutes();\n    const hours = now.getHours();\n    \n    const secondDeg = seconds * 6;\n    const minuteDeg = minutes * 6 + seconds * 0.1;\n    const hourDeg = (hours % 12) * 30 + minutes * 0.5;\n    \n    document.querySelector('.second-hand').style.transform = `rotate(${secondDeg}deg)`;\n    document.querySelector('.minute-hand').style.transform = `rotate(${minuteDeg}deg)`;\n    document.querySelector('.hour-hand').style.transform = `rotate(${hourDeg}deg)`;\n    \n    const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;\n    document.getElementById('time').textContent = timeString;\n}\n\nsetInterval(updateClock, 1000);\nupdateClock();",
+          "version_type": "create",
+          "version": "initial",
+          "size": 827,
+          "checksum": "b78d08ea124e",
+          "created_at": "2026-08-04T22:15:01.992288",
+          "metadata": {}
         }
       ],
       "current_version": "initial",
       "created_at": "2026-08-03T18:11:42.036630",
-      "updated_at": "2026-08-03T18:11:42.036630"
+      "updated_at": "2026-08-04T22:15:01.992288"
     },
     "..\\nooo\\index.html": {
       "path": "..\\nooo\\index.html",
@@ -2505,7 +2529,27 @@
       "current_version": "v2",
       "created_at": "2026-08-04T20:08:46.892404",
       "updated_at": "2026-08-04T20:55:32.021674"
+    },
+    "..\\CafeWebTest3\\styles.css": {
+      "path": "..\\CafeWebTest3\\styles.css",
+      "versions": [
+        {
+          "id": "..\\CafeWebTest3\\styles.css_20260804221501",
+          "session_id": "20260804_210531",
+          "path": "..\\CafeWebTest3\\styles.css",
+          "content": "* {\n    margin: 0;\n    padding: 0;\n    box-sizing: border-box;\n}\n\nbody {\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    min-height: 100vh;\n    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);\n    font-family: 'Segoe UI', sans-serif;\n}\n\n.clock-container {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    gap: 30px;\n}\n\n.clock {\n    width: 250px;\n    height: 250px;\n    border-radius: 50%;\n    background: rgba(255, 255, 255, 0.1);\n    backdrop-filter: blur(10px);\n    border: 4px solid rgba(255, 255, 255, 0.2);\n    position: relative;\n    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3),\n                inset 0 0 30px rgba(255, 255, 255, 0.05);\n}\n\n.hand {\n    position: absolute;\n    bottom: 50%;\n    left: 50%;\n    transform-origin: bottom;\n    border-radius: 5px;\n}\n\n.hour-hand {\n    width: 6px;\n    height: 60px;\n    background: #fff;\n    margin-left: -3px;\n}\n\n.minute-hand {\n    width: 4px;\n    height: 80px;\n    background: #e0e0e0;\n    margin-left: -2px;\n}\n\n.second-hand {\n    width: 2px;\n    height: 90px;\n    background: #e94560;\n    margin-left: -1px;\n}\n\n.center-dot {\n    position: absolute;\n    top: 50%;\n    left: 50%;\n    transform: translate(-50%, -50%);\n    width: 12px;\n    height: 12px;\n    background: #e94560;\n    border-radius: 50%;\n    z-index: 10;\n}\n\n.numbers {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n}\n\n.numbers span {\n    position: absolute;\n    text-align: center;\n    font-size: 14px;\n    color: rgba(255, 255, 255, 0.8);\n    transform: rotate(calc(30deg * var(--i)));\n    width: 100%;\n    height: 100%;\n}\n\n.numbers span b {\n    display: block;\n    margin-top: 15px;\n    transform: rotate(calc(-30deg * var(--i)));\n}\n\n.digital {\n    font-size: 2.5rem;\n    color: #fff;\n    background: rgba(255, 255, 255, 0.1);\n    backdrop-filter: blur(10px);\n    padding: 15px 30px;\n    border-radius: 15px;\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    letter-spacing: 3px;\n    font-weight: 300;\n}\n\n@media (max-width: 400px) {\n    .clock {\n        width: 200px;\n        height: 200px;\n    }\n    .hour-hand { height: 50px; }\n    .minute-hand { height: 65px; }\n    .second-hand { height: 75px; }\n    .digital { font-size: 1.8rem; padding: 10px 20px; }\n}",
+          "version_type": "create",
+          "version": "initial",
+          "size": 2254,
+          "checksum": "827dc2ad79d6",
+          "created_at": "2026-08-04T22:15:01.976999",
+          "metadata": {}
+        }
+      ],
+      "current_version": "initial",
+      "created_at": "2026-08-04T22:15:01.976999",
+      "updated_at": "2026-08-04T22:15:01.976999"
     }
   },
-  "last_updated": "2026-08-04T20:56:20.923285"
+  "last_updated": "2026-08-04T22:15:01.994331"
 }
