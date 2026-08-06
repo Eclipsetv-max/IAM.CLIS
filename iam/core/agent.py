@@ -43,6 +43,7 @@ from .permissions import (
 # Nuevos modulos v4.1
 from ..tools.smart_templates import smart_templates
 from ..tools.code_validator import validate_file
+from ..tools.advanced_actions import advanced_actions, ALL_ACTIONS, TOTAL_ACTIONS
 
 # Modulos IAM
 from .file_history import FileHistory, file_history
@@ -3861,6 +3862,44 @@ footer, .footer, .site-footer {
                     return "[ERROR] Falta name para set_env"
                 os.environ[name] = value
                 return f"[OK] Variable de entorno: {name}={value[:50]}..."
+            
+            # Buscar en acciones avanzadas (1000+ funciones)
+            if action in ALL_ACTIONS:
+                func = ALL_ACTIONS[action]
+                kwargs = {}
+                # Mapear parametros comunes
+                if path:
+                    kwargs['path'] = path
+                if content:
+                    kwargs['content'] = content
+                if command:
+                    kwargs['command'] = command
+                if result_dict.get('source'):
+                    kwargs['source'] = result_dict['source']
+                if result_dict.get('destination'):
+                    kwargs['destination'] = result_dict['destination']
+                if result_dict.get('query'):
+                    kwargs['query'] = result_dict['query']
+                if result_dict.get('pattern'):
+                    kwargs['pattern'] = result_dict['pattern']
+                if result_dict.get('new_text'):
+                    kwargs['new_text'] = result_dict['new_text']
+                if result_dict.get('url'):
+                    kwargs['url'] = result_dict['url']
+                if result_dict.get('package'):
+                    kwargs['package'] = result_dict['package']
+                if result_dict.get('message'):
+                    kwargs['message'] = result_dict['message']
+                if result_dict.get('name'):
+                    kwargs['name'] = result_dict['name']
+                if result_dict.get('value'):
+                    kwargs['value'] = result_dict['value']
+                # Filtrar kwargs None
+                kwargs = {k: v for k, v in kwargs.items() if v is not None}
+                try:
+                    return func(**kwargs)
+                except Exception as e:
+                    return f"[ERROR] {action}: {str(e)}"
             
             return f"[ERROR] Accion no reconocida: {action}"
         
