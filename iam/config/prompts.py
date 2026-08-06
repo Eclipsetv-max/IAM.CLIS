@@ -33,6 +33,9 @@ contenido del archivo aqui
 [TOOL_CALL] action: delete_file path: "ruta"
 [/TOOL_CALL]
 
+[TOOL_CALL] action: clear_folder path: "ruta_carpeta"
+[/TOOL_CALL]
+
 [TOOL_CALL] action: create_folder path: "carpeta"
 [/TOOL_CALL]
 

@@ -3175,6 +3175,8 @@ footer, .footer, .site-footer {
                     result['action'] = 'read_file'
                 elif 'delete_file' in action_part or 'deletefile' in action_part or 'delete' in action_part or 'remove' in action_part:
                     result['action'] = 'delete_file'
+                elif 'clear_folder' in action_part or 'clearfolder' in action_part or 'delete_all' in action_part or 'deleteall' in action_part:
+                    result['action'] = 'clear_folder'
                 elif 'create_folder' in action_part or 'createfolder' in action_part:
                     result['action'] = 'create_folder'
                 elif 'execute' in action_part:
@@ -3291,6 +3293,7 @@ footer, .footer, .site-footer {
             'edit_file':   ('[EDIT]', 'editando', 'smooth'),
             'read_file':   ('[READ]', 'leyendo', 'type'),
             'delete_file': ('[DEL]', 'eliminando', 'pulse'),
+            'clear_folder':('[DEL]', 'limpiando carpeta', 'pulse'),
             'execute':     ('[RUN]', 'ejecutando', 'wave'),
             'create_folder':('[DIR]', 'creando carpeta', 'orbit'),
         }
@@ -3484,6 +3487,33 @@ footer, .footer, .site-footer {
                     return f"[OK] Archivo eliminado: {os.path.basename(path)}"
                 else:
                     return f"[ERROR] Archivo no existe: {path}"
+            
+            elif action == 'clear_folder' and path:
+                if os.path.isdir(path):
+                    import shutil
+                    deleted = []
+                    errors = []
+                    for item in os.listdir(path):
+                        item_path = os.path.join(path, item)
+                        try:
+                            if os.path.isfile(item_path):
+                                os.remove(item_path)
+                                deleted.append(item)
+                            elif os.path.isdir(item_path):
+                                shutil.rmtree(item_path)
+                                deleted.append(f"{item}/")
+                        except Exception as e:
+                            errors.append(f"{item}: {str(e)}")
+                    
+                    if deleted:
+                        result = f"[OK] Carpeta limpiada: {len(deleted)} items eliminados"
+                        if errors:
+                            result += f"\n[WARN] {len(errors)} errores"
+                        return result
+                    else:
+                        return "[WARN] La carpeta ya esta vacia"
+                else:
+                    return f"[ERROR] No es una carpeta: {path}"
             
             return f"[ERROR] Accion no reconocida: {action}"
         
