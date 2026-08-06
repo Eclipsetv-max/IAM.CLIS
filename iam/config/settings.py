@@ -48,8 +48,8 @@ class IAMSettings:
         "security": "mimo-v2.5-free"
     })
     
-    MAX_CONTEXT_MESSAGES: int = 20
-    MAX_SESSION_MESSAGES: int = 50
+    MAX_CONTEXT_MESSAGES: int = 8
+    MAX_SESSION_MESSAGES: int = 20
     SCREENSHOT_INTERVAL: int = 5
     
     # API Keys - Ultra ofuscación (7 keys cifradas)

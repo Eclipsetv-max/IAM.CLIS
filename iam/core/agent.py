@@ -154,50 +154,29 @@ class Agent:
         """Construir prompt enriquecido con contexto del sistema y memoria"""
         base_prompt = self.system_prompt
         
-        # Contexto del sistema
+        # Contexto del sistema (solo info esencial)
         system_context = self._get_system_context()
         
-        # Memoria relevante
+        # Memoria relevante (limitada)
         memory_context = self._get_memory_context()
         
-        # Contexto del proyecto (IAM)
-        project_context = ""
-        if self.active_project:
-            self.context_loader.project_path = self.active_project
-            self.context_loader.load_project_context(force=True)
-            project_context = self.context_loader.get_context_prompt()
-        
-        # Proyecto activo
+        # Proyecto activo (solo nombre)
         project_info = ""
         if self.active_project:
-            project_info = f"\n- PROYECTO ACTIVO: {self.active_project}"
-            try:
-                items = os.listdir(self.active_project)
-                files = [f for f in items if os.path.isfile(os.path.join(self.active_project, f))]
-                dirs = [d for d in items if os.path.isdir(os.path.join(self.active_project, d))]
-                project_info += f"\n- Archivos: {len(files)} | Subcarpetas: {len(dirs)}"
-                if files:
-                    project_info += f"\n- Lista: {', '.join(files[:15])}"
-            except:
-                pass
+            project_info = f"\n- PROYECTO: {os.path.basename(self.active_project)}"
         
         enriched = f"""{base_prompt}
 
-## CONTEXTO DEL SISTEMA
+## CONTEXTO
 {system_context}
 {project_info}
 
-## CONTEXTO DEL PROYECTO (archivos de instrucciones)
-{project_context}
-
-## MEMORIA A LARGO PLAZO
+## MEMORIA
 {memory_context}
 
-## INSTRUCCIONES ADICIONALES
-- Usa la memoria para recordar preferencias y conversaciones previas
-- Adapta tus respuestas al contexto del sistema actual
-- Si el usuario menciona algo que recuerdas de antes, mencionalo
-- SIEMPRE usa [TOOL_CALL] para crear/editar archivos. NUNCA solo describas lo que harías."""
+## REGLAS
+- SIEMPRE usa [TOOL_CALL] para crear/editar archivos
+- NO describas, EJECUTA"""
         
         return enriched
     
@@ -873,7 +852,7 @@ class Agent:
                 
                 # Si no hizo nada util O faltan archivos - reintento con loop
                 if (not made_edit and not made_create) or (made_create and (needs_html or needs_css or needs_js)):
-                    for _retry in range(3):
+                    for _retry in range(1):
                         missing = []
                         if needs_html:
                             missing.append("index.html")

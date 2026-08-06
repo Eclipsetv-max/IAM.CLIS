@@ -16,7 +16,7 @@ class TertiaryConfig:
     online_url: str = ""
     model: str = "gemini-2.0-flash"
     temperature: float = 0.7
-    max_tokens: int = 2048
+    max_tokens: int = 1024
     top_p: float = 0.9
     use_proxy: bool = True
 
@@ -94,7 +94,7 @@ class TertiaryClient:
                         "temperature": self.config.temperature,
                         "max_tokens": self.config.max_tokens
                     },
-                    timeout=60
+                    timeout=30
                 )
                 
                 if response.status_code == 200:
