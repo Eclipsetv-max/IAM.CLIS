@@ -28,7 +28,6 @@ from iam.config.settings import settings, COLORS
 from iam.config.prompts import AGENT_PROMPTS
 from iam.core.agent import AgentRouter
 from iam.core.memory import MemorySystem
-from iam.core.loading import LoadingIndicator
 from iam.core.enhanced_cli import EnhancedCLI
 
 
@@ -607,8 +606,6 @@ def main():
                 continue
 
             cli.stats.track_command()
-
-            # === GATE: Si no hay proyecto, bloquear todo excepto comandos de setup ===
             if not project_set:
                 # Primero sync por si /project acaba de setear
                 if router.agent.active_project:
@@ -644,20 +641,15 @@ def main():
                 importance=0.7 if "?" in user_input else 0.5
             )
 
-            loader = LoadingIndicator()
-            
             # Iniciar listener de ESC y limpiar interrupciones previas
             from iam.core.enhanced_cli import interrupt
             interrupt.clear()
             interrupt.start_listening()
             
-            loader.start("🧠 procesando", "brain")
-
             start_time = time.time()
             try:
                 response = router.process_input(user_input)
             finally:
-                loader.stop()
                 interrupt.stop_listening()
 
             # Verificar si fue interrumpido por ESC
