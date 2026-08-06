@@ -36,6 +36,51 @@ contenido del archivo aqui
 [TOOL_CALL] action: clear_folder path: "ruta_carpeta"
 [/TOOL_CALL]
 
+[TOOL_CALL] action: copy_file source: "origen" destination: "destino"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: move_file source: "origen" destination: "destino"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: rename_file path: "ruta" destination: "nuevo_nombre"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: search_in_files query: "texto_a_buscar"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: replace_in_files pattern: "texto_viejo" new_text: "texto_nuevo"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: get_file_info path: "ruta"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: list_directory path: "ruta"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: create_project name: "nombre_proyecto" type: "web|python"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: run_python command: "codigo_python"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: install_package package: "nombre_paquete"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: git_commit message: "mensaje_commit"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: compress_files source: "origen" destination: "archivo.zip"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: extract_files source: "archivo.zip" destination: "carpeta_destino"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: download_file url: "https://ejemplo.com/archivo" destination: "nombre_archivo"
+[/TOOL_CALL]
+
+[TOOL_CALL] action: set_env name: "VARIABLE" value: "valor"
+[/TOOL_CALL]
+
 [TOOL_CALL] action: create_folder path: "carpeta"
 [/TOOL_CALL]
 

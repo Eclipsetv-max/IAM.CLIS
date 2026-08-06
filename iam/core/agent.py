@@ -3177,6 +3177,36 @@ footer, .footer, .site-footer {
                     result['action'] = 'delete_file'
                 elif 'clear_folder' in action_part or 'clearfolder' in action_part or 'delete_all' in action_part or 'deleteall' in action_part:
                     result['action'] = 'clear_folder'
+                elif 'copy_file' in action_part or 'copyfile' in action_part or 'copy' in action_part:
+                    result['action'] = 'copy_file'
+                elif 'move_file' in action_part or 'movefile' in action_part or 'move' in action_part:
+                    result['action'] = 'move_file'
+                elif 'rename_file' in action_part or 'renamefile' in action_part or 'rename' in action_part:
+                    result['action'] = 'rename_file'
+                elif 'search_in_files' in action_part or 'searchinfiles' in action_part or 'search' in action_part or 'grep' in action_part or 'find' in action_part:
+                    result['action'] = 'search_in_files'
+                elif 'replace_in_files' in action_part or 'replaceinfiles' in action_part or 'replace' in action_part:
+                    result['action'] = 'replace_in_files'
+                elif 'get_file_info' in action_part or 'getfileinfo' in action_part or 'file_info' in action_part or 'fileinfo' in action_part:
+                    result['action'] = 'get_file_info'
+                elif 'list_directory' in action_part or 'listdirectory' in action_part or 'list_dir' in action_part or 'listdir' in action_part or 'ls' in action_part or 'dir' in action_part:
+                    result['action'] = 'list_directory'
+                elif 'create_project' in action_part or 'createproject' in action_part or 'project' in action_part:
+                    result['action'] = 'create_project'
+                elif 'run_python' in action_part or 'runpython' in action_part or 'python' in action_part:
+                    result['action'] = 'run_python'
+                elif 'install_package' in action_part or 'installpackage' in action_part or 'install' in action_part or 'pip' in action_part or 'npm' in action_part:
+                    result['action'] = 'install_package'
+                elif 'git_commit' in action_part or 'gitcommit' in action_part or 'commit' in action_part:
+                    result['action'] = 'git_commit'
+                elif 'compress_files' in action_part or 'compressfiles' in action_part or 'compress' in action_part or 'zip' in action_part:
+                    result['action'] = 'compress_files'
+                elif 'extract_files' in action_part or 'extractfiles' in action_part or 'extract' in action_part or 'unzip' in action_part:
+                    result['action'] = 'extract_files'
+                elif 'download_file' in action_part or 'downloadfile' in action_part or 'download' in action_part or 'wget' in action_part or 'curl' in action_part:
+                    result['action'] = 'download_file'
+                elif 'set_env' in action_part or 'setenv' in action_part or 'env' in action_part:
+                    result['action'] = 'set_env'
                 elif 'create_folder' in action_part or 'createfolder' in action_part:
                     result['action'] = 'create_folder'
                 elif 'execute' in action_part:
@@ -3191,7 +3221,7 @@ footer, .footer, .site-footer {
                 result['action'] = 'execute'
         
         # 2. Detectar Nombre/Path del archivo
-        for line in lines[:6]:
+        for line in lines[:8]:
             line_s = line.strip()
             # Patrón name: "x" o path: "x"
             m = re.search(r'(?:name|path):\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
@@ -3201,6 +3231,47 @@ footer, .footer, .site-footer {
                 if not found_path.lower().startswith('create_file') and not found_path.lower().startswith('edit_file'):
                     result['path'] = found_path
                     break
+        
+        # Detectar parámetros adicionales para nuevas acciones
+        for line in lines[:10]:
+            line_s = line.strip()
+            # source/destination para copy/move/rename
+            m = re.search(r'source:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['source'] = m.group(1).strip()
+            m = re.search(r'destination(?:_path)?:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['destination'] = m.group(1).strip()
+            # pattern para search/replace
+            m = re.search(r'pattern:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['pattern'] = m.group(1).strip()
+            m = re.search(r'new_text:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['new_text'] = m.group(1).strip()
+            # query para search
+            m = re.search(r'query:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['query'] = m.group(1).strip()
+            # url para download
+            m = re.search(r'url:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['url'] = m.group(1).strip()
+            # package para install
+            m = re.search(r'package:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['package'] = m.group(1).strip()
+            # message para git commit
+            m = re.search(r'message:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['message'] = m.group(1).strip()
+            # name/value para env
+            m = re.search(r'name:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m and 'name' not in result:
+                result['name'] = m.group(1).strip()
+            m = re.search(r'value:\s*["\']?([^"\'\n\r]+)["\']?', line_s, re.IGNORECASE)
+            if m:
+                result['value'] = m.group(1).strip()
         
         # Inferir path si falta por extensión o estructura
         if result['action'] == 'create_file' and not result['path']:
@@ -3294,6 +3365,21 @@ footer, .footer, .site-footer {
             'read_file':   ('[READ]', 'leyendo', 'type'),
             'delete_file': ('[DEL]', 'eliminando', 'pulse'),
             'clear_folder':('[DEL]', 'limpiando carpeta', 'pulse'),
+            'copy_file':   ('[COPY]', 'copiando', 'smooth'),
+            'move_file':   ('[MOVE]', 'moviendo', 'smooth'),
+            'rename_file': ('[REN]', 'renombrando', 'smooth'),
+            'search_in_files': ('[SEARCH]', 'buscando', 'dots_v'),
+            'replace_in_files': ('[REPLACE]', 'reemplazando', 'smooth'),
+            'get_file_info': ('[INFO]', 'obteniendo info', 'orbit'),
+            'list_directory': ('[DIR]', 'listando', 'dots_v'),
+            'create_project': ('[PROJ]', 'creando proyecto', 'build'),
+            'run_python':  ('[PY]', 'ejecutando Python', 'wave'),
+            'install_package': ('[PKG]', 'instalando paquete', 'bars'),
+            'git_commit':  ('[GIT]', 'git commit', 'smooth'),
+            'compress_files': ('[ZIP]', 'comprimiendo', 'bars'),
+            'extract_files': ('[UNZIP]', 'extrayendo', 'bars'),
+            'download_file': ('[DL]', 'descargando', 'bars'),
+            'set_env':     ('[ENV]', 'configurando env', 'orbit'),
             'execute':     ('[RUN]', 'ejecutando', 'wave'),
             'create_folder':('[DIR]', 'creando carpeta', 'orbit'),
         }
@@ -3514,6 +3600,267 @@ footer, .footer, .site-footer {
                         return "[WARN] La carpeta ya esta vacia"
                 else:
                     return f"[ERROR] No es una carpeta: {path}"
+            
+            elif action == 'copy_file' and path:
+                source = result_dict.get('source', path)
+                destination = result_dict.get('destination', '')
+                if not destination:
+                    return "[ERROR] Falta destination para copy_file"
+                if os.path.exists(source):
+                    import shutil
+                    if os.path.isfile(source):
+                        shutil.copy2(source, destination)
+                    else:
+                        shutil.copytree(source, destination)
+                    return f"[OK] Copiado: {os.path.basename(source)} -> {destination}"
+                else:
+                    return f"[ERROR] Fuente no existe: {source}"
+            
+            elif action == 'move_file' and path:
+                source = result_dict.get('source', path)
+                destination = result_dict.get('destination', '')
+                if not destination:
+                    return "[ERROR] Falta destination para move_file"
+                if os.path.exists(source):
+                    import shutil
+                    shutil.move(source, destination)
+                    return f"[OK] Movido: {os.path.basename(source)} -> {destination}"
+                else:
+                    return f"[ERROR] Fuente no existe: {source}"
+            
+            elif action == 'rename_file' and path:
+                new_name = result_dict.get('destination', '')
+                if not new_name:
+                    return "[ERROR] Falta destination (nuevo nombre) para rename_file"
+                if os.path.exists(path):
+                    dir_name = os.path.dirname(path)
+                    new_path = os.path.join(dir_name, new_name)
+                    os.rename(path, new_path)
+                    return f"[OK] Renombrado: {os.path.basename(path)} -> {new_name}"
+                else:
+                    return f"[ERROR] Archivo no existe: {path}"
+            
+            elif action == 'search_in_files':
+                query = result_dict.get('query', '') or result_dict.get('pattern', '')
+                search_path = path or self.active_project or os.getcwd()
+                if not query:
+                    return "[ERROR] Falta query/pattern para search_in_files"
+                results = []
+                count = 0
+                for root, dirs, files in os.walk(search_path):
+                    dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['node_modules', '__pycache__', '.git']]
+                    for f in files:
+                        if f.endswith(('.py', '.js', '.html', '.css', '.json', '.md', '.txt')):
+                            fpath = os.path.join(root, f)
+                            try:
+                                with open(fpath, 'r', encoding='utf-8', errors='ignore') as fh:
+                                    for i, line in enumerate(fh, 1):
+                                        if query.lower() in line.lower():
+                                            rel = os.path.relpath(fpath, search_path)
+                                            results.append(f"{rel}:{i}: {line.strip()[:80]}")
+                                            count += 1
+                                            if count >= 20:
+                                                break
+                            except:
+                                pass
+                            if count >= 20:
+                                break
+                    if count >= 20:
+                        break
+                if results:
+                    return f"[OK] {count} coincidencias encontradas:\n" + "\n".join(results[:20])
+                else:
+                    return "[WARN] Sin coincidencias"
+            
+            elif action == 'replace_in_files':
+                pattern = result_dict.get('pattern', '') or result_dict.get('old_text', '')
+                new_text_val = result_dict.get('new_text', '')
+                replace_path = path or self.active_project or os.getcwd()
+                if not pattern or not new_text_val:
+                    return "[ERROR] Falta pattern/old_text y new_text para replace_in_files"
+                replaced = 0
+                for root, dirs, files in os.walk(replace_path):
+                    dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['node_modules', '__pycache__', '.git']]
+                    for f in files:
+                        if f.endswith(('.py', '.js', '.html', '.css', '.json')):
+                            fpath = os.path.join(root, f)
+                            try:
+                                with open(fpath, 'r', encoding='utf-8') as fh:
+                                    content = fh.read()
+                                if pattern in content:
+                                    new_content = content.replace(pattern, new_text_val)
+                                    with open(fpath, 'w', encoding='utf-8') as fh:
+                                        fh.write(new_content)
+                                    replaced += 1
+                            except:
+                                pass
+                return f"[OK] Reemplazado en {replaced} archivos"
+            
+            elif action == 'get_file_info' and path:
+                if os.path.exists(path):
+                    stat = os.stat(path)
+                    size = stat.st_size
+                    modified = datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                    is_dir = os.path.isdir(path)
+                    info_type = "Carpeta" if is_dir else "Archivo"
+                    if is_dir:
+                        items = len(os.listdir(path))
+                        return f"[OK] {info_type}: {path}\n- Items: {items}\n- Modificado: {modified}"
+                    else:
+                        ext = os.path.splitext(path)[1]
+                        lines_count = sum(1 for _ in open(path, 'r', encoding='utf-8', errors='ignore'))
+                        return f"[OK] {info_type}: {path}\n- Tamano: {size} bytes\n- Extension: {ext}\n- Lineas: {lines_count}\n- Modificado: {modified}"
+                else:
+                    return f"[ERROR] No existe: {path}"
+            
+            elif action == 'list_directory':
+                list_path = path or self.active_project or os.getcwd()
+                if os.path.isdir(list_path):
+                    items = os.listdir(list_path)
+                    dirs = [d for d in items if os.path.isdir(os.path.join(list_path, d))]
+                    files = [f for f in items if os.path.isfile(os.path.join(list_path, f))]
+                    result_lines = [f"[OK] Contenido de {os.path.basename(list_path)}:"]
+                    if dirs:
+                        result_lines.append(f"  Carpetas ({len(dirs)}):")
+                        for d in dirs[:15]:
+                            result_lines.append(f"    + {d}/")
+                    if files:
+                        result_lines.append(f"  Archivos ({len(files)}):")
+                        for f in files[:15]:
+                            size = os.path.getsize(os.path.join(list_path, f))
+                            result_lines.append(f"    - {f} ({size} bytes)")
+                    return "\n".join(result_lines)
+                else:
+                    return f"[ERROR] No es una carpeta: {list_path}"
+            
+            elif action == 'create_project':
+                project_name = result_dict.get('name', 'nuevo_proyecto')
+                project_type = result_dict.get('type', 'web')
+                project_path = os.path.join(self.active_project or os.getcwd(), project_name)
+                os.makedirs(project_path, exist_ok=True)
+                created = []
+                if project_type == 'web':
+                    files = {
+                        'index.html': '<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + project_name + '</title>\n<link rel="stylesheet" href="style.css">\n</head>\n<body>\n<h1>' + project_name + '</h1>\n<script src="script.js"></script>\n</body>\n</html>',
+                        'style.css': '/* Styles */\n* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: sans-serif; }',
+                        'script.js': '// JavaScript\ndocument.addEventListener("DOMContentLoaded", () => {\n  console.log("Ready");\n});'
+                    }
+                elif project_type == 'python':
+                    files = {
+                        'main.py': f'#!/usr/bin/env python3\n"""Main module"""\n\ndef main():\n    print("Hello from {project_name}")\n\nif __name__ == "__main__":\n    main()\n',
+                        'requirements.txt': '',
+                        'README.md': f'# {project_name}\n\nDescription'
+                    }
+                else:
+                    files = {'README.md': f'# {project_name}'}
+                for fname, content in files.items():
+                    fpath = os.path.join(project_path, fname)
+                    with open(fpath, 'w', encoding='utf-8') as fh:
+                        fh.write(content)
+                    created.append(fname)
+                return f"[OK] Proyecto creado: {project_path}\nArchivos: {', '.join(created)}"
+            
+            elif action == 'run_python' and command:
+                import tempfile
+                script = command if command.endswith('.py') else None
+                if not script:
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as tmp:
+                        tmp.write(command)
+                        script = tmp.name
+                result = self.shell.exec(f'python "{script}"', timeout=60, cwd=self.active_project)
+                output_parts = []
+                if result.stdout:
+                    output_parts.append(result.stdout.strip())
+                if result.stderr:
+                    output_parts.append(f"STDERR: {result.stderr.strip()}")
+                if result.exit_code != 0:
+                    output_parts.append(f"[ERROR] Python fallo (codigo {result.exit_code})")
+                return "\n".join(output_parts) if output_parts else "[OK] Python ejecutado"
+            
+            elif action == 'install_package':
+                package = result_dict.get('package', '') or command or ''
+                if not package:
+                    return "[ERROR] Falta package para install_package"
+                if 'requirements' in package or package.endswith('.txt'):
+                    cmd = f'pip install -r "{package}"'
+                elif package.startswith('npm') or package.startswith('yarn'):
+                    cmd = package
+                else:
+                    cmd = f'pip install {package}'
+                result = self.shell.exec(cmd, timeout=120, cwd=self.active_project)
+                if result.exit_code == 0:
+                    return f"[OK] Paquete instalado: {package}"
+                else:
+                    return f"[ERROR] Fallo al instalar: {result.stderr[:200] if result.stderr else 'error desconocido'}"
+            
+            elif action == 'git_commit':
+                message = result_dict.get('message', '') or command or ''
+                if not message:
+                    return "[ERROR] Falta message para git_commit"
+                cmds = ['git add .', f'git commit -m "{message}"']
+                results = []
+                for cmd in cmds:
+                    r = self.shell.exec(cmd, timeout=30, cwd=self.active_project)
+                    if r.stdout:
+                        results.append(r.stdout.strip())
+                    if r.stderr and 'warning' not in r.stderr.lower():
+                        results.append(r.stderr.strip())
+                return "[OK] Git commit realizado" + ("\n" + "\n".join(results) if results else "")
+            
+            elif action == 'compress_files':
+                import zipfile
+                source = result_dict.get('source', path)
+                destination = result_dict.get('destination', 'archive.zip')
+                if not source:
+                    return "[ERROR] Falta source para compress_files"
+                with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED) as zf:
+                    if os.path.isfile(source):
+                        zf.write(source, os.path.basename(source))
+                    elif os.path.isdir(source):
+                        for root, dirs, files in os.walk(source):
+                            for f in files:
+                                fpath = os.path.join(root, f)
+                                arcname = os.path.relpath(fpath, os.path.dirname(source))
+                                zf.write(fpath, arcname)
+                size = os.path.getsize(destination)
+                return f"[OK] Comprimido: {destination} ({size} bytes)"
+            
+            elif action == 'extract_files':
+                import zipfile
+                source = result_dict.get('source', path)
+                destination = result_dict.get('destination', '.')
+                if not source:
+                    return "[ERROR] Falta source para extract_files"
+                if not os.path.exists(source):
+                    return f"[ERROR] Archivo no existe: {source}"
+                with zipfile.ZipFile(source, 'r') as zf:
+                    zf.extractall(destination)
+                return f"[OK] Extraido: {source} -> {destination}"
+            
+            elif action == 'download_file':
+                url = result_dict.get('url', '') or command or ''
+                if not url:
+                    return "[ERROR] Falta url para download_file"
+                destination = result_dict.get('destination', path)
+                if not destination:
+                    destination = os.path.basename(url.split('?')[0]) or 'downloaded_file'
+                response = requests.get(url, timeout=30, stream=True)
+                if response.status_code == 200:
+                    with open(destination, 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            f.write(chunk)
+                    size = os.path.getsize(destination)
+                    return f"[OK] Descargado: {destination} ({size} bytes)"
+                else:
+                    return f"[ERROR] HTTP {response.status_code}"
+            
+            elif action == 'set_env':
+                name = result_dict.get('name', '') or result_dict.get('path', '')
+                value = result_dict.get('value', '') or content or ''
+                if not name:
+                    return "[ERROR] Falta name para set_env"
+                os.environ[name] = value
+                return f"[OK] Variable de entorno: {name}={value[:50]}..."
             
             return f"[ERROR] Accion no reconocida: {action}"
         
