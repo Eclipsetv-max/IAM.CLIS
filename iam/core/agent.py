@@ -42,6 +42,7 @@ from .permissions import (
 
 # Nuevos modulos v4.1
 from ..tools.smart_templates import smart_templates
+from ..tools.code_validator import validate_file
 
 # Modulos IAM
 from .file_history import FileHistory, file_history
