@@ -251,7 +251,17 @@ class SmartSuggestions:
             "create_file": [
                 "Abrir el archivo creado",
                 "Ejecutar el archivo",
-                "/folder Vincular proyecto",
+                "Editar el archivo",
+            ],
+            "delete": [
+                "Verificar que se elimino",
+                "Crear nuevos archivos",
+                "Listar carpeta",
+            ],
+            "clear_folder": [
+                "Crear nuevo proyecto",
+                "Listar carpeta vacia",
+                "Verificar contenido",
             ],
             "error": [
                 "Revisar el error",
@@ -268,10 +278,25 @@ class SmartSuggestions:
                 "Hacer commit",
                 "Subir cambios",
             ],
+            "web": [
+                "Abrir en navegador",
+                "Agregar mas estilos",
+                "Crear mas paginas",
+            ],
+            "python": [
+                "Ejecutar script",
+                "Crear tests",
+                "Instalar dependencias",
+            ],
             "question": [
                 "Buscar mas informacion",
                 "Ver documentacion",
                 "Probar ejemplo",
+            ],
+            "success": [
+                "Continuar con siguiente paso",
+                "Ver resultados",
+                "Hacer ajustes",
             ],
         }
 
@@ -281,20 +306,40 @@ class SmartSuggestions:
 
         suggestions = []
 
-        if any(w in response_lower for w in ["creado", "archivo creado", "new file"]):
+        # Detectar tipo de accion realizada
+        if any(w in response_lower for w in ["creado", "archivo creado", "new file", "[ok]"]):
             suggestions.extend(self.suggestion_patterns["create_file"][:2])
+        
+        if any(w in response_lower for w in ["eliminado", "borrado", "removido", "clear", "limpiado"]):
+            suggestions.extend(self.suggestion_patterns["delete"][:2])
+        
+        if any(w in response_lower for w in ["carpeta limpiada", "items eliminados", "vaciar"]):
+            suggestions.extend(self.suggestion_patterns["clear_folder"][:2])
 
-        if any(w in response_lower for w in ["error", "fallo", "failed"]):
+        if any(w in response_lower for w in ["error", "fallo", "failed", "[error]"]):
             suggestions.extend(self.suggestion_patterns["error"][:2])
 
-        if any(w in response_lower for w in ["def ", "class ", "function"]):
+        if any(w in response_lower for w in ["def ", "class ", "function", "import"]):
             suggestions.extend(self.suggestion_patterns["code"][:2])
+
+        if any(w in response_lower for w in ["commit", "push", "git", "branch"]):
+            suggestions.extend(self.suggestion_patterns["git"][:2])
+
+        if any(w in response_lower for w in ["html", "css", "javascript", "web", "frontend"]):
+            suggestions.extend(self.suggestion_patterns["web"][:2])
+
+        if any(w in response_lower for w in ["python", "pip", "virtualenv", "pytest"]):
+            suggestions.extend(self.suggestion_patterns["python"][:2])
 
         if "?" in query:
             suggestions.extend(self.suggestion_patterns["question"][:1])
 
+        # Si es exito general
+        if not suggestions and any(w in response_lower for w in ["ok", "completado", "hecho", "listo"]):
+            suggestions.extend(self.suggestion_patterns["success"][:2])
+
         if not suggestions:
-            suggestions = ["Continuar", "Ver ayuda"]
+            suggestions = ["Continuar", "Ver ayuda", "Listar archivos"]
 
         return suggestions[:3]
 
